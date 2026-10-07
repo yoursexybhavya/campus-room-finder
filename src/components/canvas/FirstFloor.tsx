@@ -222,7 +222,7 @@ export const FirstFloor: React.FC = () => {
           <group key={`ff-door-frame-${room.id}`} position={doorPos}>
             <mesh castShadow>
               <boxGeometry args={frameArgs} />
-              <meshStandardMaterial color="#2563eb" metalness={0.3} roughness={0.4} />
+              <meshStandardMaterial color={room.color} metalness={0.3} roughness={0.4} />
             </mesh>
           </group>
         );

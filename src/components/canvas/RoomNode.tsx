@@ -208,19 +208,31 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       >
         <boxGeometry args={[w - 0.05, 0.1, d - 0.05]} />
         <meshStandardMaterial
-          color={isSelected ? '#f97316' : isHovered ? (isDark ? '#0284c7' : '#bae6fd') : floorTileColor}
-          roughness={0.4}
+          color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : room.color}
+          roughness={0.35}
           metalness={0.1}
           transparent
-          opacity={floorOpacity}
-          emissive={isSelected ? '#ea580c' : isHovered ? '#0284c7' : '#000000'}
-          emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.0}
+          opacity={isFloorActive ? (isDark ? 0.85 : 0.75) : 0.15}
+          emissive={isSelected ? '#ea580c' : isHovered ? '#0284c7' : room.color}
+          emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.25 : (isDark ? 0.2 : 0.08)}
         />
-        {/* Crisp perimeter outline */}
+        {/* Crisp perimeter outline in category color */}
         <Edges
           scale={1.0}
           threshold={15}
-          color={isSelected ? '#f97316' : isHovered ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#334155' : '#cbd5e1')}
+          color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : room.color}
+        />
+      </mesh>
+
+      {/* Architectural Base Plinth Band in Room Category Color */}
+      <mesh position={[0, -h / 2 + 0.14, 0]}>
+        <boxGeometry args={[w - 0.08, 0.08, d - 0.08]} />
+        <meshStandardMaterial
+          color={room.color}
+          emissive={room.color}
+          emissiveIntensity={isDark ? 0.35 : 0.15}
+          transparent
+          opacity={floorOpacity}
         />
       </mesh>
 
@@ -246,7 +258,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
           <Edges
             scale={1.0}
             threshold={25}
-            color={isSelected ? '#f97316' : wallTrimColor}
+            color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? room.color : wallTrimColor)}
           />
         </mesh>
       ))}

@@ -71,7 +71,8 @@ const rawWaypoints: { id: string; coords: [number, number, number]; links: strin
   // FIRST FLOOR QUADRANGLE CORRIDOR LOOP
   // ==========================================
   // South Corridor
-  { id: 'corr_south_1f', coords: [0, 3.6, 16], links: ['stairs_sw_1f', 'stairs_se_1f'] },
+  { id: 'corr_south_1f', coords: [0, 3.6, 16], links: ['stairs_sw_1f', 'stairs_se_1f', 'wp_south_1f'] },
+  { id: 'wp_south_1f', coords: [0, 3.6, 18], links: ['corr_south_1f'] },
 
   // West Corridor (AI/ML & Robotics Labs)
   { id: 'corr_west_1f', coords: [-16, 3.6, 0], links: ['stairs_sw_1f', 'stairs_nw_1f', 'wp_lab3', 'wp_lab4'] },

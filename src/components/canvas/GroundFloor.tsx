@@ -234,10 +234,10 @@ export const GroundFloor: React.FC = () => {
 
         return (
           <group key={`door-frame-${room.id}`} position={doorPos}>
-            {/* Vibrant Blue Institutional Door Frame */}
+            {/* Institutional Door Frame in Room Category Color */}
             <mesh castShadow>
               <boxGeometry args={frameArgs} />
-              <meshStandardMaterial color="#2563eb" metalness={0.3} roughness={0.4} />
+              <meshStandardMaterial color={room.color} metalness={0.3} roughness={0.4} />
             </mesh>
           </group>
         );
