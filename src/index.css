@@ -8,3 +8,14 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+
+/* Ensure Drei 3D HTML overlays stay contained in lower stacking context */
+[data-testid="campus-scene-container"] {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+[data-testid="campus-scene-container"] div[style*="pointer-events"] {
+  z-index: 5 !important;
+}

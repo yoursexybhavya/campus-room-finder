@@ -45,7 +45,7 @@ export const SearchBar: React.FC = () => {
     : 'hover:bg-slate-100';
 
   return (
-    <div className="absolute top-20 left-4 z-20 pointer-events-auto w-72 sm:w-80 select-none">
+    <div className="absolute top-20 left-4 z-40 pointer-events-auto w-72 sm:w-80 select-none">
       <div className="relative">
         <div
           className={`flex items-center gap-2 border px-3.5 py-2.5 rounded-2xl shadow-xl focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-500/20 transition-all ${inputContainerClass}`}
@@ -81,7 +81,7 @@ export const SearchBar: React.FC = () => {
         {/* Dropdown Results */}
         {isOpen && filteredRooms.length > 0 && (
           <div
-            className={`absolute top-full left-0 right-0 mt-2 border rounded-2xl shadow-2xl max-h-72 overflow-y-auto divide-y z-30 animate-in fade-in zoom-in-95 duration-150 ${dropdownClass}`}
+            className={`absolute top-full left-0 right-0 mt-2 border rounded-2xl shadow-2xl max-h-72 overflow-y-auto divide-y z-50 animate-in fade-in zoom-in-95 duration-150 ${dropdownClass}`}
           >
             {filteredRooms.map((room) => (
               <button

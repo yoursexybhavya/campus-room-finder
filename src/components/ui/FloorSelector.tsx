@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Layers, ArrowDown, ArrowUp, Compass, Box, Map } from 'lucide-react';
+import { Layers, ArrowDown, ArrowUp, Compass, Box, Map, Plus, Minus } from 'lucide-react';
 import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { campusRooms } from '../../data/campusRooms';
@@ -10,6 +10,11 @@ export const FloorSelector: React.FC = () => {
   const setFloorFilter = useCampusStore((state) => state.setFloorFilter);
   const viewMode = useCampusStore((state) => state.viewMode);
   const setViewMode = useCampusStore((state) => state.setViewMode);
+  const zoomIn = useCampusStore((state) => state.zoomIn);
+  const zoomOut = useCampusStore((state) => state.zoomOut);
+  const isPanelOpen = useCampusStore((state) => state.isPanelOpen);
+  const selectedRoomId = useCampusStore((state) => state.selectedRoomId);
+
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
@@ -42,21 +47,67 @@ export const FloorSelector: React.FC = () => {
     },
   ];
 
+  // If a right-side drawer is open on mobile or small screen, hide dock or adjust position
+  const isHiddenByDrawer = selectedRoomId !== null || isPanelOpen;
+
   return (
     <div
       data-testid="floor-selector-dock"
-      className="absolute top-36 left-4 z-20 pointer-events-auto flex flex-col gap-2 select-none animate-in fade-in slide-in-from-left duration-300"
+      className={`absolute top-20 right-4 z-40 pointer-events-auto flex flex-col gap-2 select-none animate-in fade-in slide-in-from-right duration-300 ${
+        isHiddenByDrawer ? 'hidden lg:flex lg:right-[410px]' : 'flex'
+      }`}
     >
-      {/* MazeMap-Inspired Vertical Floor Level Switcher Dock */}
+      {/* 1. 2D / 3D View Mode Toggle Pill (MazeMap Style) */}
+      <div
+        className={`flex items-center p-1 rounded-2xl backdrop-blur-xl border shadow-xl transition-all duration-300 ${
+          isDark
+            ? 'bg-slate-900/95 border-slate-700/80 shadow-black/50'
+            : 'bg-white/95 border-slate-200/90 shadow-slate-300/40'
+        }`}
+      >
+        <button
+          onClick={() => setViewMode('3D')}
+          data-testid="view-mode-3d-btn"
+          className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            viewMode === '3D'
+              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30'
+              : isDark
+              ? 'text-slate-400 hover:text-white'
+              : 'text-slate-600 hover:text-slate-950'
+          }`}
+          title="3D Isometric Perspective View"
+        >
+          <Box className="w-3.5 h-3.5" />
+          <span>3D</span>
+        </button>
+
+        <button
+          onClick={() => setViewMode('2D')}
+          data-testid="view-mode-2d-btn"
+          className={`flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            viewMode === '2D'
+              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30'
+              : isDark
+              ? 'text-slate-400 hover:text-white'
+              : 'text-slate-600 hover:text-slate-950'
+          }`}
+          title="2D Top-Down Architectural Blueprint Plan View"
+        >
+          <Map className="w-3.5 h-3.5" />
+          <span>2D</span>
+        </button>
+      </div>
+
+      {/* 2. MazeMap-Inspired Vertical Floor Level Switcher Dock */}
       <div
         className={`flex flex-col p-1.5 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all duration-300 ${
           isDark
-            ? 'bg-slate-900/90 border-slate-700/80 shadow-black/60'
+            ? 'bg-slate-900/95 border-slate-700/80 shadow-black/60'
             : 'bg-white/95 border-slate-200/90 shadow-slate-300/50'
         }`}
       >
         {/* Header label badge */}
-        <div className="px-2 py-1 mb-1 flex items-center justify-between border-b border-slate-700/40">
+        <div className="px-2 py-1 mb-1 flex items-center justify-between border-b border-slate-700/30">
           <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Floor
           </span>
@@ -72,7 +123,7 @@ export const FloorSelector: React.FC = () => {
                 key={filter.id}
                 onClick={() => setFloorFilter(filter.id)}
                 data-testid={`floor-filter-${filter.id}`}
-                className={`group relative flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 text-left ${
+                className={`group relative flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all duration-200 text-left ${
                   isActive
                     ? `bg-gradient-to-r ${filter.accent} text-white shadow-lg shadow-cyan-500/25 font-bold scale-[1.02]`
                     : isDark
@@ -114,7 +165,7 @@ export const FloorSelector: React.FC = () => {
 
                 {/* Active Indicator Light */}
                 {isActive && (
-                  <span className="ml-auto w-1.5 h-4 rounded-full bg-white/90 shadow-sm" />
+                  <span className="ml-auto w-1.5 h-3.5 rounded-full bg-white/90 shadow-sm" />
                 )}
               </button>
             );
@@ -122,44 +173,30 @@ export const FloorSelector: React.FC = () => {
         </div>
       </div>
 
-      {/* 2D / 3D View Mode Toggle Pill */}
+      {/* 3. Zoom Controls (+ / -) (MazeMap Style) */}
       <div
-        className={`flex items-center p-1 rounded-2xl backdrop-blur-xl border shadow-xl transition-all duration-300 ${
+        className={`flex flex-col p-1 rounded-2xl backdrop-blur-xl border shadow-lg transition-all ${
           isDark
-            ? 'bg-slate-900/90 border-slate-700/80 shadow-black/50'
-            : 'bg-white/95 border-slate-200/90 shadow-slate-300/40'
+            ? 'bg-slate-900/95 border-slate-700/80 text-slate-300'
+            : 'bg-white/95 border-slate-200/90 text-slate-700 shadow-slate-300/40'
         }`}
       >
         <button
-          onClick={() => setViewMode('3D')}
-          data-testid="view-mode-3d-btn"
-          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-            viewMode === '3D'
-              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30'
-              : isDark
-              ? 'text-slate-400 hover:text-white'
-              : 'text-slate-600 hover:text-slate-950'
-          }`}
-          title="3D Isometric Perspective View"
+          onClick={zoomIn}
+          data-testid="zoom-in-btn"
+          className="p-2 hover:text-cyan-500 hover:bg-slate-800/40 rounded-xl transition-colors flex items-center justify-center"
+          title="Zoom In"
         >
-          <Box className="w-3.5 h-3.5" />
-          <span>3D View</span>
+          <Plus className="w-4 h-4" />
         </button>
-
+        <div className={`h-px my-0.5 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`} />
         <button
-          onClick={() => setViewMode('2D')}
-          data-testid="view-mode-2d-btn"
-          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-            viewMode === '2D'
-              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30'
-              : isDark
-              ? 'text-slate-400 hover:text-white'
-              : 'text-slate-600 hover:text-slate-950'
-          }`}
-          title="2D Top-Down Architectural Blueprint Plan View"
+          onClick={zoomOut}
+          data-testid="zoom-out-btn"
+          className="p-2 hover:text-cyan-500 hover:bg-slate-800/40 rounded-xl transition-colors flex items-center justify-center"
+          title="Zoom Out"
         >
-          <Map className="w-3.5 h-3.5" />
-          <span>2D Plan</span>
+          <Minus className="w-4 h-4" />
         </button>
       </div>
     </div>

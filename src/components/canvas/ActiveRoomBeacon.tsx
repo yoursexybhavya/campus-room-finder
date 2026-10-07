@@ -118,7 +118,13 @@ export const ActiveRoomBeacon: React.FC = () => {
 
       {/* Beacon 3D Billboarding Tag */}
       {isClassActive && (
-        <Html position={[0, 8.8, 0]} center distanceFactor={20} className="pointer-events-none select-none">
+        <Html
+          position={[0, 8.8, 0]}
+          center
+          distanceFactor={20}
+          zIndexRange={[10, 0]}
+          className="pointer-events-none select-none"
+        >
           <div className="bg-slate-950/90 text-cyan-300 border border-cyan-400 px-3 py-1 rounded-xl shadow-xl shadow-cyan-500/30 flex items-center gap-1.5 whitespace-nowrap text-xs font-bold animate-pulse backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
             <span>ACTIVE: {activeSchedule.activeSlot?.courseCode}</span>

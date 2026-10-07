@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-cyan-600 border border-slate-200';
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-3 sm:p-4 flex items-center justify-between gap-3">
+    <header className="absolute top-0 left-0 right-0 z-40 pointer-events-none p-3 sm:p-4 flex items-center justify-between gap-3">
       {/* Brand & Campus Identity */}
       <div className={`pointer-events-auto flex items-center gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl ${cardBgClass} transition-colors duration-300`}>
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/25 shrink-0">

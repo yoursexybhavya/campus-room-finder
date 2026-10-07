@@ -25,7 +25,7 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
   const hemiGroundColor = isDark ? '#1e293b' : '#cbd5e1';
 
   return (
-    <div className={className} data-testid="campus-scene-container">
+    <div className={`${className} relative z-0`} data-testid="campus-scene-container">
       <Canvas
         camera={{ position: [34, 26, 36], fov: 48, near: 0.1, far: 300 }}
         shadows

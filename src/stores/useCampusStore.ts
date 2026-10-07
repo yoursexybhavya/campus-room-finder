@@ -11,6 +11,11 @@ export interface CampusStoreState {
   cameraTarget: CameraTarget | null;
   navigationPath: [number, number, number][] | null;
 
+  isPanelOpen: boolean;
+  setIsPanelOpen: (open: boolean) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+
   selectRoom: (roomId: string | null) => void;
   setHoveredRoom: (roomId: string | null) => void;
   setFloorFilter: (filter: FloorFilter) => void;
@@ -29,6 +34,41 @@ export const useCampusStore = create<CampusStoreState>((set) => ({
   viewMode: '3D',
   cameraTarget: null,
   navigationPath: null,
+  isPanelOpen: false,
+
+  setIsPanelOpen: (open) => set({ isPanelOpen: open }),
+
+  zoomIn: () =>
+    set((state) => {
+      const currentPos = state.cameraTarget?.position || (state.viewMode === '2D' ? [0, 52, 0.05] : [34, 26, 36]);
+      const currentLook = state.cameraTarget?.lookAt || (state.viewMode === '2D' ? [0, 0, 0] : [0, 1.5, 0]);
+      return {
+        cameraTarget: {
+          position: [
+            currentLook[0] + (currentPos[0] - currentLook[0]) * 0.8,
+            Math.max(6, currentLook[1] + (currentPos[1] - currentLook[1]) * 0.8),
+            currentLook[2] + (currentPos[2] - currentLook[2]) * 0.8,
+          ],
+          lookAt: currentLook,
+        },
+      };
+    }),
+
+  zoomOut: () =>
+    set((state) => {
+      const currentPos = state.cameraTarget?.position || (state.viewMode === '2D' ? [0, 52, 0.05] : [34, 26, 36]);
+      const currentLook = state.cameraTarget?.lookAt || (state.viewMode === '2D' ? [0, 0, 0] : [0, 1.5, 0]);
+      return {
+        cameraTarget: {
+          position: [
+            currentLook[0] + (currentPos[0] - currentLook[0]) * 1.25,
+            Math.min(130, currentLook[1] + (currentPos[1] - currentLook[1]) * 1.25),
+            currentLook[2] + (currentPos[2] - currentLook[2]) * 1.25,
+          ],
+          lookAt: currentLook,
+        },
+      };
+    }),
 
   selectRoom: (roomId) => {
     set({ selectedRoomId: roomId });

@@ -185,6 +185,7 @@ export const PeerAvatarsLayer: React.FC = () => {
                 position={[0, 1.35, 0]}
                 center
                 distanceFactor={25}
+                zIndexRange={[10, 0]}
                 className="pointer-events-none select-none transition-all duration-200"
               >
                 <div className="flex flex-col items-center">

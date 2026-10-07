@@ -73,19 +73,19 @@ export const RoomDetailsDrawer: React.FC = () => {
     activeSchedule.status === 'IN_SESSION' && activeSchedule.activeSlot?.roomId === room.id;
   const currentSlot = isClassActive ? activeSchedule.activeSlot : null;
 
-  // Theme-aware styles
+  // Solid theme-aware styles to prevent any 3D elements from bleeding through
   const containerBgClass = isDark
-    ? 'bg-slate-900/95 backdrop-blur-2xl border-slate-700/80 text-white shadow-black/70'
-    : 'bg-white/95 backdrop-blur-2xl border-slate-200/90 text-slate-900 shadow-slate-300/60';
+    ? 'bg-slate-900 border-slate-700 text-white shadow-2xl'
+    : 'bg-white border-slate-200 text-slate-900 shadow-2xl';
 
-  const headerBgClass = isDark ? 'bg-slate-950/40 border-slate-800/80' : 'bg-slate-50/80 border-slate-200';
-  const cardBgClass = isDark ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200/80';
+  const headerBgClass = isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200';
+  const cardBgClass = isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200';
   const textMutedClass = isDark ? 'text-slate-400' : 'text-slate-500';
 
   return (
     <div
       data-testid="room-details-drawer"
-      className={`absolute top-20 right-4 bottom-24 w-80 sm:w-96 z-20 pointer-events-auto border rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 ${containerBgClass}`}
+      className={`absolute top-20 right-4 bottom-24 w-80 sm:w-96 z-50 pointer-events-auto border rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 ${containerBgClass}`}
     >
       {/* Drawer Header */}
       <div className={`p-4 sm:p-5 border-b flex items-start justify-between gap-3 ${headerBgClass}`}>

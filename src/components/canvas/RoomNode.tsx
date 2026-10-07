@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 import { Edges, Html } from '@react-three/drei';
 import { CampusRoom, FloorFilter } from '../../types/campus';
 import { useCampusStore } from '../../stores/useCampusStore';
@@ -13,6 +14,57 @@ interface RoomNodeProps {
   floorFilter: FloorFilter;
 }
 
+// 3D MazeMap-style animated location marker pin
+const MazeMapMarkerPin: React.FC<{ color?: string }> = ({ color = '#f97316' }) => {
+  const pinRef = useRef<THREE.Group>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (pinRef.current) {
+      pinRef.current.position.y = 2.4 + Math.sin(t * 3.5) * 0.22;
+      pinRef.current.rotation.y = t * 1.5;
+    }
+    if (ringRef.current) {
+      const s = 1.0 + 0.25 * Math.sin(t * 3.0);
+      ringRef.current.scale.set(s, s, 1);
+    }
+  });
+
+  return (
+    <group position={[0, 0, 0]}>
+      {/* Floor pulsing highlight ring */}
+      <mesh ref={ringRef} position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.2, 1.8, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.65} side={THREE.DoubleSide} depthWrite={false} />
+      </mesh>
+
+      {/* Floating 3D Teardrop Pin */}
+      <group ref={pinRef} position={[0, 2.4, 0]}>
+        {/* Head Sphere */}
+        <mesh position={[0, 0.45, 0]} castShadow>
+          <sphereGeometry args={[0.38, 20, 20]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} roughness={0.2} metalness={0.3} />
+        </mesh>
+        {/* White Center Eye Dot */}
+        <mesh position={[0, 0.45, 0.32]}>
+          <circleGeometry args={[0.13, 16]} />
+          <meshBasicMaterial color="#ffffff" />
+        </mesh>
+        <mesh position={[0, 0.45, -0.32]} rotation={[0, Math.PI, 0]}>
+          <circleGeometry args={[0.13, 16]} />
+          <meshBasicMaterial color="#ffffff" />
+        </mesh>
+        {/* Inverted Cone Base Pointing Down */}
+        <mesh position={[0, 0.05, 0]} rotation={[Math.PI, 0, 0]} castShadow>
+          <coneGeometry args={[0.32, 0.6, 20]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} roughness={0.2} metalness={0.3} />
+        </mesh>
+      </group>
+    </group>
+  );
+};
+
 export const RoomNode: React.FC<RoomNodeProps> = ({
   room,
   isSelected,
@@ -23,6 +75,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
   const meshRef = useRef<THREE.Mesh>(null);
   const selectRoom = useCampusStore((state) => state.selectRoom);
   const setHoveredRoom = useCampusStore((state) => state.setHoveredRoom);
+  const isPanelOpen = useCampusStore((state) => state.isPanelOpen);
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
@@ -31,23 +84,24 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     {
       id: room.id,
       basePosition: room.position,
-      mass: 0.9 + ((room.capacity ?? 60) / 150) * 0.3, // Capacity-weighted mass (0.9 to 1.2kg)
+      mass: 0.9 + ((room.capacity ?? 60) / 150) * 0.3,
     },
     groupRef
   );
 
-  // Determine visibility / opacity based on floor filter
+  // Floor filter visibility
   const isFloorActive =
     floorFilter === 'all' ||
     (floorFilter === 'ground' && room.floor === 'ground') ||
     (floorFilter === 'first' && room.floor === 'first');
 
-  const opacity = isFloorActive ? (isSelected ? 0.95 : 0.8) : 0.15;
-  const isDimmed = !isFloorActive;
+  const [w, h, d] = room.dimensions;
+  const wallH = 1.35; // Architectural extruded wall height (open top, MazeMap style)
+  const wallT = 0.22; // Architectural wall thickness
+  const doorW = 1.4; // Entrance door gap opening
 
   const handleClick = (e: any) => {
     e.stopPropagation();
-    // If clicking a dimmed room on an inactive floor, activate that floor
     if (!isFloorActive) {
       useCampusStore.getState().setFloorFilter(room.floor);
     }
@@ -57,17 +111,82 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
   const handlePointerOver = (e: any) => {
     e.stopPropagation();
     setHoveredRoom(room.id);
-    document.body.style.cursor = 'pointer';
+    if (typeof document !== 'undefined') {
+      document.body.style.cursor = 'pointer';
+    }
   };
 
   const handlePointerOut = () => {
     setHoveredRoom(null);
-    document.body.style.cursor = 'auto';
+    if (typeof document !== 'undefined') {
+      document.body.style.cursor = 'auto';
+    }
   };
 
-  // Base dimensions and color
-  const [w, h, d] = room.dimensions;
-  const scale = isHovered ? 1.03 : 1.0;
+  const scale = isHovered ? 1.02 : 1.0;
+
+  // Architectural Colors
+  const wallColor = isDark ? '#334155' : '#f1f5f9';
+  const wallTrimColor = isDark ? '#475569' : '#cbd5e1';
+  const floorTileColor = isDark ? '#1e293b' : '#f8fafc';
+  const selectedBorderColor = '#f97316'; // MazeMap signature vibrant orange
+
+  // Compute 4 extruded boundary walls with doorway opening towards corridor
+  const wallSegments = useMemo(() => {
+    const segments: { pos: [number, number, number]; args: [number, number, number] }[] = [];
+    const yCenter = -h / 2 + wallH / 2;
+
+    if (room.wing === 'East') {
+      // East wing: Corridor is on -x face. Door opening on -x.
+      // Solid +x outer wall
+      segments.push({ pos: [w / 2 - wallT / 2, yCenter, 0], args: [wallT, wallH, d] });
+      // Solid -z wall
+      segments.push({ pos: [0, yCenter, -d / 2 + wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
+      // Solid +z wall
+      segments.push({ pos: [0, yCenter, d / 2 - wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
+      // Corridor wall (-x) with door gap
+      const segL = Math.max(0.4, (d - doorW) / 2);
+      segments.push({ pos: [-w / 2 + wallT / 2, yCenter, -d / 2 + segL / 2], args: [wallT, wallH, segL] });
+      segments.push({ pos: [-w / 2 + wallT / 2, yCenter, d / 2 - segL / 2], args: [wallT, wallH, segL] });
+    } else if (room.wing === 'West') {
+      // West wing: Corridor is on +x face. Door opening on +x.
+      // Solid -x outer wall
+      segments.push({ pos: [-w / 2 + wallT / 2, yCenter, 0], args: [wallT, wallH, d] });
+      // Solid -z wall
+      segments.push({ pos: [0, yCenter, -d / 2 + wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
+      // Solid +z wall
+      segments.push({ pos: [0, yCenter, d / 2 - wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
+      // Corridor wall (+x) with door gap
+      const segL = Math.max(0.4, (d - doorW) / 2);
+      segments.push({ pos: [w / 2 - wallT / 2, yCenter, -d / 2 + segL / 2], args: [wallT, wallH, segL] });
+      segments.push({ pos: [w / 2 - wallT / 2, yCenter, d / 2 - segL / 2], args: [wallT, wallH, segL] });
+    } else if (room.wing === 'North') {
+      // North wing: Corridor is on +z face. Door opening on +z.
+      segments.push({ pos: [0, yCenter, -d / 2 + wallT / 2], args: [w, wallH, wallT] });
+      segments.push({ pos: [-w / 2 + wallT / 2, yCenter, 0], args: [wallT, wallH, d - 2 * wallT] });
+      segments.push({ pos: [w / 2 - wallT / 2, yCenter, 0], args: [wallT, wallH, d - 2 * wallT] });
+      const segL = Math.max(0.4, (w - doorW) / 2);
+      segments.push({ pos: [-w / 2 + segL / 2, yCenter, d / 2 - wallT / 2], args: [segL, wallH, wallT] });
+      segments.push({ pos: [w / 2 - segL / 2, yCenter, d / 2 - wallT / 2], args: [segL, wallH, wallT] });
+    } else {
+      // South wing: Corridor is on -z face. Door opening on -z.
+      segments.push({ pos: [0, yCenter, d / 2 - wallT / 2], args: [w, wallH, wallT] });
+      segments.push({ pos: [-w / 2 + wallT / 2, yCenter, 0], args: [wallT, wallH, d - 2 * wallT] });
+      segments.push({ pos: [w / 2 - wallT / 2, yCenter, 0], args: [wallT, wallH, d - 2 * wallT] });
+      const segL = Math.max(0.4, (w - doorW) / 2);
+      segments.push({ pos: [-w / 2 + segL / 2, yCenter, -d / 2 + wallT / 2], args: [segL, wallH, wallT] });
+      segments.push({ pos: [w / 2 - segL / 2, yCenter, -d / 2 + wallT / 2], args: [segL, wallH, wallT] });
+    }
+
+    return segments;
+  }, [w, h, d, room.wing, wallH, wallT, doorW]);
+
+  const floorOpacity = isFloorActive ? 0.95 : 0.15;
+  const wallOpacity = isFloorActive ? 0.95 : 0.12;
+
+  // Determine whether to display the 3D label
+  // When a drawer/modal is open, hide non-selected labels to prevent clutter behind panels
+  const shouldRenderLabel = isFloorActive && (!isPanelOpen || isSelected || isHovered);
 
   return (
     <group
@@ -76,63 +195,98 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       scale={[scale, scale, scale]}
       userData={{ roomId: room.id, roomCode: room.code, roomName: room.name, floor: room.floor }}
     >
+      {/* 1. ROOM FLOOR TILE (Clickable interactive surface) */}
       <mesh
         ref={meshRef}
         name={`room-${room.id}`}
+        position={[0, -h / 2 + 0.05, 0]}
         onClick={handleClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
-        castShadow
         receiveShadow
+        castShadow
       >
-        <boxGeometry args={[w, h, d]} />
+        <boxGeometry args={[w - 0.05, 0.1, d - 0.05]} />
         <meshStandardMaterial
-          color={room.color}
-          roughness={0.3}
-          metalness={0.2}
-          transparent={true}
-          opacity={opacity}
-          emissive={isSelected ? room.color : isHovered ? '#38bdf8' : '#000000'}
-          emissiveIntensity={isSelected ? 0.6 : isHovered ? 0.35 : 0.0}
+          color={isSelected ? '#f97316' : isHovered ? (isDark ? '#0284c7' : '#bae6fd') : floorTileColor}
+          roughness={0.4}
+          metalness={0.1}
+          transparent
+          opacity={floorOpacity}
+          emissive={isSelected ? '#ea580c' : isHovered ? '#0284c7' : '#000000'}
+          emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.0}
         />
-        {/* Outlines for high visibility */}
+        {/* Crisp perimeter outline */}
         <Edges
           scale={1.0}
           threshold={15}
-          color={isSelected ? '#38bdf8' : isHovered ? (isDark ? '#ffffff' : '#0284c7') : (isDark ? '#1e293b' : '#94a3b8')}
+          color={isSelected ? '#f97316' : isHovered ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#334155' : '#cbd5e1')}
         />
       </mesh>
 
-      {/* Floating 2D badge label above the room */}
-      {isFloorActive && (
+      {/* 2. EXTRUDED ARCHITECTURAL WALLS (MazeMap style with open ceilings & door gaps) */}
+      {wallSegments.map((seg, idx) => (
+        <mesh
+          key={`wall-${idx}`}
+          position={seg.pos}
+          castShadow
+          receiveShadow
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          <boxGeometry args={seg.args} />
+          <meshStandardMaterial
+            color={isSelected ? (isDark ? '#431407' : '#ffedd5') : wallColor}
+            roughness={0.6}
+            metalness={0.05}
+            transparent
+            opacity={wallOpacity}
+          />
+          <Edges
+            scale={1.0}
+            threshold={25}
+            color={isSelected ? '#f97316' : wallTrimColor}
+          />
+        </mesh>
+      ))}
+
+      {/* 3. MAZEMAP ICONIC ORANGE LOCATION PIN (Appears on Selected Room) */}
+      {isSelected && isFloorActive && (
+        <MazeMapMarkerPin color="#f97316" />
+      )}
+
+      {/* 4. BILLBOARDING ARCHITECTURAL ROOM LABEL */}
+      {shouldRenderLabel && (
         <Html
-          position={[0, h / 2 + 0.4, 0]}
+          position={[0, -h / 2 + wallH + 0.35, 0]}
           center
-          distanceFactor={22}
+          distanceFactor={24}
+          zIndexRange={[10, 0]}
           className="pointer-events-none select-none transition-all duration-200"
         >
           <div
-            className={`px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap shadow-lg flex items-center gap-1 border backdrop-blur-md transition-all ${
+            className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shadow-md flex items-center gap-1.5 border backdrop-blur-md transition-all ${
               isSelected
-                ? 'bg-cyan-500 text-slate-950 border-cyan-300 scale-110 shadow-cyan-500/50'
+                ? 'bg-orange-500 text-white border-orange-300 scale-110 shadow-orange-500/50'
                 : isHovered
                 ? isDark
                   ? 'bg-slate-800 text-cyan-300 border-cyan-400 scale-105'
-                  : 'bg-white text-cyan-600 border-cyan-400 scale-105 shadow-md shadow-cyan-500/10'
+                  : 'bg-white text-cyan-700 border-cyan-400 scale-105 shadow-md shadow-cyan-500/20'
                 : isDark
-                ? 'bg-slate-900/90 text-slate-200 border-slate-700/80'
-                : 'bg-white/95 text-slate-800 border-slate-200/90 shadow-slate-300/50'
+                ? 'bg-slate-900/90 text-slate-300 border-slate-700/80'
+                : 'bg-white/95 text-slate-800 border-slate-200/90 shadow-slate-300/40'
             }`}
           >
             <span
-              className="w-2 h-2 rounded-full inline-block shadow-sm"
-              style={{ backgroundColor: room.color }}
+              className="w-1.5 h-1.5 rounded-full inline-block shrink-0 shadow-sm"
+              style={{ backgroundColor: isSelected ? '#ffffff' : room.color }}
             />
-            <span className="tracking-wide">{room.code}</span>
+            <span className="tracking-tight">{room.code}</span>
             {isHovered && (
               <span
-                className={`text-[10px] font-normal pl-1 border-l ${
-                  isDark ? 'text-cyan-200 border-slate-600' : 'text-cyan-700 border-slate-200'
+                className={`text-[10px] font-sans font-medium pl-1.5 border-l ${
+                  isDark ? 'text-cyan-200 border-slate-600' : 'text-cyan-800 border-slate-200'
                 }`}
               >
                 {room.name}
