@@ -45,7 +45,7 @@ export const SearchBar: React.FC = () => {
     : 'hover:bg-slate-100';
 
   return (
-    <div className="absolute top-20 left-4 z-40 pointer-events-auto w-72 sm:w-80 select-none">
+    <div className="absolute top-16 sm:top-20 left-3 right-24 sm:right-auto sm:w-80 z-40 pointer-events-auto select-none">
       <div className="relative">
         <div
           className={`flex items-center gap-2 border px-3.5 py-2.5 rounded-2xl shadow-xl focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-500/20 transition-all ${inputContainerClass}`}

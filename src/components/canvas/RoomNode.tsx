@@ -294,6 +294,15 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
               className="w-1.5 h-1.5 rounded-full inline-block shrink-0 shadow-sm"
               style={{ backgroundColor: isSelected ? '#ffffff' : room.color }}
             />
+            {floorFilter === 'all' && (
+              <span className={`text-[9px] font-mono font-black px-1 rounded ${
+                room.floor === 'ground'
+                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-purple-500/20 text-purple-600 dark:text-purple-400'
+              }`}>
+                {room.floor === 'ground' ? 'GF' : '1F'}
+              </span>
+            )}
             <span className="tracking-tight">{room.code}</span>
             {isHovered && (
               <span

@@ -34,6 +34,7 @@ export const UserLocationDot: React.FC = () => {
 
   // Determine floor of current position
   const isGround = basePosition[1] < 2.2;
+
   const isVisible =
     activeFloorFilter === 'all' ||
     (activeFloorFilter === 'ground' && isGround) ||

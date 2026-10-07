@@ -41,6 +41,7 @@ export const RoomDetailsDrawer: React.FC = () => {
 
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
+  const isPanelOpen = useCampusStore((state) => state.isPanelOpen);
 
   const simulatedDate = useTimetableStore((state) => state.simulatedDate);
   const activeSchedule = useTimetableStore((state) => state.activeSchedule);
@@ -108,8 +109,15 @@ export const RoomDetailsDrawer: React.FC = () => {
   return (
     <div
       data-testid="room-details-drawer"
-      className={`absolute top-20 right-4 bottom-24 w-80 sm:w-96 z-50 pointer-events-auto border rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 ${containerBgClass}`}
+      className={`fixed inset-x-0 bottom-0 max-h-[82vh] md:inset-auto md:top-20 md:bottom-24 w-full md:w-96 ${
+        isPanelOpen
+          ? 'md:left-4 md:right-auto md:slide-in-from-left'
+          : 'md:right-4 md:left-auto md:slide-in-from-right'
+      } z-40 md:z-50 pointer-events-auto border rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 ${containerBgClass}`}
     >
+      {/* Mobile drag handle bar */}
+      <div className="md:hidden w-12 h-1.5 rounded-full bg-slate-400/40 mx-auto mt-2.5 mb-1 shrink-0" />
+
       {/* Drawer Header */}
       <div className={`p-4 sm:p-5 border-b flex items-start justify-between gap-3 ${headerBgClass}`}>
         <div>

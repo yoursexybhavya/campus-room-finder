@@ -110,7 +110,7 @@ export const NavigationHUD: React.FC = () => {
   return (
     <div
       data-testid="navigation-hud-banner"
-      className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto max-w-lg w-[92%] sm:w-auto min-w-[340px] sm:min-w-[420px] select-none animate-in slide-in-from-top duration-300"
+      className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto max-w-lg w-[94%] sm:w-auto min-w-0 sm:min-w-[420px] select-none animate-in slide-in-from-top duration-300"
     >
       <div className={`border rounded-3xl p-4 shadow-2xl ${containerBgClass}`}>
         {/* Main Turn Direction Bar */}

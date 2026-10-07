@@ -18,20 +18,20 @@ export const FirstFloor: React.FC = () => {
   const slabOpacity = 0.98;
   const glassOpacity = 0.45;
 
-  // Quadrangle structural pillars on First Floor
+  // Quadrangle structural pillars on First Floor (aligned along courtyard colonnade at x = ±12.5, z = ±12.5)
   const upperPillarPositions: [number, number, number][] = [
-    // West Wing Corridors
-    [-16, 4.3, 14], [-16, 4.3, 6], [-16, 4.3, -2], [-16, 4.3, -10], [-16, 4.3, -18],
-    [-20, 4.3, 14], [-20, 4.3, 6], [-20, 4.3, -2], [-20, 4.3, -10], [-20, 4.3, -18],
-    // East Wing Corridors
-    [16, 4.3, 14], [16, 4.3, 6], [16, 4.3, -2], [16, 4.3, -10], [16, 4.3, -18],
-    [20, 4.3, 14], [20, 4.3, 6], [20, 4.3, -2], [20, 4.3, -10], [20, 4.3, -18],
-    // North Wing Corridors
-    [-10, 4.3, -16], [0, 4.3, -16], [10, 4.3, -16],
-    [-10, 4.3, -20], [0, 4.3, -20], [10, 4.3, -20],
-    // South Wing Corridors
-    [-10, 4.3, 16], [0, 4.3, 16], [10, 4.3, 16],
-    [-10, 4.3, 20], [0, 4.3, 20], [10, 4.3, 20],
+    // West Wing Veranda Colonnade
+    [-12.5, 3.8, -14], [-12.5, 3.8, -10.5], [-12.5, 3.8, -7], [-12.5, 3.8, -3.5],
+    [-12.5, 3.8, 3.5], [-12.5, 3.8, 7], [-12.5, 3.8, 10.5], [-12.5, 3.8, 14],
+    // East Wing Veranda Colonnade
+    [12.5, 3.8, -14], [12.5, 3.8, -10.5], [12.5, 3.8, -7], [12.5, 3.8, -3.5],
+    [12.5, 3.8, 3.5], [12.5, 3.8, 7], [12.5, 3.8, 10.5], [12.5, 3.8, 14],
+    // North Wing Veranda Colonnade
+    [-14, 3.8, -12.5], [-10.5, 3.8, -12.5], [-7, 3.8, -12.5], [-3.5, 3.8, -12.5],
+    [3.5, 3.8, -12.5], [7, 3.8, -12.5], [10.5, 3.8, -12.5], [14, 3.8, -12.5],
+    // South Wing Veranda Colonnade
+    [-14, 3.8, 12.5], [-10.5, 3.8, 12.5], [-7, 3.8, 12.5], [-3.5, 3.8, 12.5],
+    [3.5, 3.8, 12.5], [7, 3.8, 12.5], [10.5, 3.8, 12.5], [14, 3.8, 12.5],
   ];
 
   const floorSlabColor = isDark ? '#1e293b' : '#e2e8f0';
@@ -39,142 +39,143 @@ export const FirstFloor: React.FC = () => {
   const sandstonePillarColor = '#c28d58';
   const sandstoneCapitalColor = '#b47b45';
 
+  // In 'ALL' mode, subtly adjust slab opacity so ground floor elements show through smoothly
+  const isAllMode = activeFloorFilter === 'all';
+  const slabRenderOpacity = isAllMode ? 0.85 : slabOpacity;
+
   return (
-    <group name="first-floor-group" visible={isVisible}>
+    <group
+      name="first-floor-group"
+      visible={isVisible}
+    >
       {/* ======================================================== */}
       {/* CONTINUOUS FIRST FLOOR QUADRANGLE CORRIDOR SLAB LOOP    */}
       {/* Polished stone flooring with authentic black border bands */}
       {/* ======================================================== */}
-      {/* West Corridor Slab (y = 2.5, width: 5m, length: 40m) */}
-      <mesh position={[-18, 2.5, 0]} receiveShadow castShadow>
-        <boxGeometry args={[5, 0.15, 40]} />
-        <meshStandardMaterial color={floorSlabColor} roughness={0.4} transparent opacity={slabOpacity} />
+      {/* West Corridor Slab (width: 3.5m, x: -16 to -12.5, length: 32m) */}
+      <mesh position={[-14.25, 2.5, 0]} receiveShadow castShadow>
+        <boxGeometry args={[3.5, 0.15, 32]} />
+        <meshStandardMaterial color={floorSlabColor} roughness={0.35} transparent opacity={slabRenderOpacity} />
       </mesh>
       {/* West Corridor Black Border Bands */}
-      <mesh position={[-20.35, 2.58, 0]}>
-        <boxGeometry args={[0.2, 0.02, 40]} />
+      <mesh position={[-15.85, 2.58, 0]}>
+        <boxGeometry args={[0.18, 0.02, 32]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
-      <mesh position={[-15.65, 2.58, 0]}>
-        <boxGeometry args={[0.2, 0.02, 40]} />
+      <mesh position={[-12.65, 2.58, 0]}>
+        <boxGeometry args={[0.18, 0.02, 32]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
 
-      {/* East Corridor Slab */}
-      <mesh position={[18, 2.5, 0]} receiveShadow castShadow>
-        <boxGeometry args={[5, 0.15, 40]} />
-        <meshStandardMaterial color={floorSlabColor} roughness={0.4} transparent opacity={slabOpacity} />
+      {/* East Corridor Slab (width: 3.5m, x: 12.5 to 16, length: 32m) */}
+      <mesh position={[14.25, 2.5, 0]} receiveShadow castShadow>
+        <boxGeometry args={[3.5, 0.15, 32]} />
+        <meshStandardMaterial color={floorSlabColor} roughness={0.35} transparent opacity={slabRenderOpacity} />
       </mesh>
       {/* East Corridor Black Border Bands */}
-      <mesh position={[20.35, 2.58, 0]}>
-        <boxGeometry args={[0.2, 0.02, 40]} />
+      <mesh position={[15.85, 2.58, 0]}>
+        <boxGeometry args={[0.18, 0.02, 32]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
-      <mesh position={[15.65, 2.58, 0]}>
-        <boxGeometry args={[0.2, 0.02, 40]} />
+      <mesh position={[12.65, 2.58, 0]}>
+        <boxGeometry args={[0.18, 0.02, 32]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
 
-      {/* North Corridor Slab */}
-      <mesh position={[0, 2.5, -18]} receiveShadow castShadow>
-        <boxGeometry args={[40, 0.15, 5]} />
-        <meshStandardMaterial color={floorSlabColor} roughness={0.4} transparent opacity={slabOpacity} />
+      {/* North Corridor Slab (length: 32m, depth: 3.5m, z: -16 to -12.5) */}
+      <mesh position={[0, 2.5, -14.25]} receiveShadow castShadow>
+        <boxGeometry args={[32, 0.15, 3.5]} />
+        <meshStandardMaterial color={floorSlabColor} roughness={0.35} transparent opacity={slabRenderOpacity} />
       </mesh>
       {/* North Corridor Black Border Bands */}
-      <mesh position={[0, 2.58, -20.35]}>
-        <boxGeometry args={[40, 0.02, 0.2]} />
+      <mesh position={[0, 2.58, -15.85]}>
+        <boxGeometry args={[32, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
-      <mesh position={[0, 2.58, -15.65]}>
-        <boxGeometry args={[40, 0.02, 0.2]} />
+      <mesh position={[0, 2.58, -12.65]}>
+        <boxGeometry args={[32, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
 
-      {/* South Corridor Slab */}
-      <mesh position={[0, 2.5, 18]} receiveShadow castShadow>
-        <boxGeometry args={[40, 0.15, 5]} />
-        <meshStandardMaterial color={floorSlabColor} roughness={0.4} transparent opacity={slabOpacity} />
+      {/* South Corridor Slab (length: 32m, depth: 3.5m, z: 12.5 to 16) */}
+      <mesh position={[0, 2.5, 14.25]} receiveShadow castShadow>
+        <boxGeometry args={[32, 0.15, 3.5]} />
+        <meshStandardMaterial color={floorSlabColor} roughness={0.35} transparent opacity={slabRenderOpacity} />
       </mesh>
       {/* South Corridor Black Border Bands */}
-      <mesh position={[0, 2.58, 20.35]}>
-        <boxGeometry args={[40, 0.02, 0.2]} />
+      <mesh position={[0, 2.58, 15.85]}>
+        <boxGeometry args={[32, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
-      <mesh position={[0, 2.58, 15.65]}>
-        <boxGeometry args={[40, 0.02, 0.2]} />
+      <mesh position={[0, 2.58, 12.65]}>
+        <boxGeometry args={[32, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
+      </mesh>
+
+      {/* 4 Corner Stairwell Landings (At y = 2.5) */}
+      <mesh position={[-14.25, 2.5, 14.25]} receiveShadow>
+        <boxGeometry args={[3.5, 0.16, 3.5]} />
+        <meshStandardMaterial color="#475569" roughness={0.6} />
+      </mesh>
+      <mesh position={[14.25, 2.5, 14.25]} receiveShadow>
+        <boxGeometry args={[3.5, 0.16, 3.5]} />
+        <meshStandardMaterial color="#475569" roughness={0.6} />
+      </mesh>
+      <mesh position={[-14.25, 2.5, -14.25]} receiveShadow>
+        <boxGeometry args={[3.5, 0.16, 3.5]} />
+        <meshStandardMaterial color="#475569" roughness={0.6} />
+      </mesh>
+      <mesh position={[14.25, 2.5, -14.25]} receiveShadow>
+        <boxGeometry args={[3.5, 0.16, 3.5]} />
+        <meshStandardMaterial color="#475569" roughness={0.6} />
       </mesh>
 
       {/* South Central Library Plinth (Expansive First Floor Frontage) */}
-      <mesh position={[0, 2.5, 25]} receiveShadow castShadow>
-        <boxGeometry args={[28, 0.15, 9]} />
-        <meshStandardMaterial color={floorSlabColor} roughness={0.5} transparent opacity={slabOpacity} />
+      <mesh position={[0, 2.5, 24]} receiveShadow castShadow>
+        <boxGeometry args={[26, 0.15, 8]} />
+        <meshStandardMaterial color={floorSlabColor} roughness={0.5} transparent opacity={slabRenderOpacity} />
       </mesh>
 
       {/* ======================================================== */}
       {/* INNER COURTYARD GLASS RAILINGS (Overlooking Courtyard)   */}
       {/* ======================================================== */}
-      {/* South Edge Glass Railing */}
-      <mesh position={[0, 3.1, 15.5]} castShadow>
-        <boxGeometry args={[31, 0.9, 0.06]} />
+      {/* South Edge Glass Railing (along inner courtyard edge z = 12.5) */}
+      <mesh position={[0, 3.05, 12.5]} castShadow>
+        <boxGeometry args={[25.4, 0.9, 0.06]} />
         <meshStandardMaterial color="#38bdf8" transparent opacity={glassOpacity} roughness={0.1} metalness={0.8} />
       </mesh>
-      {/* North Edge Glass Railing */}
-      <mesh position={[0, 3.1, -15.5]} castShadow>
-        <boxGeometry args={[31, 0.9, 0.06]} />
+      {/* North Edge Glass Railing (along inner courtyard edge z = -12.5) */}
+      <mesh position={[0, 3.05, -12.5]} castShadow>
+        <boxGeometry args={[25.4, 0.9, 0.06]} />
         <meshStandardMaterial color="#38bdf8" transparent opacity={glassOpacity} roughness={0.1} metalness={0.8} />
       </mesh>
-      {/* West Edge Glass Railing */}
-      <mesh position={[-15.5, 3.1, 0]} castShadow>
-        <boxGeometry args={[0.06, 0.9, 31]} />
+      {/* West Edge Glass Railing (along inner courtyard edge x = -12.5) */}
+      <mesh position={[-12.5, 3.05, 0]} castShadow>
+        <boxGeometry args={[0.06, 0.9, 25.4]} />
         <meshStandardMaterial color="#38bdf8" transparent opacity={glassOpacity} roughness={0.1} metalness={0.8} />
       </mesh>
-      {/* East Edge Glass Railing */}
-      <mesh position={[15.5, 3.1, 0]} castShadow>
-        <boxGeometry args={[0.06, 0.9, 31]} />
+      {/* East Edge Glass Railing (along inner courtyard edge x = 12.5) */}
+      <mesh position={[12.5, 3.05, 0]} castShadow>
+        <boxGeometry args={[0.06, 0.9, 25.4]} />
         <meshStandardMaterial color="#38bdf8" transparent opacity={glassOpacity} roughness={0.1} metalness={0.8} />
       </mesh>
 
       {/* Railing Handrail Top Caps (Brushed Steel) */}
-      <mesh position={[0, 3.58, 15.5]}>
-        <boxGeometry args={[31.2, 0.06, 0.1]} />
+      <mesh position={[0, 3.52, 12.5]}>
+        <boxGeometry args={[25.6, 0.05, 0.08]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
       </mesh>
-      <mesh position={[0, 3.58, -15.5]}>
-        <boxGeometry args={[31.2, 0.06, 0.1]} />
+      <mesh position={[0, 3.52, -12.5]}>
+        <boxGeometry args={[25.6, 0.05, 0.08]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
       </mesh>
-      <mesh position={[-15.5, 3.58, 0]}>
-        <boxGeometry args={[0.1, 0.06, 31.2]} />
+      <mesh position={[-12.5, 3.52, 0]}>
+        <boxGeometry args={[0.08, 0.05, 25.6]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
       </mesh>
-      <mesh position={[15.5, 3.58, 0]}>
-        <boxGeometry args={[0.1, 0.06, 31.2]} />
+      <mesh position={[12.5, 3.52, 0]}>
+        <boxGeometry args={[0.08, 0.05, 25.6]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
-      </mesh>
-
-      {/* ======================================================== */}
-      {/* 4 CORNER STAIRWELL LANDINGS (At y = 2.5)                 */}
-      {/* ======================================================== */}
-      {/* SW Landing */}
-      <mesh position={[-18, 2.5, 18]} receiveShadow>
-        <boxGeometry args={[5, 0.16, 5]} />
-        <meshStandardMaterial color="#475569" roughness={0.6} />
-      </mesh>
-      {/* SE Landing */}
-      <mesh position={[18, 2.5, 18]} receiveShadow>
-        <boxGeometry args={[5, 0.16, 5]} />
-        <meshStandardMaterial color="#475569" roughness={0.6} />
-      </mesh>
-      {/* NW Landing */}
-      <mesh position={[-18, 2.5, -18]} receiveShadow>
-        <boxGeometry args={[5, 0.16, 5]} />
-        <meshStandardMaterial color="#475569" roughness={0.6} />
-      </mesh>
-      {/* NE Landing */}
-      <mesh position={[18, 2.5, -18]} receiveShadow>
-        <boxGeometry args={[5, 0.16, 5]} />
-        <meshStandardMaterial color="#475569" roughness={0.6} />
       </mesh>
 
       {/* ======================================================== */}
@@ -182,16 +183,16 @@ export const FirstFloor: React.FC = () => {
       {/* ======================================================== */}
       {upperPillarPositions.map(([x, y, z], index) => (
         <group key={`ff-sandstone-pillar-${index}`} position={[x, y, z]}>
-          <mesh position={[0, -1.2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[0.45, 0.18, 0.45]} />
+          <mesh position={[0, -0.9, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.42, 0.16, 0.42]} />
             <meshStandardMaterial color={sandstoneCapitalColor} roughness={0.6} />
           </mesh>
           <mesh castShadow receiveShadow>
-            <cylinderGeometry args={[0.2, 0.22, 2.4, 12]} />
+            <cylinderGeometry args={[0.18, 0.2, 2.0, 12]} />
             <meshStandardMaterial color={sandstonePillarColor} roughness={0.5} />
           </mesh>
-          <mesh position={[0, 1.2, 0]} castShadow>
-            <boxGeometry args={[0.45, 0.15, 0.45]} />
+          <mesh position={[0, 0.9, 0]} castShadow>
+            <boxGeometry args={[0.42, 0.14, 0.42]} />
             <meshStandardMaterial color={sandstoneCapitalColor} roughness={0.6} />
           </mesh>
         </group>

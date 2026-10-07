@@ -47,14 +47,14 @@ export const FloorSelector: React.FC = () => {
     },
   ];
 
-  // If a right-side drawer is open on mobile or small screen, hide dock or adjust position
+  // If a right-side drawer is open on desktop, shift dock left so it never overlaps
   const isHiddenByDrawer = selectedRoomId !== null || isPanelOpen;
 
   return (
     <div
       data-testid="floor-selector-dock"
-      className={`absolute top-20 right-4 z-40 pointer-events-auto flex flex-col gap-2 select-none animate-in fade-in slide-in-from-right duration-300 ${
-        isHiddenByDrawer ? 'hidden lg:flex lg:right-[410px]' : 'flex'
+      className={`absolute top-28 sm:top-32 right-3 sm:right-4 z-40 pointer-events-auto flex flex-col gap-2 select-none animate-in fade-in slide-in-from-right duration-300 ${
+        isHiddenByDrawer ? 'hidden md:flex md:right-[410px]' : 'flex'
       }`}
     >
       {/* 1. 2D / 3D View Mode Toggle Pill (MazeMap Style) */}

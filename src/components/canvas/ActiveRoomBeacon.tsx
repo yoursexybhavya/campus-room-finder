@@ -48,7 +48,11 @@ export const ActiveRoomBeacon: React.FC = () => {
           currentFloatingPos[2]
         );
       } else {
-        groupRef.current.position.set(targetRoom.position[0], targetRoom.position[1], targetRoom.position[2]);
+        groupRef.current.position.set(
+          targetRoom.position[0],
+          targetRoom.position[1],
+          targetRoom.position[2]
+        );
       }
     }
   });

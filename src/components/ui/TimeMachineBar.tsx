@@ -64,10 +64,16 @@ export const TimeMachineBar: React.FC = () => {
     ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border-slate-700'
     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-950 border-slate-200';
 
+  const isPanelOpen = useCampusStore((state) => state.isPanelOpen);
+  const selectedRoomId = useCampusStore((state) => state.selectedRoomId);
+  const isCoveredBySheet = isPanelOpen || selectedRoomId !== null;
+
   return (
     <div
       data-testid="time-machine-bar"
-      className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-4xl w-[92%] sm:w-auto border rounded-2xl p-2.5 shadow-2xl flex flex-wrap items-center justify-between gap-3 select-none animate-in fade-in slide-in-from-bottom duration-300 ${containerBgClass}`}
+      className={`absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-4xl w-[95%] sm:w-auto border rounded-2xl p-2 sm:p-2.5 shadow-2xl items-center justify-between gap-2 sm:gap-3 select-none animate-in fade-in slide-in-from-bottom duration-300 ${
+        isCoveredBySheet ? 'hidden md:flex' : 'flex'
+      } flex-wrap sm:flex-nowrap ${containerBgClass}`}
     >
       {/* Clock Status & Display */}
       <div className="flex items-center gap-2.5 px-2">

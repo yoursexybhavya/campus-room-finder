@@ -7,10 +7,10 @@ export const CampusTerrain: React.FC = () => {
 
   // Symmetrical courtyard planter trees along the quadrangle walkways
   const courtyardTreePositions: [number, number, number][] = [
-    [-11, 0, 11], [11, 0, 11],
-    [-11, 0, -11], [11, 0, -11],
-    [-11, 0, 0], [11, 0, 0],
-    [0, 0, 11], [0, 0, -11],
+    [-7.5, 0, 7.5], [7.5, 0, 7.5],
+    [-7.5, 0, -7.5], [7.5, 0, -7.5],
+    [-7.5, 0, 0], [7.5, 0, 0],
+    [0, 0, 7.5], [0, 0, -7.5],
   ];
 
   // Perimeter boundary trees (outer roads)
@@ -86,53 +86,42 @@ export const CampusTerrain: React.FC = () => {
       </mesh>
 
       {/* ======================================================== */}
-      {/* AUTHENTIC CENTRAL OPEN COURTYARD LAWN (NO FOUNTAIN)      */}
-      {/* Blueprint verified: Large quadrangle continuous open lawn */}
+      {/* AUTHENTIC CENTRAL OPEN COURTYARD LAWN                    */}
+      {/* Blueprint verified: Quadrangle lawn with clean walkways  */}
       {/* ======================================================== */}
-      {/* Lush Green Courtyard Grass Lawn */}
+      {/* Lush Green Courtyard Grass Lawn (25m x 25m quadrangle) */}
       <mesh position={[0, 0.03, 0]} receiveShadow>
-        <boxGeometry args={[30.6, 0.03, 30.6]} />
+        <boxGeometry args={[25, 0.03, 25]} />
         <meshStandardMaterial color={lawnColor} roughness={0.7} />
       </mesh>
 
-      {/* Cross Walkways Across Courtyard (Connecting 4 Corridors) */}
-      {/* North-South Walkway (width: 3.6m) */}
-      <mesh position={[0, 0.045, 0]} receiveShadow>
-        <boxGeometry args={[3.6, 0.02, 30.6]} />
+      {/* Cross Walkways Across Courtyard (Connecting 4 Corridors seamlessly, NO central monument/square) */}
+      {/* North-South Walkway (width: 3.2m) */}
+      <mesh position={[0, 0.042, 0]} receiveShadow>
+        <boxGeometry args={[3.2, 0.015, 25]} />
         <meshStandardMaterial color={walkwayColor} roughness={0.6} />
       </mesh>
-      {/* East-West Walkway (width: 3.6m) */}
-      <mesh position={[0, 0.045, 0]} receiveShadow>
-        <boxGeometry args={[30.6, 0.02, 3.6]} />
+      {/* East-West Walkway (width: 3.2m) */}
+      <mesh position={[0, 0.042, 0]} receiveShadow>
+        <boxGeometry args={[25, 0.015, 3.2]} />
         <meshStandardMaterial color={walkwayColor} roughness={0.6} />
       </mesh>
 
-      {/* Central Crossroads Paved Plaza (Authentic sandstone meeting node, NO fountain/basin) */}
-      <mesh position={[0, 0.048, 0]} receiveShadow>
-        <boxGeometry args={[5.2, 0.02, 5.2]} />
-        <meshStandardMaterial color={plazaColor} roughness={0.5} />
-      </mesh>
-      {/* Inner stone edging for central crossroad plaza */}
-      <mesh position={[0, 0.05, 0]}>
-        <boxGeometry args={[5.5, 0.015, 5.5]} />
+      {/* Peripheral Stone Edging around Courtyard Lawn Boundary */}
+      <mesh position={[0, 0.05, 12.5]}>
+        <boxGeometry args={[25.4, 0.05, 0.25]} />
         <meshStandardMaterial color={borderStoneColor} roughness={0.6} />
       </mesh>
-
-      {/* Peripheral Veranda Curbing around Courtyard Lawn */}
-      <mesh position={[0, 0.06, 15.3]}>
-        <boxGeometry args={[31, 0.06, 0.3]} />
+      <mesh position={[0, 0.05, -12.5]}>
+        <boxGeometry args={[25.4, 0.05, 0.25]} />
         <meshStandardMaterial color={borderStoneColor} roughness={0.6} />
       </mesh>
-      <mesh position={[0, 0.06, -15.3]}>
-        <boxGeometry args={[31, 0.06, 0.3]} />
+      <mesh position={[12.5, 0.05, 0]}>
+        <boxGeometry args={[0.25, 0.05, 25.4]} />
         <meshStandardMaterial color={borderStoneColor} roughness={0.6} />
       </mesh>
-      <mesh position={[15.3, 0.06, 0]}>
-        <boxGeometry args={[0.3, 0.06, 31]} />
-        <meshStandardMaterial color={borderStoneColor} roughness={0.6} />
-      </mesh>
-      <mesh position={[-15.3, 0.06, 0]}>
-        <boxGeometry args={[0.3, 0.06, 31]} />
+      <mesh position={[-12.5, 0.05, 0]}>
+        <boxGeometry args={[0.25, 0.05, 25.4]} />
         <meshStandardMaterial color={borderStoneColor} roughness={0.6} />
       </mesh>
 

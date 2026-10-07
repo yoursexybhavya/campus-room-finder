@@ -49,7 +49,7 @@ export const ActiveClassBanner: React.FC = () => {
   return (
     <div
       data-testid="active-class-banner"
-      className={`absolute top-[138px] left-4 z-30 pointer-events-auto w-72 sm:w-80 border rounded-2xl p-3 shadow-2xl select-none transition-all duration-300 animate-in fade-in slide-in-from-top ${containerBgClass}`}
+      className={`absolute top-28 sm:top-[138px] left-3 sm:left-4 z-30 pointer-events-auto max-w-[calc(100vw-24px)] sm:w-80 border rounded-2xl p-3 shadow-2xl select-none transition-all duration-300 animate-in fade-in slide-in-from-top ${containerBgClass}`}
     >
       {/* IN SESSION STATUS */}
       {status === 'IN_SESSION' && activeSlot && (

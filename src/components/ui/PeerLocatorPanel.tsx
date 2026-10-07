@@ -60,6 +60,10 @@ export const PeerLocatorPanel: React.FC = () => {
     return rId ? campusRooms.find((r) => r.id === rId) : null;
   }, [currentUser]);
 
+  const handleOpen = () => {
+    setIsOpen(true);
+  };
+
   const handleManualCheckIn = (roomId: string) => {
     if (!roomId) return;
     const room = campusRooms.find((r) => r.id === roomId);
@@ -83,13 +87,13 @@ export const PeerLocatorPanel: React.FC = () => {
   const cardBgClass = isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200';
   const textMutedClass = isDark ? 'text-slate-400' : 'text-slate-500';
 
-  // Minimized Trigger Pill (Docked neatly at top-20 right-4 above FloorSelector)
+  // Minimized Trigger Pill (Docked neatly at top-16/top-20 right-3/right-4 above FloorSelector)
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         data-testid="open-peer-panel-btn"
-        className={`absolute top-20 right-4 z-40 pointer-events-auto border px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2 transition-all active:scale-95 group select-none ${
+        className={`absolute top-16 sm:top-20 right-3 sm:right-4 z-40 pointer-events-auto border px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2 transition-all active:scale-95 group select-none ${
           isDark
             ? 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200'
             : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-800'
@@ -111,8 +115,11 @@ export const PeerLocatorPanel: React.FC = () => {
   return (
     <div
       data-testid="peer-locator-panel"
-      className={`absolute top-20 right-4 bottom-24 w-80 sm:w-96 z-50 pointer-events-auto border rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 select-none ${panelBgClass}`}
+      className={`fixed inset-x-0 bottom-0 max-h-[75vh] md:inset-auto md:top-20 md:right-4 md:bottom-24 w-full md:w-96 z-50 pointer-events-auto border rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-right duration-300 select-none ${panelBgClass}`}
     >
+      {/* Mobile drag handle bar */}
+      <div className="md:hidden w-12 h-1.5 rounded-full bg-slate-400/40 mx-auto mt-2.5 mb-1 shrink-0" />
+
       {/* Header */}
       <div className={`p-4 border-b flex items-center justify-between ${headerBgClass}`}>
         <div className="flex items-center gap-2.5">

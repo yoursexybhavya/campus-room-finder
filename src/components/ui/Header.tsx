@@ -34,27 +34,27 @@ export const Header: React.FC = () => {
     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-cyan-600 border border-slate-200';
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-40 pointer-events-none p-3 sm:p-4 flex items-center justify-between gap-3">
+    <header className="absolute top-0 left-0 right-0 z-40 pointer-events-none p-2 sm:p-4 flex items-center justify-between gap-2">
       {/* Brand & Campus Identity */}
-      <div className={`pointer-events-auto flex items-center gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl ${cardBgClass} transition-colors duration-300`}>
-        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/25 shrink-0">
-          <Building2 className="w-5 h-5" />
+      <div className={`pointer-events-auto flex items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-2xl ${cardBgClass} transition-colors duration-300 shrink-0`}>
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/25 shrink-0">
+          <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm sm:text-base font-bold tracking-wide">JIET Jodhpur</h1>
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
-              {viewMode === '2D' ? '2D Blueprint' : '3D Digital Twin'}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <h1 className="text-xs sm:text-base font-bold tracking-wide">JIET Jodhpur</h1>
+            <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
+              {viewMode === '2D' ? '2D' : '3D'}
             </span>
           </div>
-          <p className={`text-[11px] sm:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          <p className={`hidden sm:block text-[11px] sm:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Campus Room Finder & Navigation
           </p>
         </div>
       </div>
 
       {/* Right Controls: Theme Toggle, View Mode, Clock & Reset */}
-      <div className="pointer-events-auto flex items-center gap-2 sm:gap-2.5">
+      <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5">
         {/* Live Clock Badge */}
         <div className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-xs ${cardBgClass} transition-colors duration-300`}>
           <Clock className="w-3.5 h-3.5 text-cyan-500" />
@@ -65,7 +65,7 @@ export const Header: React.FC = () => {
         <button
           onClick={() => setViewMode(viewMode === '2D' ? '3D' : '2D')}
           data-testid="header-viewmode-toggle-btn"
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
+          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
           title={`Switch to ${viewMode === '2D' ? '3D Isometric' : '2D Blueprint'} View`}
         >
           {viewMode === '2D' ? (
@@ -85,7 +85,7 @@ export const Header: React.FC = () => {
         <button
           onClick={toggleTheme}
           data-testid="theme-toggle-btn"
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
+          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
           title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {isDark ? (
@@ -105,7 +105,7 @@ export const Header: React.FC = () => {
         <button
           onClick={resetView}
           data-testid="reset-view-btn"
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
+          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
           title="Reset Camera View to Default"
         >
           <RotateCcw className="w-3.5 h-3.5" />
