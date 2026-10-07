@@ -10,6 +10,8 @@ import { PeerAvatarsLayer } from './PeerAvatarsLayer';
 import { CosmicBackground } from './CosmicBackground';
 import { useThemeStore } from '../../stores/useThemeStore';
 
+import { UserLocationDot } from './UserLocationDot';
+
 interface CampusSceneProps {
   className?: string;
 }
@@ -59,6 +61,7 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
           <GroundFloor />
           <FirstFloor />
           <RoutePathMesh />
+          <UserLocationDot />
           <ActiveRoomBeacon />
           <PeerAvatarsLayer />
         </Suspense>

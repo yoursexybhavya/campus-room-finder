@@ -14,6 +14,9 @@ import {
   Footprints,
   ChevronRight,
   ArrowUpRight,
+  ArrowRightLeft,
+  MapPin,
+  Play,
 } from 'lucide-react';
 import { campusRooms } from '../../data/campusRooms';
 import { useCampusStore } from '../../stores/useCampusStore';
@@ -30,16 +33,22 @@ export const RoomDetailsDrawer: React.FC = () => {
   const navigateToRoom = useCampusStore((state) => state.navigateToRoom);
   const clearNavigationPath = useCampusStore((state) => state.clearNavigationPath);
 
+  const userOriginId = useCampusStore((state) => state.userOriginId);
+  const setUserOriginId = useCampusStore((state) => state.setUserOriginId);
+  const isNavigating = useCampusStore((state) => state.isNavigating);
+  const setIsNavigating = useCampusStore((state) => state.setIsNavigating);
+  const setCurrentStepIndex = useCampusStore((state) => state.setCurrentStepIndex);
+
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
   const simulatedDate = useTimetableStore((state) => state.simulatedDate);
   const activeSchedule = useTimetableStore((state) => state.activeSchedule);
 
-  // Compute Turn-by-Turn Wayfinding data for the selected room
+  // Compute Turn-by-Turn Wayfinding data from origin to selected room
   const detailedRoute = useMemo(() => {
-    return selectedRoomId ? findDetailedPathToRoom(selectedRoomId) : null;
-  }, [selectedRoomId]);
+    return selectedRoomId ? findDetailedPathToRoom(selectedRoomId, userOriginId) : null;
+  }, [selectedRoomId, userOriginId]);
 
   if (!selectedRoomId) return null;
 
@@ -61,13 +70,19 @@ export const RoomDetailsDrawer: React.FC = () => {
     if (navigationPath) {
       clearNavigationPath();
     } else {
-      navigateToRoom(room.id);
+      navigateToRoom(room.id, userOriginId);
     }
+  };
+
+  const handleStartNavigation = () => {
+    navigateToRoom(room.id, userOriginId);
+    setCurrentStepIndex(0);
+    setIsNavigating(true);
   };
 
   const formattedType = room.type.replace('_', ' ').toUpperCase();
 
-  // Query live schedule for this room on the simulated date
+  // Query live schedule for this room on simulated date
   const roomSchedule = getRoomDailySchedule(room.id, simulatedDate);
   const isClassActive =
     activeSchedule.status === 'IN_SESSION' && activeSchedule.activeSlot?.roomId === room.id;
@@ -81,6 +96,14 @@ export const RoomDetailsDrawer: React.FC = () => {
   const headerBgClass = isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200';
   const cardBgClass = isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200';
   const textMutedClass = isDark ? 'text-slate-400' : 'text-slate-500';
+
+  // Common landmarks for the "Where you are at" origin selector
+  const originLandmarks = [
+    { id: 'gate', label: '📍 My Location: Main Entrance Gate (South)' },
+    { id: 'courtyard_center', label: '🌳 Courtyard Lawn Crossroad Plaza' },
+    { id: 'wp_admin', label: '🏛 Admin Block / Dean Office' },
+    { id: 'wp_lib_main', label: '📚 Central Knowledge Library' },
+  ];
 
   return (
     <div
@@ -102,7 +125,7 @@ export const RoomDetailsDrawer: React.FC = () => {
               {room.code}
             </span>
             <span
-              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                 room.floor === 'ground'
                   ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                   : 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30'
@@ -110,9 +133,15 @@ export const RoomDetailsDrawer: React.FC = () => {
             >
               {room.floor === 'ground' ? 'Ground Floor' : '1st Floor'}
             </span>
+            <span className="text-xs font-mono text-slate-400">
+              {formattedType}
+            </span>
           </div>
-          <h2 className="text-base font-bold leading-tight">{room.name}</h2>
-          <p className={`text-xs mt-0.5 ${textMutedClass}`}>
+
+          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight leading-snug">
+            {room.name}
+          </h2>
+          <p className={`text-xs mt-0.5 font-mono ${textMutedClass}`}>
             {room.building} • {room.wing} Wing
           </p>
         </div>
@@ -120,7 +149,9 @@ export const RoomDetailsDrawer: React.FC = () => {
         <button
           onClick={handleClose}
           data-testid="close-room-drawer-btn"
-          className={`p-1 rounded-xl transition-colors ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/80' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200'}`}
+          className={`p-1.5 rounded-xl transition-colors ${
+            isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200'
+          }`}
           title="Close details"
         >
           <X className="w-5 h-5" />
@@ -130,7 +161,98 @@ export const RoomDetailsDrawer: React.FC = () => {
       {/* Drawer Body */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
         {/* ======================================================== */}
-        {/* TURN-BY-TURN WAYFINDING & ROUTE ESTIMATES (MazeMap Style)*/}
+        {/* GOOGLE MAPS STYLE "WHERE YOU ARE AT -> WHERE YOU ARE GOING" */}
+        {/* ======================================================== */}
+        <div className={`p-3.5 rounded-2xl border ${cardBgClass} space-y-3`}>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400">
+              <Navigation className="w-3.5 h-3.5" />
+              <span>Google Maps Campus Directions</span>
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30">
+              WALKING
+            </span>
+          </div>
+
+          {/* From / To Input Stack */}
+          <div className="space-y-2 text-xs">
+            {/* Origin (Where you are at) */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" />
+                <span>From (Where You Are)</span>
+              </label>
+              <select
+                value={userOriginId}
+                onChange={(e) => setUserOriginId(e.target.value)}
+                className={`w-full border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-500 ${
+                  isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
+                }`}
+              >
+                <optgroup label="Campus Arterial Hubs">
+                  {originLandmarks.map((lm) => (
+                    <option key={lm.id} value={lm.id}>
+                      {lm.label}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="All Classrooms & Labs">
+                  {campusRooms
+                    .filter((r) => r.id !== room.id)
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.code} ({r.floor === 'ground' ? 'GF' : '1F'}) - {r.wing} Wing
+                      </option>
+                    ))}
+                </optgroup>
+              </select>
+            </div>
+
+            {/* Destination (Where you are going) */}
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+                <span>To (Destination)</span>
+              </label>
+              <div
+                className={`p-2 rounded-xl border font-semibold flex items-center justify-between ${
+                  isDark ? 'bg-slate-900/60 border-slate-800 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
+                }`}
+              >
+                <span className="truncate">🎯 Target: Room {room.code} ({room.wing} Wing)</span>
+                <span className="text-[10px] font-mono text-cyan-500 font-bold shrink-0 ml-1">
+                  {room.floor === 'ground' ? 'GF' : '1F'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Route Summary & Start Navigation Button */}
+          {detailedRoute && (
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+              <div className="text-xs">
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  ~{detailedRoute.estimatedWalkingMinutes} min
+                </span>
+                <span className="text-[11px] text-slate-400 ml-1.5">
+                  ({detailedRoute.totalDistanceMeters}m)
+                </span>
+              </div>
+
+              <button
+                onClick={handleStartNavigation}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold py-1.5 px-3 rounded-xl text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+                title="Start turn-by-turn navigation"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Start Navigation</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ======================================================== */}
+        {/* TURN-BY-TURN WAYFINDING & ROUTE ESTIMATES                */}
         {/* ======================================================== */}
         {detailedRoute && (
           <div
@@ -229,8 +351,16 @@ export const RoomDetailsDrawer: React.FC = () => {
               <div className="text-sm font-bold leading-tight">
                 {currentSlot.courseName}
               </div>
-              <div className={`text-xs mt-0.5 ${textMutedClass}`}>
-                {currentSlot.courseCode} • {currentSlot.facultyName}
+              <p className={`text-xs mt-0.5 ${textMutedClass}`}>
+                {currentSlot.courseCode} • {currentSlot.facultyName || (currentSlot as any).faculty}
+              </p>
+              <div className="flex items-center gap-3 mt-2 text-[11px] font-mono">
+                <span className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400">
+                  <Clock className="w-3 h-3" />
+                  {currentSlot.startTime} - {currentSlot.endTime}
+                </span>
+                <span className="text-slate-400">•</span>
+                <span className="text-slate-400">{currentSlot.slotType}</span>
               </div>
             </div>
           ) : (
@@ -239,36 +369,6 @@ export const RoomDetailsDrawer: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Core Specs Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className={`p-3 rounded-2xl border ${cardBgClass}`}>
-            <div className={`flex items-center gap-1.5 text-[11px] mb-1 ${textMutedClass}`}>
-              <Users className="w-3.5 h-3.5 text-cyan-500" />
-              <span>Capacity</span>
-            </div>
-            <div className="text-sm font-bold">{room.capacity || 60} Students</div>
-          </div>
-
-          <div className={`p-3 rounded-2xl border ${cardBgClass}`}>
-            <div className={`flex items-center gap-1.5 text-[11px] mb-1 ${textMutedClass}`}>
-              <Layers className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Category</span>
-            </div>
-            <div className="text-sm font-bold capitalize">{formattedType}</div>
-          </div>
-        </div>
-
-        {/* Faculty In-Charge */}
-        {room.inChargeFaculty && (
-          <div className={`p-3.5 rounded-2xl border ${cardBgClass}`}>
-            <div className={`flex items-center gap-1.5 text-[11px] mb-1 ${textMutedClass}`}>
-              <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
-              <span>Faculty In-Charge / Lab Head</span>
-            </div>
-            <div className="text-xs font-semibold">{room.inChargeFaculty}</div>
-          </div>
-        )}
 
         {/* Full Day Schedule Timeline */}
         {roomSchedule.length > 0 && (
@@ -288,7 +388,7 @@ export const RoomDetailsDrawer: React.FC = () => {
                   <div>
                     <div className="font-semibold">{slot.courseName}</div>
                     <div className={`text-[11px] ${textMutedClass}`}>
-                      {slot.courseCode} • {slot.facultyName}
+                      {slot.courseCode} • {slot.facultyName || (slot as any).faculty}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
@@ -302,31 +402,52 @@ export const RoomDetailsDrawer: React.FC = () => {
           </div>
         )}
 
-        {/* Description */}
+        {/* Capacity & Faculty In-Charge */}
+        <div className={`p-3.5 rounded-2xl border ${cardBgClass} space-y-2.5`}>
+          <div className="flex items-center justify-between text-xs">
+            <span className={`flex items-center gap-1.5 ${textMutedClass}`}>
+              <Users className="w-3.5 h-3.5" />
+              <span>Seating Capacity:</span>
+            </span>
+            <span className="font-bold">{room.capacity ?? 60} Students</span>
+          </div>
+
+          {room.inChargeFaculty && (
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200 dark:border-slate-800">
+              <span className={`flex items-center gap-1.5 ${textMutedClass}`}>
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Faculty In-Charge:</span>
+              </span>
+              <span className="font-semibold text-cyan-600 dark:text-cyan-400">{room.inChargeFaculty}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Description & Overview */}
         {room.description && (
           <div className={`p-3.5 rounded-2xl border ${cardBgClass}`}>
-            <div className={`flex items-center gap-1.5 text-[11px] mb-1 ${textMutedClass}`}>
-              <Info className="w-3.5 h-3.5 text-sky-500" />
-              <span>Overview</span>
-            </div>
-            <p className="text-xs leading-relaxed">{room.description}</p>
+            <h4 className="text-xs font-bold mb-1 flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+              <Info className="w-3.5 h-3.5 text-cyan-500" />
+              <span>Room Overview</span>
+            </h4>
+            <p className={`text-xs leading-relaxed ${textMutedClass}`}>{room.description}</p>
           </div>
         )}
 
-        {/* Facilities & Equipment */}
+        {/* Facilities Badges */}
         {room.facilities && room.facilities.length > 0 && (
-          <div>
-            <div className={`flex items-center gap-1.5 text-xs font-semibold mb-2 ${textMutedClass}`}>
-              <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
-              <span>Facilities & Equipment</span>
-            </div>
+          <div className={`p-3.5 rounded-2xl border ${cardBgClass}`}>
+            <h4 className="text-xs font-bold mb-2 flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Room Features & Equipment</span>
+            </h4>
             <div className="flex flex-wrap gap-1.5">
               {room.facilities.map((fac, idx) => (
                 <span
                   key={idx}
-                  className={`text-[11px] px-2.5 py-1 rounded-xl border ${
+                  className={`text-[10px] px-2 py-0.5 rounded-lg border ${
                     isDark
-                      ? 'bg-slate-800/80 text-slate-300 border-slate-700/60'
+                      ? 'bg-slate-900 text-slate-300 border-slate-800'
                       : 'bg-slate-100 text-slate-700 border-slate-200'
                   }`}
                 >

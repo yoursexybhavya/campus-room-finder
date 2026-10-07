@@ -16,18 +16,27 @@ export interface CampusStoreState {
   zoomIn: () => void;
   zoomOut: () => void;
 
+  userOriginId: string;
+  setUserOriginId: (id: string) => void;
+  isNavigating: boolean;
+  setIsNavigating: (active: boolean) => void;
+  currentStepIndex: number;
+  setCurrentStepIndex: (idx: number) => void;
+  userPosition: [number, number, number];
+  setUserPosition: (pos: [number, number, number]) => void;
+
   selectRoom: (roomId: string | null) => void;
   setHoveredRoom: (roomId: string | null) => void;
   setFloorFilter: (filter: FloorFilter) => void;
   setViewMode: (mode: ViewMode) => void;
   setCameraTarget: (position: [number, number, number], lookAt: [number, number, number]) => void;
   setNavigationPath: (path: [number, number, number][] | null) => void;
-  navigateToRoom: (roomId: string) => void;
+  navigateToRoom: (roomId: string, originId?: string) => void;
   clearNavigationPath: () => void;
   resetView: () => void;
 }
 
-export const useCampusStore = create<CampusStoreState>((set) => ({
+export const useCampusStore = create<CampusStoreState>((set, get) => ({
   selectedRoomId: null,
   hoveredRoomId: null,
   activeFloorFilter: 'all',
@@ -35,6 +44,16 @@ export const useCampusStore = create<CampusStoreState>((set) => ({
   cameraTarget: null,
   navigationPath: null,
   isPanelOpen: false,
+
+  userOriginId: 'gate',
+  isNavigating: false,
+  currentStepIndex: 0,
+  userPosition: [0, 0.2, 36],
+
+  setUserOriginId: (id) => set({ userOriginId: id }),
+  setIsNavigating: (active) => set({ isNavigating: active }),
+  setCurrentStepIndex: (idx) => set({ currentStepIndex: idx }),
+  setUserPosition: (pos) => set({ userPosition: pos }),
 
   setIsPanelOpen: (open) => set({ isPanelOpen: open }),
 
@@ -114,8 +133,9 @@ export const useCampusStore = create<CampusStoreState>((set) => ({
 
   setNavigationPath: (path) => set({ navigationPath: path }),
 
-  navigateToRoom: (roomId: string) => {
-    const path = findPathToRoom(roomId);
+  navigateToRoom: (roomId: string, originId?: string) => {
+    const origin = originId || get().userOriginId || 'gate';
+    const path = findPathToRoom(roomId, origin);
     set({ navigationPath: path, selectedRoomId: roomId });
     const room = campusRooms.find((r) => r.id === roomId);
     if (room) {

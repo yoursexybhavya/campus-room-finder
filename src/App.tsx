@@ -4,6 +4,7 @@ import { Header } from './components/ui/Header';
 import { FloorSelector } from './components/ui/FloorSelector';
 import { SearchBar } from './components/ui/SearchBar';
 import { RoomDetailsDrawer } from './components/ui/RoomDetailsDrawer';
+import { NavigationHUD } from './components/ui/NavigationHUD';
 import { TimeMachineBar } from './components/ui/TimeMachineBar';
 import { ActiveClassBanner } from './components/ui/ActiveClassBanner';
 import { PeerLocatorPanel } from './components/ui/PeerLocatorPanel';
@@ -47,6 +48,7 @@ export const App: React.FC = () => {
         <SearchBar />
         <FloorSelector />
         <ActiveClassBanner />
+        <NavigationHUD />
         <RoomDetailsDrawer />
         <TimeMachineBar />
         <PeerLocatorPanel />
