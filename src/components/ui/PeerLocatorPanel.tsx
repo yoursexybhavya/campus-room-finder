@@ -87,13 +87,17 @@ export const PeerLocatorPanel: React.FC = () => {
   const cardBgClass = isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200';
   const textMutedClass = isDark ? 'text-slate-400' : 'text-slate-500';
 
-  // Minimized Trigger Pill (Docked neatly at top-16/top-20 right-3/right-4 above FloorSelector)
+  // Minimized Trigger Pill (Docked neatly at top-16/top-20 above FloorSelector, shifted left if room drawer is open on desktop)
+  const isRoomDrawerOpen = selectedRoomId !== null;
+
   if (!isOpen) {
     return (
       <button
         onClick={handleOpen}
         data-testid="open-peer-panel-btn"
-        className={`absolute top-16 sm:top-20 right-3 sm:right-4 z-40 pointer-events-auto border px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2 transition-all active:scale-95 group select-none ${
+        className={`absolute top-16 sm:top-20 ${
+          isRoomDrawerOpen ? 'right-3 sm:right-4 md:right-[410px]' : 'right-3 sm:right-4'
+        } z-40 pointer-events-auto border px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2 transition-all active:scale-95 group select-none ${
           isDark
             ? 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200'
             : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-800'

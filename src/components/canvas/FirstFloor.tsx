@@ -4,6 +4,34 @@ import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { RoomNode } from './RoomNode';
 
+// Subcomponent: Architectural Rajasthan Teakwood & Sandstone Conversation Bench
+const VerandaBench: React.FC<{
+  position: [number, number, number];
+  rotation?: number;
+}> = ({ position, rotation = 0 }) => (
+  <group position={position} rotation={[0, rotation, 0]} name="veranda-discussion-bench">
+    {/* Sandstone Base Supports */}
+    <mesh position={[-0.7, 0.16, 0]} castShadow>
+      <boxGeometry args={[0.2, 0.32, 0.45]} />
+      <meshStandardMaterial color="#c28d58" roughness={0.6} />
+    </mesh>
+    <mesh position={[0.7, 0.16, 0]} castShadow>
+      <boxGeometry args={[0.2, 0.32, 0.45]} />
+      <meshStandardMaterial color="#c28d58" roughness={0.6} />
+    </mesh>
+    {/* Teakwood Polished Seat Slat */}
+    <mesh position={[0, 0.34, 0]} castShadow receiveShadow>
+      <boxGeometry args={[1.7, 0.06, 0.5]} />
+      <meshStandardMaterial color="#78350f" roughness={0.4} />
+    </mesh>
+    {/* Teakwood Ergonomic Backrest */}
+    <mesh position={[0, 0.62, -0.22]} rotation={[0.1, 0, 0]} castShadow>
+      <boxGeometry args={[1.7, 0.28, 0.05]} />
+      <meshStandardMaterial color="#78350f" roughness={0.4} />
+    </mesh>
+  </group>
+);
+
 export const FirstFloor: React.FC = () => {
   const selectedRoomId = useCampusStore((state) => state.selectedRoomId);
   const hoveredRoomId = useCampusStore((state) => state.hoveredRoomId);
@@ -39,9 +67,28 @@ export const FirstFloor: React.FC = () => {
   const sandstonePillarColor = '#c28d58';
   const sandstoneCapitalColor = '#b47b45';
 
-  // In 'ALL' mode, subtly adjust slab opacity so ground floor elements show through smoothly
+  // In 'ALL' mode, set slab opacity to translucent architectural glass (0.38) so ground floor shows through cleanly
   const isAllMode = activeFloorFilter === 'all';
-  const slabRenderOpacity = isAllMode ? 0.85 : slabOpacity;
+  const slabRenderOpacity = isAllMode ? 0.38 : slabOpacity;
+
+  // Upper Veranda Discussion & Conversation Benches ("where people talk")
+  const upperBenches: { pos: [number, number, number]; rot: number }[] = [
+    // West Upper Veranda
+    { pos: [-14.25, 2.5, -7], rot: Math.PI / 2 },
+    { pos: [-14.25, 2.5, 7], rot: Math.PI / 2 },
+    // East Upper Veranda
+    { pos: [14.25, 2.5, -7], rot: -Math.PI / 2 },
+    { pos: [14.25, 2.5, 7], rot: -Math.PI / 2 },
+    // North Upper Veranda
+    { pos: [-7, 2.5, -14.25], rot: 0 },
+    { pos: [7, 2.5, -14.25], rot: 0 },
+    // South Upper Veranda
+    { pos: [-7, 2.5, 14.25], rot: Math.PI },
+    { pos: [7, 2.5, 14.25], rot: Math.PI },
+    // Central Library Balcony Terrace Lounge
+    { pos: [-6, 2.5, 23], rot: Math.PI },
+    { pos: [6, 2.5, 23], rot: Math.PI },
+  ];
 
   return (
     <group
@@ -228,6 +275,15 @@ export const FirstFloor: React.FC = () => {
           </group>
         );
       })}
+
+      {/* Veranda & Terrace Discussion Benches ("where people talk") */}
+      {upperBenches.map((bench, idx) => (
+        <VerandaBench
+          key={`ff-veranda-bench-${idx}`}
+          position={bench.pos}
+          rotation={bench.rot}
+        />
+      ))}
 
       {/* ======================================================== */}
       {/* FIRST FLOOR ROOM NODES (Authentic JIET Inventory)        */}

@@ -55,6 +55,34 @@ const CornerStaircase: React.FC<{ position: [number, number, number]; rotation?:
   );
 };
 
+// Subcomponent: Architectural Rajasthan Teakwood & Sandstone Conversation Bench
+const VerandaBench: React.FC<{
+  position: [number, number, number];
+  rotation?: number;
+}> = ({ position, rotation = 0 }) => (
+  <group position={position} rotation={[0, rotation, 0]} name="veranda-discussion-bench">
+    {/* Sandstone Base Supports */}
+    <mesh position={[-0.7, 0.16, 0]} castShadow>
+      <boxGeometry args={[0.2, 0.32, 0.45]} />
+      <meshStandardMaterial color="#c28d58" roughness={0.6} />
+    </mesh>
+    <mesh position={[0.7, 0.16, 0]} castShadow>
+      <boxGeometry args={[0.2, 0.32, 0.45]} />
+      <meshStandardMaterial color="#c28d58" roughness={0.6} />
+    </mesh>
+    {/* Teakwood Polished Seat Slat */}
+    <mesh position={[0, 0.34, 0]} castShadow receiveShadow>
+      <boxGeometry args={[1.7, 0.06, 0.5]} />
+      <meshStandardMaterial color="#78350f" roughness={0.4} />
+    </mesh>
+    {/* Teakwood Ergonomic Backrest */}
+    <mesh position={[0, 0.62, -0.22]} rotation={[0.1, 0, 0]} castShadow>
+      <boxGeometry args={[1.7, 0.28, 0.05]} />
+      <meshStandardMaterial color="#78350f" roughness={0.4} />
+    </mesh>
+  </group>
+);
+
 export const GroundFloor: React.FC = () => {
   const selectedRoomId = useCampusStore((state) => state.selectedRoomId);
   const hoveredRoomId = useCampusStore((state) => state.hoveredRoomId);
@@ -106,6 +134,27 @@ export const GroundFloor: React.FC = () => {
       pos: [x, 3.3, 14.25] as [number, number, number],
       args: [0.4, 0.25, 3.5] as [number, number, number],
     })),
+  ];
+
+  // Covered Veranda Discussion & Conversation Benches ("where people talk")
+  const groundBenches: { pos: [number, number, number]; rot: number }[] = [
+    // West Veranda
+    { pos: [-14.25, 0.08, -8.75], rot: Math.PI / 2 },
+    { pos: [-14.25, 0.08, 0], rot: Math.PI / 2 },
+    { pos: [-14.25, 0.08, 8.75], rot: Math.PI / 2 },
+    // East Veranda
+    { pos: [14.25, 0.08, -8.75], rot: -Math.PI / 2 },
+    { pos: [14.25, 0.08, 0], rot: -Math.PI / 2 },
+    { pos: [14.25, 0.08, 8.75], rot: -Math.PI / 2 },
+    // North Veranda
+    { pos: [-8.75, 0.08, -14.25], rot: 0 },
+    { pos: [8.75, 0.08, -14.25], rot: 0 },
+    // South Veranda
+    { pos: [-8.75, 0.08, 14.25], rot: Math.PI },
+    { pos: [8.75, 0.08, 14.25], rot: Math.PI },
+    // South Main Reception Lobby Conversation Lounge
+    { pos: [-2.5, 0.08, 22], rot: Math.PI / 2 },
+    { pos: [2.5, 0.08, 22], rot: -Math.PI / 2 },
   ];
 
   // Colors for polished flooring with black border bands
@@ -338,6 +387,15 @@ export const GroundFloor: React.FC = () => {
           </group>
         );
       })}
+
+      {/* Veranda & Lobby Discussion Benches ("where people talk") */}
+      {groundBenches.map((bench, idx) => (
+        <VerandaBench
+          key={`gf-veranda-bench-${idx}`}
+          position={bench.pos}
+          rotation={bench.rot}
+        />
+      ))}
 
       {/* ======================================================== */}
       {/* GROUND FLOOR ROOM NODES (Authentic JIET Inventory)        */}

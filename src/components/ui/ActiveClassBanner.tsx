@@ -46,10 +46,16 @@ export const ActiveClassBanner: React.FC = () => {
   const textMutedClass = isDark ? 'text-slate-400' : 'text-slate-500';
   const borderSubtleClass = isDark ? 'border-slate-800/80' : 'border-slate-200';
 
+  const selectedRoomId = useCampusStore((state) => state.selectedRoomId);
+  const isPanelOpen = useCampusStore((state) => state.isPanelOpen);
+  const isCoveredBySheet = isPanelOpen || selectedRoomId !== null;
+
   return (
     <div
       data-testid="active-class-banner"
-      className={`absolute top-28 sm:top-[138px] left-3 sm:left-4 z-30 pointer-events-auto max-w-[calc(100vw-24px)] sm:w-80 border rounded-2xl p-3 shadow-2xl select-none transition-all duration-300 animate-in fade-in slide-in-from-top ${containerBgClass}`}
+      className={`absolute top-28 sm:top-[138px] left-3 sm:left-4 z-30 pointer-events-auto w-[calc(100%-80px)] sm:w-80 border rounded-2xl p-3 shadow-2xl select-none transition-all duration-300 animate-in fade-in slide-in-from-top ${
+        isCoveredBySheet ? 'hidden md:block' : 'block'
+      } ${containerBgClass}`}
     >
       {/* IN SESSION STATUS */}
       {status === 'IN_SESSION' && activeSlot && (

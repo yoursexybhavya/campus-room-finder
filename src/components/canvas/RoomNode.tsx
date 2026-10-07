@@ -181,12 +181,27 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     return segments;
   }, [w, h, d, room.wing, wallH, wallT, doorW]);
 
-  const floorOpacity = isFloorActive ? 0.95 : 0.15;
-  const wallOpacity = isFloorActive ? 0.95 : 0.12;
+  const isAllMode = floorFilter === 'all';
+  const isFirstFloorInAll = isAllMode && room.floor === 'first';
+
+  const floorOpacity = !isFloorActive ? 0.15 : isFirstFloorInAll ? 0.55 : 0.95;
+  const wallOpacity = !isFloorActive ? 0.12 : isFirstFloorInAll ? 0.55 : 0.95;
+
+  // Key anchor rooms to prioritize in All Floors overview to prevent 61 overlapping labels
+  const isMajorAnchor =
+    room.type === 'lecture_theater' ||
+    room.type === 'library' ||
+    room.id.startsWith('LT-') ||
+    room.id === 'LIB-1' ||
+    room.id.includes('LAB');
 
   // Determine whether to display the 3D label
-  // When a drawer/modal is open, hide non-selected labels to prevent clutter behind panels
-  const shouldRenderLabel = isFloorActive && (!isPanelOpen || isSelected || isHovered);
+  // In 'ALL' mode: display key anchors, selected, or hovered rooms to prevent unreadable label collision
+  // In single floor mode ('ground' / 'first'): display all rooms on that floor
+  const shouldRenderLabel =
+    isFloorActive &&
+    (!isPanelOpen || isSelected || isHovered) &&
+    (!isAllMode || isMajorAnchor || isSelected || isHovered);
 
   return (
     <group
@@ -271,7 +286,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       {/* 4. BILLBOARDING ARCHITECTURAL ROOM LABEL */}
       {shouldRenderLabel && (
         <Html
-          position={[0, -h / 2 + wallH + 0.35, 0]}
+          position={[0, -h / 2 + wallH + (room.floor === 'first' && isAllMode ? 0.6 : 0.35), 0]}
           center
           distanceFactor={24}
           zIndexRange={[10, 0]}

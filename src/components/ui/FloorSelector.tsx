@@ -57,9 +57,9 @@ export const FloorSelector: React.FC = () => {
         isHiddenByDrawer ? 'hidden md:flex md:right-[410px]' : 'flex'
       }`}
     >
-      {/* 1. 2D / 3D View Mode Toggle Pill (MazeMap Style) */}
+      {/* 1. 2D / 3D View Mode Toggle Pill (MazeMap Style - hidden on mobile as Header has switcher) */}
       <div
-        className={`flex items-center p-1 rounded-2xl backdrop-blur-xl border shadow-xl transition-all duration-300 ${
+        className={`hidden sm:flex items-center p-1 rounded-2xl backdrop-blur-xl border shadow-xl transition-all duration-300 ${
           isDark
             ? 'bg-slate-900/95 border-slate-700/80 shadow-black/50'
             : 'bg-white/95 border-slate-200/90 shadow-slate-300/40'
@@ -107,11 +107,11 @@ export const FloorSelector: React.FC = () => {
         }`}
       >
         {/* Header label badge */}
-        <div className="px-2 py-1 mb-1 flex items-center justify-between border-b border-slate-700/30">
-          <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+        <div className="px-1.5 sm:px-2 py-1 mb-1 flex items-center justify-between border-b border-slate-700/30">
+          <span className={`hidden sm:inline text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Floor
           </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mx-auto sm:mx-0" />
         </div>
 
         {/* Vertical Floor Buttons */}
@@ -123,7 +123,7 @@ export const FloorSelector: React.FC = () => {
                 key={filter.id}
                 onClick={() => setFloorFilter(filter.id)}
                 data-testid={`floor-filter-${filter.id}`}
-                className={`group relative flex items-center gap-2 px-2.5 py-2 rounded-xl transition-all duration-200 text-left ${
+                className={`group relative flex items-center justify-center sm:justify-start gap-1 sm:gap-2 p-1.5 sm:px-2.5 sm:py-2 rounded-xl transition-all duration-200 text-left ${
                   isActive
                     ? `bg-gradient-to-r ${filter.accent} text-white shadow-lg shadow-cyan-500/25 font-bold scale-[1.02]`
                     : isDark
@@ -146,7 +146,7 @@ export const FloorSelector: React.FC = () => {
                 </div>
 
                 {/* Full testable label */}
-                <div className="flex flex-col min-w-0 pr-1">
+                <div className="hidden sm:flex flex-col min-w-0 pr-1">
                   <span className="text-xs font-bold leading-tight truncate">
                     {filter.label}
                   </span>
@@ -165,7 +165,7 @@ export const FloorSelector: React.FC = () => {
 
                 {/* Active Indicator Light */}
                 {isActive && (
-                  <span className="ml-auto w-1.5 h-3.5 rounded-full bg-white/90 shadow-sm" />
+                  <span className="hidden sm:inline-block ml-auto w-1.5 h-3.5 rounded-full bg-white/90 shadow-sm" />
                 )}
               </button>
             );
