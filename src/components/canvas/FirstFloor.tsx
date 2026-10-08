@@ -17,7 +17,7 @@ export const FirstFloor: React.FC = () => {
   const isVisible = activeFloorFilter !== 'ground';
   const glassOpacity = 0.45;
 
-  const floorSlabColor = isDark ? '#1e293b' : '#f1f5f9';
+  const floorSlabColor = isDark ? '#1e293b' : '#ffffff';
   const blackBorderColor = isDark ? '#090d16' : '#cbd5e1';
 
   const isAllMode = activeFloorFilter === 'all';
@@ -260,41 +260,6 @@ export const FirstFloor: React.FC = () => {
         <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
       </mesh>
 
-      {/* Clean Architectural Doorway Threshold Strips in Room Category Colors */}
-      {firstRooms.map((room) => {
-        const [rx, ry, rz] = room.position;
-        const [rw, rh, rd] = room.dimensions;
-        let thresholdPos: [number, number, number] = [rx, 2.71, rz];
-        let thresholdArgs: [number, number, number] = [1.4, 0.02, 0.22];
-
-        if (room.wing === 'East') {
-          thresholdPos = [rx - rw / 2, 2.71, rz];
-          thresholdArgs = [0.22, 0.02, 1.4];
-        } else if (room.wing === 'West') {
-          thresholdPos = [rx + rw / 2, 2.71, rz];
-          thresholdArgs = [0.22, 0.02, 1.4];
-        } else if (room.wing === 'North') {
-          thresholdPos = [rx, 2.71, rz + rd / 2];
-          thresholdArgs = [1.4, 0.02, 0.22];
-        } else {
-          thresholdPos = [rx, 2.71, rz - rd / 2];
-          thresholdArgs = [1.4, 0.02, 0.22];
-        }
-
-        return (
-          <mesh key={`ff-threshold-${room.id}`} position={thresholdPos} receiveShadow>
-            <boxGeometry args={thresholdArgs} />
-            <meshStandardMaterial
-              color={room.color}
-              roughness={0.3}
-              metalness={0.2}
-              polygonOffset
-              polygonOffsetFactor={-3}
-              polygonOffsetUnits={-3}
-            />
-          </mesh>
-        );
-      })}
 
       {/* ======================================================== */}
       {/* FIRST FLOOR ROOM NODES (Authentic JIET Inventory)        */}

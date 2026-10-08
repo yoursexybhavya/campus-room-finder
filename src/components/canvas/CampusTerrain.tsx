@@ -5,20 +5,20 @@ export const CampusTerrain: React.FC = () => {
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
-  // Symmetrical courtyard planter trees along the quadrangle walkways
+  // Symmetrical courtyard planter trees centered in the 4 open grass quadrangle lawns
+  // Safely offset from cross-walkways (|x|, |z| > 1.6m) and corridors (|x|, |z| < 12.5m)
   const courtyardTreePositions: [number, number, number][] = [
-    [-7.5, 0, 7.5], [7.5, 0, 7.5],
-    [-7.5, 0, -7.5], [7.5, 0, -7.5],
-    [-7.5, 0, 0], [7.5, 0, 0],
-    [0, 0, 7.5], [0, 0, -7.5],
+    [-6.5, 0, -6.5], [6.5, 0, -6.5],
+    [-6.5, 0, 6.5], [6.5, 0, 6.5],
   ];
 
-  // Perimeter boundary trees (outer roads)
+  // Perimeter campus landscape trees positioned cleanly on outer green lawns
+  // Safely clear of all building slabs (|x|, |z| > 36m), roads, and entrance porches
   const perimeterTrees: [number, number, number][] = [
-    [-35, 0, 25], [-35, 0, 0], [-35, 0, -25],
-    [35, 0, 25], [35, 0, 0], [35, 0, -25],
-    [-20, 0, 36], [20, 0, 36],
-    [-20, 0, -36], [20, 0, -36],
+    [-45, 0, 24], [-45, 0, 0], [-45, 0, -24], [-45, 0, 38], [-45, 0, -38],
+    [45, 0, 24], [45, 0, 0], [45, 0, -24], [45, 0, 38], [45, 0, -38],
+    [-22, 0, -45], [22, 0, -45], [-35, 0, -45], [35, 0, -45],
+    [-32, 0, 45], [32, 0, 45],
   ];
 
   // Architectural color palette depending on theme

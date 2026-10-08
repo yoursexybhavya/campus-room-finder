@@ -96,9 +96,9 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     (floorFilter === 'first' && room.floor === 'first');
 
   const [w, h, d] = room.dimensions;
-  const wallH = 1.35; // Architectural extruded wall height (open top, MazeMap style)
-  const wallT = 0.22; // Architectural wall thickness
-  const doorW = 1.4; // Entrance door gap opening
+  const wallH = 1.2; // Architectural 1.2m cutaway wall height (matching Blender reference)
+  const wallT = 0.14; // Slender, realistic architectural wall thickness
+  const doorW = 1.15; // CAD standard clear entrance doorway
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -125,11 +125,9 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
 
   const scale = isHovered ? 1.02 : 1.0;
 
-  // Architectural Colors
-  const wallColor = isDark ? '#334155' : '#f1f5f9';
+  // Architectural Colors matching preview_render_0001.png
+  const wallColor = isDark ? '#334155' : '#f8fafc';
   const wallTrimColor = isDark ? '#475569' : '#cbd5e1';
-  const floorTileColor = isDark ? '#1e293b' : '#f8fafc';
-  const selectedBorderColor = '#f97316'; // MazeMap signature vibrant orange
 
   // Compute 4 extruded boundary walls with doorway opening towards corridor
   const wallSegments = useMemo(() => {
@@ -138,25 +136,17 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
 
     if (room.wing === 'East') {
       // East wing: Corridor is on -x face. Door opening on -x.
-      // Solid +x outer wall
       segments.push({ pos: [w / 2 - wallT / 2, yCenter, 0], args: [wallT, wallH, d] });
-      // Solid -z wall
       segments.push({ pos: [0, yCenter, -d / 2 + wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
-      // Solid +z wall
       segments.push({ pos: [0, yCenter, d / 2 - wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
-      // Corridor wall (-x) with door gap
       const segL = Math.max(0.4, (d - doorW) / 2);
       segments.push({ pos: [-w / 2 + wallT / 2, yCenter, -d / 2 + segL / 2], args: [wallT, wallH, segL] });
       segments.push({ pos: [-w / 2 + wallT / 2, yCenter, d / 2 - segL / 2], args: [wallT, wallH, segL] });
     } else if (room.wing === 'West') {
       // West wing: Corridor is on +x face. Door opening on +x.
-      // Solid -x outer wall
       segments.push({ pos: [-w / 2 + wallT / 2, yCenter, 0], args: [wallT, wallH, d] });
-      // Solid -z wall
       segments.push({ pos: [0, yCenter, -d / 2 + wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
-      // Solid +z wall
       segments.push({ pos: [0, yCenter, d / 2 - wallT / 2], args: [w - 2 * wallT, wallH, wallT] });
-      // Corridor wall (+x) with door gap
       const segL = Math.max(0.4, (d - doorW) / 2);
       segments.push({ pos: [w / 2 - wallT / 2, yCenter, -d / 2 + segL / 2], args: [wallT, wallH, segL] });
       segments.push({ pos: [w / 2 - wallT / 2, yCenter, d / 2 - segL / 2], args: [wallT, wallH, segL] });
@@ -180,6 +170,71 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
 
     return segments;
   }, [w, h, d, room.wing, wallH, wallT, doorW]);
+
+  // Wooden door threshold inlay flat on floor at doorway opening
+  const threshold = useMemo(() => {
+    const yTh = -h / 2 + 0.082;
+    if (room.wing === 'East') {
+      return { pos: [-w / 2 + wallT / 2, yTh, 0] as [number, number, number], args: [wallT + 0.04, 0.016, doorW] as [number, number, number] };
+    } else if (room.wing === 'West') {
+      return { pos: [w / 2 - wallT / 2, yTh, 0] as [number, number, number], args: [wallT + 0.04, 0.016, doorW] as [number, number, number] };
+    } else if (room.wing === 'North') {
+      return { pos: [0, yTh, d / 2 - wallT / 2] as [number, number, number], args: [doorW, 0.016, wallT + 0.04] as [number, number, number] };
+    } else {
+      return { pos: [0, yTh, -d / 2 + wallT / 2] as [number, number, number], args: [doorW, 0.016, wallT + 0.04] as [number, number, number] };
+    }
+  }, [w, h, d, room.wing, wallT, doorW]);
+
+  // 72° CAD Door Swing Arc and swung timber door leaf
+  const doorSwing = useMemo(() => {
+    const yArc = -h / 2 + 0.085;
+    const leafL = 0.82;
+    const angleRad = (72 * Math.PI) / 180;
+
+    let hingePos: [number, number, number] = [0, yArc, 0];
+    let arcRot: [number, number, number] = [-Math.PI / 2, 0, 0];
+    let leafPos: [number, number, number] = [0, yArc, 0];
+    let leafRot: [number, number, number] = [0, 0, 0];
+
+    if (room.wing === 'East') {
+      hingePos = [-w / 2 + wallT, yArc, -doorW / 2 + 0.08];
+      arcRot = [-Math.PI / 2, 0, 0];
+      leafPos = [-w / 2 + wallT + (leafL / 2) * Math.sin(angleRad), yArc, -doorW / 2 + 0.08 + (leafL / 2) * Math.cos(angleRad)];
+      leafRot = [0, -angleRad + Math.PI / 2, 0];
+    } else if (room.wing === 'West') {
+      hingePos = [w / 2 - wallT, yArc, -doorW / 2 + 0.08];
+      arcRot = [-Math.PI / 2, 0, Math.PI / 2];
+      leafPos = [w / 2 - wallT - (leafL / 2) * Math.sin(angleRad), yArc, -doorW / 2 + 0.08 + (leafL / 2) * Math.cos(angleRad)];
+      leafRot = [0, angleRad - Math.PI / 2, 0];
+    } else if (room.wing === 'North') {
+      hingePos = [-doorW / 2 + 0.08, yArc, d / 2 - wallT];
+      arcRot = [-Math.PI / 2, 0, Math.PI];
+      leafPos = [-doorW / 2 + 0.08 + (leafL / 2) * Math.cos(angleRad), yArc, d / 2 - wallT - (leafL / 2) * Math.sin(angleRad)];
+      leafRot = [0, -angleRad, 0];
+    } else {
+      hingePos = [-doorW / 2 + 0.08, yArc, -d / 2 + wallT];
+      arcRot = [-Math.PI / 2, 0, -Math.PI / 2];
+      leafPos = [-doorW / 2 + 0.08 + (leafL / 2) * Math.cos(angleRad), yArc, -d / 2 + wallT + (leafL / 2) * Math.sin(angleRad)];
+      leafRot = [0, angleRad, 0];
+    }
+
+    return { hingePos, arcRot, leafPos, leafRot, leafL };
+  }, [w, h, d, room.wing, wallT, doorW]);
+
+  // Exterior architectural window glass panes
+  const windowPane = useMemo(() => {
+    const yWin = -h / 2 + 0.60;
+    const hWin = 0.50;
+    if (room.wing === 'East') {
+      return { pos: [w / 2 - wallT / 2, yWin, 0] as [number, number, number], args: [wallT * 1.05, hWin, Math.min(d * 0.6, 3.6)] as [number, number, number] };
+    } else if (room.wing === 'West') {
+      return { pos: [-w / 2 + wallT / 2, yWin, 0] as [number, number, number], args: [wallT * 1.05, hWin, Math.min(d * 0.6, 3.6)] as [number, number, number] };
+    } else if (room.wing === 'North') {
+      return { pos: [0, yWin, -d / 2 + wallT / 2] as [number, number, number], args: [Math.min(w * 0.6, 3.6), hWin, wallT * 1.05] as [number, number, number] };
+    } else {
+      return { pos: [0, yWin, d / 2 - wallT / 2] as [number, number, number], args: [Math.min(w * 0.6, 3.6), hWin, wallT * 1.05] as [number, number, number] };
+    }
+  }, [w, h, d, room.wing, wallT]);
 
   const isAllMode = floorFilter === 'all';
 
@@ -239,7 +294,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
         />
       </mesh>
 
-      {/* 2. EXTRUDED ARCHITECTURAL WALLS (MazeMap style with open ceilings & door gaps) */}
+      {/* 2. EXTRUDED ARCHITECTURAL CUTAWAY WALLS (1.2m with doorway openings) */}
       {wallSegments.map((seg, idx) => (
         <mesh
           key={`wall-${idx}`}
@@ -253,8 +308,8 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
           <boxGeometry args={seg.args} />
           <meshStandardMaterial
             color={isSelected ? (isDark ? '#431407' : '#ffedd5') : wallColor}
-            roughness={0.6}
-            metalness={0.05}
+            roughness={0.45}
+            metalness={0.02}
             transparent={!isFloorActive}
             opacity={isFloorActive ? 0.98 : 0.15}
             polygonOffset={true}
@@ -265,12 +320,75 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
           <Edges
             scale={1.0}
             threshold={25}
-            color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? '#64748b' : wallTrimColor)}
+            color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? '#475569' : wallTrimColor)}
           />
         </mesh>
       ))}
 
-      {/* 3. MAZEMAP ICONIC ORANGE LOCATION PIN (Appears on Selected Room) */}
+      {/* 3. WOODEN DOOR THRESHOLD INLAY (Matching Blender model timber inlay) */}
+      <mesh position={threshold.pos} receiveShadow>
+        <boxGeometry args={threshold.args} />
+        <meshStandardMaterial
+          color={isDark ? '#78350f' : '#92400e'}
+          roughness={0.4}
+        />
+      </mesh>
+
+      {/* 4. 72° CAD DOOR SWING ARC & OPEN TIMBER DOOR LEAF */}
+      {isFloorActive && (
+        <group name="cad-door-swing">
+          {/* Swung door leaf */}
+          <mesh position={doorSwing.leafPos} rotation={doorSwing.leafRot} castShadow>
+            <boxGeometry args={[doorSwing.leafL, 0.012, 0.035]} />
+            <meshStandardMaterial
+              color={isDark ? '#92400e' : '#b45309'}
+              roughness={0.4}
+            />
+          </mesh>
+          {/* 72° CAD Arc line on floor */}
+          <mesh position={doorSwing.hingePos} rotation={doorSwing.arcRot}>
+            <ringGeometry args={[0.78, 0.82, 16, 1, 0, (72 * Math.PI) / 180]} />
+            <meshBasicMaterial
+              color="#f97316"
+              transparent
+              opacity={0.85}
+              depthWrite={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        </group>
+      )}
+
+      {/* 5. EXTERIOR ARCHITECTURAL WINDOW GLASS PANE */}
+      <mesh position={windowPane.pos}>
+        <boxGeometry args={windowPane.args} />
+        <meshStandardMaterial
+          color="#38bdf8"
+          transparent
+          opacity={0.45}
+          roughness={0.15}
+          metalness={0.1}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* 6. FLAT ARCHITECTURAL ROOM LABEL (Printed directly on floor tiles) */}
+      {isFloorActive && !isSelected && (
+        <group position={[0, -h / 2 + 0.082, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <Html transform center distanceFactor={28} className="pointer-events-none select-none">
+            <div className="flex flex-col items-center justify-center text-center opacity-85">
+              <span className="font-mono font-black text-[10px] leading-tight tracking-wider text-slate-800 dark:text-slate-100">
+                {room.code}
+              </span>
+              <span className="font-sans font-medium text-[7.5px] leading-tight text-slate-600 dark:text-slate-300 max-w-[80px] truncate mt-0.5">
+                {room.name.replace(/\(.*?\)/g, '').trim()}
+              </span>
+            </div>
+          </Html>
+        </group>
+      )}
+
+      {/* 7. MAZEMAP ICONIC ORANGE LOCATION PIN (Appears on Selected Room) */}
       {isSelected && isFloorActive && (
         <MazeMapMarkerPin color="#f97316" />
       )}

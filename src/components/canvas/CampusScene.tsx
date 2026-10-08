@@ -12,7 +12,6 @@ import { CosmicBackground } from './CosmicBackground';
 import { useThemeStore } from '../../stores/useThemeStore';
 
 import { UserLocationDot } from './UserLocationDot';
-import { BlenderCampusModel } from './BlenderCampusModel';
 
 interface CampusSceneProps {
   className?: string;
@@ -62,7 +61,6 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
           <CampusTerrain />
           <GroundFloor />
           <FirstFloor />
-          <BlenderCampusModel />
           <ArchitecturalStairs />
           <RoutePathMesh />
           <UserLocationDot />

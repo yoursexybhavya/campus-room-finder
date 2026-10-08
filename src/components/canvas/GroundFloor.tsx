@@ -16,8 +16,8 @@ export const GroundFloor: React.FC = () => {
   // When First Floor is selected, hide Ground Floor completely to eliminate bleed-through & z-fighting
   const isVisible = activeFloorFilter !== 'first';
 
-  // Architectural flooring colors matching MazeMap aesthetic
-  const floorSlabColor = isDark ? '#1e293b' : '#f1f5f9';
+  // Architectural flooring colors matching MazeMap and Blender reference
+  const floorSlabColor = isDark ? '#1e293b' : '#ffffff';
   const blackBorderColor = isDark ? '#090d16' : '#cbd5e1';
 
   return (
@@ -157,41 +157,6 @@ export const GroundFloor: React.FC = () => {
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
 
-      {/* Clean Architectural Doorway Threshold Strips in Room Category Colors */}
-      {groundRooms.map((room) => {
-        const [rx, ry, rz] = room.position;
-        const [rw, rh, rd] = room.dimensions;
-        let thresholdPos: [number, number, number] = [rx, 0.14, rz];
-        let thresholdArgs: [number, number, number] = [1.4, 0.02, 0.22];
-
-        if (room.wing === 'East') {
-          thresholdPos = [rx - rw / 2, 0.14, rz];
-          thresholdArgs = [0.22, 0.02, 1.4];
-        } else if (room.wing === 'West') {
-          thresholdPos = [rx + rw / 2, 0.14, rz];
-          thresholdArgs = [0.22, 0.02, 1.4];
-        } else if (room.wing === 'North') {
-          thresholdPos = [rx, 0.14, rz + rd / 2];
-          thresholdArgs = [1.4, 0.02, 0.22];
-        } else {
-          thresholdPos = [rx, 0.14, rz - rd / 2];
-          thresholdArgs = [1.4, 0.02, 0.22];
-        }
-
-        return (
-          <mesh key={`gf-threshold-${room.id}`} position={thresholdPos} receiveShadow>
-            <boxGeometry args={thresholdArgs} />
-            <meshStandardMaterial
-              color={room.color}
-              roughness={0.3}
-              metalness={0.2}
-              polygonOffset
-              polygonOffsetFactor={-3}
-              polygonOffsetUnits={-3}
-            />
-          </mesh>
-        );
-      })}
 
       {/* ======================================================== */}
       {/* GROUND FLOOR ROOM NODES (Authentic JIET Inventory)        */}
