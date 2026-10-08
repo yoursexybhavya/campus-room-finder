@@ -62,4 +62,17 @@ describe('Ground-Truth JIET Courtyard & Stage Invariants (Strict Ground-Only)', 
     expect(groundSource).not.toContain('admin-breezeway-portal');
     expect(groundSource).not.toContain('admin-architectural-fins');
   });
+
+  it('should enforce that the Admin Directorate is correctly situated on the Left (West) wing', () => {
+    const roomsPath = path.resolve(__dirname, '../../src/data/campusRooms.ts');
+    const roomsSource = fs.readFileSync(roomsPath, 'utf-8');
+
+    // Verify ADMIN-01 is assigned to West wing (Left side)
+    expect(roomsSource).toMatch(/id:\s*['"]ADMIN-01['"][\s\S]*?wing:\s*['"]West['"]/);
+    // Verify ADM-REG is assigned to West wing (Left side)
+    expect(roomsSource).toMatch(/id:\s*['"]ADM-REG['"][\s\S]*?wing:\s*['"]West['"]/);
+    // Verify DIR-OFFICE is assigned to West wing (Left side)
+    expect(roomsSource).toMatch(/id:\s*['"]DIR-OFFICE['"][\s\S]*?wing:\s*['"]West['"]/);
+  });
 });
+
