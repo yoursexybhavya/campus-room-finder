@@ -25,23 +25,23 @@ const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
   isDark,
   activeFloorFilter,
 }) => {
-  const stepCount = 18;
-  const totalRise = 2.55; // from y=0.10m ground slab to y=2.65m first floor slab
-  const stepHeight = totalRise / stepCount; // ~0.142m comfortable architectural riser
+  const isAllMode = activeFloorFilter === 'all';
+  const isGroundOnly = activeFloorFilter === 'ground';
+  const isFirstOnly = activeFloorFilter === 'first';
+  const explodedElevation = isAllMode ? 7.5 : 0;
+
+  const totalRise = isAllMode ? 2.55 + explodedElevation : 2.55; // from y=0.10m ground slab to First Floor arrival
+  const stepCount = isAllMode ? 48 : 18;
+  const stepHeight = totalRise / stepCount; // ~0.209m in ALL mode, ~0.142m in single-floor mode
   const rCore = 0.52; // Central stone column core radius
   const rTreadOuter = 2.22; // Outer tread radius
   const rDrumInner = 2.25; // Drum wall inner radius
   const rDrumOuter = 2.47; // Drum wall outer radius (0.22m thick solid wall)
   const drumHeight = 1.35; // 1.35m cutaway wall height matching room cutaway walls
 
-  const isAllMode = activeFloorFilter === 'all';
-  const isGroundOnly = activeFloorFilter === 'ground';
-  const isFirstOnly = activeFloorFilter === 'first';
-  const explodedElevation = isAllMode ? 7.5 : 0;
-
-  // Helical spiral arc span (270 degrees winding around the central core)
+  // Helical spiral arc span (in ALL mode, winds an extra 720 deg so ending azimuth matches single-floor arrival)
   const startAngle = doorwayAngle + (35 * Math.PI) / 180;
-  const totalArc = (270 * Math.PI) / 180;
+  const totalArc = isAllMode ? ((270 + 720) * Math.PI) / 180 : (270 * Math.PI) / 180;
   const deltaTheta = totalArc / stepCount;
 
   // Architectural Theme Colors matching MazeMap & Blender render
@@ -135,7 +135,7 @@ const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
   const handrailCurve = useMemo(() => {
     const points: THREE.Vector3[] = [];
     const rRail = rTreadOuter - 0.08;
-    const segments = 32;
+    const segments = isAllMode ? 64 : 32;
 
     for (let i = 0; i <= segments; i++) {
       const t = i / segments;
@@ -144,11 +144,11 @@ const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
       points.push(new THREE.Vector3(rRail * Math.cos(theta), y, rRail * Math.sin(theta)));
     }
     return new THREE.CatmullRomCurve3(points);
-  }, [startAngle, totalArc, rTreadOuter, totalRise]);
+  }, [startAngle, totalArc, rTreadOuter, totalRise, isAllMode]);
 
   const handrailGeometry = useMemo(() => {
-    return new THREE.TubeGeometry(handrailCurve, 32, 0.035, 12, false);
-  }, [handrailCurve]);
+    return new THREE.TubeGeometry(handrailCurve, isAllMode ? 64 : 32, 0.035, 12, false);
+  }, [handrailCurve, isAllMode]);
 
   // 4. Upper Arrival Landing Platform at First Floor
   const landingGeometry = useMemo(() => {
@@ -177,7 +177,7 @@ const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
     return geom;
   }, [startAngle, totalArc, rCore, rTreadOuter]);
 
-  const columnHeight = isGroundOnly ? 2.0 : 3.8;
+  const columnHeight = isGroundOnly ? 2.0 : isAllMode ? totalRise + 1.25 : 3.8;
 
   return (
     <group position={position} name="architectural-rotunda-staircase">
@@ -313,7 +313,10 @@ const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
       {/* 5. UPPER ARRIVAL LANDING PLATFORM (Connects to 1F Slab)  */}
       {/* ======================================================== */}
       {!isGroundOnly && (
-        <group name="upper-stair-landing" position={[0, 2.65, 0]}>
+        <group
+          name="upper-stair-landing"
+          position={[0, isAllMode ? 2.65 + explodedElevation : 2.65, 0]}
+        >
           <mesh geometry={landingGeometry} receiveShadow castShadow>
             <meshStandardMaterial
               color={landingSlabColor}
@@ -326,13 +329,24 @@ const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
         </group>
       )}
 
-      {/* In ALL Mode: Upper Elevated Landing and Rods */}
+      {/* In ALL mode: Upper Drum Enclosure embracing First Floor rotunda arrival */}
       {isAllMode && (
-        <group name="exploded-stair-bridge" position={[0, explodedElevation, 0]}>
-          <mesh position={[0, 2.65, 0]} geometry={landingGeometry} receiveShadow castShadow>
-            <meshStandardMaterial color={landingSlabColor} roughness={0.4} />
-          </mesh>
-        </group>
+        <mesh
+          geometry={drumGeometry}
+          position={[0, 2.65 + explodedElevation + drumHeight, 0]}
+          castShadow
+          receiveShadow
+        >
+          <meshStandardMaterial
+            color={wallColor}
+            roughness={0.5}
+            metalness={0.02}
+            polygonOffset
+            polygonOffsetFactor={-1}
+            polygonOffsetUnits={-1}
+          />
+          <Edges scale={1.0} threshold={20} color={wallEdgeColor} />
+        </mesh>
       )}
     </group>
   );

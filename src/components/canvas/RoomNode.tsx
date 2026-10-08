@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Edges, Html } from '@react-three/drei';
 import { CampusRoom, FloorFilter } from '../../types/campus';
+import { campusRooms } from '../../data/campusRooms';
 import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useNodePhysics } from '../../services/physics/antiGravityEngine';
@@ -238,7 +239,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
 
   const isAllMode = floorFilter === 'all';
 
-  // Key anchor rooms to prioritize in All Floors overview to prevent 61 overlapping labels
+  // Key anchor rooms to prioritize in All Floors overview to prevent overlapping labels
   const isMajorAnchor =
     room.type === 'lecture_theater' ||
     room.type === 'library' ||
@@ -246,13 +247,30 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     room.id === 'LIB-1' ||
     room.id.includes('LAB');
 
-  // Determine whether to display the 3D label
-  // In 'ALL' mode: display key anchors, selected, or hovered rooms to prevent unreadable label collision
+  // In ALL mode: Ground floor rooms directly underneath a First Floor room
+  // should suppress their billboard label to eliminate 2D screen-space collisions unless hovered or selected
+  const isCoveredByFirstFloor =
+    isAllMode &&
+    room.floor === 'ground' &&
+    campusRooms.some(
+      (r) =>
+        r.floor === 'first' &&
+        Math.hypot(r.position[0] - room.position[0], r.position[2] - room.position[2]) < 4.5
+    );
+
+  // Determine whether to display the 3D billboard label
+  // In 'ALL' mode: display key anchors, selected, or hovered rooms; suppress shadowed ground rooms
   // In single floor mode ('ground' / 'first'): display all rooms on that floor
   const shouldRenderLabel =
     isFloorActive &&
     (!isPanelOpen || isSelected || isHovered) &&
-    (!isAllMode || isMajorAnchor || isSelected || isHovered);
+    (!isAllMode || ((isMajorAnchor && !isCoveredByFirstFloor) || isSelected || isHovered));
+
+  // In ALL mode: Ground floor flat typography is suppressed if covered by First Floor to prevent double-printed text
+  const shouldRenderFlatFloorText =
+    isFloorActive &&
+    !isSelected &&
+    (!isAllMode || room.floor === 'first' || isHovered);
 
   // Lecture Theater Seating Grid Rows (MazeMap style S1, S3)
   const isLectureHall =
@@ -422,7 +440,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       </mesh>
 
       {/* 6. FLAT ARCHITECTURAL ROOM LABEL (Printed directly on floor tiles) */}
-      {isFloorActive && !isSelected && (
+      {shouldRenderFlatFloorText && (
         <group position={[0, -h / 2 + 0.082, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <Html transform center distanceFactor={28} className="pointer-events-none select-none">
             <div className="flex flex-col items-center justify-center text-center opacity-85">

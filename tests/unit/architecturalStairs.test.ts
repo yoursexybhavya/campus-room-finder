@@ -29,12 +29,31 @@ describe('Architectural Rotunda Staircases Tests', () => {
     });
   });
 
-  it('should have standard architectural riser height between 0.14m and 0.18m', () => {
+  it('should have standard architectural riser height between 0.14m and 0.18m in single-floor mode', () => {
     const totalRise = 2.55; // from 0.10m to 2.65m
     const stepCount = 18;
     const riserHeight = totalRise / stepCount;
 
     expect(riserHeight).toBeGreaterThanOrEqual(0.14);
     expect(riserHeight).toBeLessThanOrEqual(0.18);
+  });
+
+  it('should scale vertical rise across 7.5m exploded multi-floor gap in ALL mode', () => {
+    const explodedElevation = 7.5;
+    const totalRiseAll = 2.55 + explodedElevation; // 10.05m
+    const stepCountAll = 48;
+    const riserHeightAll = totalRiseAll / stepCountAll;
+
+    expect(totalRiseAll).toBeCloseTo(10.05);
+    expect(riserHeightAll).toBeGreaterThan(0.20);
+    expect(riserHeightAll).toBeLessThan(0.22);
+  });
+
+  it('should preserve arrival landing azimuth alignment between single-floor and ALL modes', () => {
+    const singleArc = 270;
+    const allArc = 270 + 720; // 990 degrees (2 extra complete coils)
+
+    // Ending azimuth modulo 360 must match exactly
+    expect(allArc % 360).toBe(singleArc % 360);
   });
 });

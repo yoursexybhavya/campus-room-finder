@@ -31,8 +31,8 @@ export const MAZEMAP_POIS: MazeMapPOI[] = [
   { id: 'poi_lift_west_g', type: 'elevator', label: 'Heis', subLabel: 'Lift 2', coords: [-14.2, 1.3, 4], floor: 'ground' },
 
   // Restrooms / Sanitary Facilities (Blue WC)
-  { id: 'poi_wc_east_g', type: 'restroom', label: 'WC', subLabel: 'Herre/Dame', coords: [20, 1.3, -24.5], floor: 'ground' },
-  { id: 'poi_wc_west_g', type: 'restroom', label: 'WC', subLabel: 'Herre/Dame', coords: [-20, 1.3, -24.5], floor: 'ground' },
+  { id: 'poi_wc_east_g', type: 'restroom', label: 'WC', subLabel: 'Herre/Dame', coords: [17.5, 1.3, -24.5], floor: 'ground' },
+  { id: 'poi_wc_west_g', type: 'restroom', label: 'WC', subLabel: 'Herre/Dame', coords: [-17.5, 1.3, -24.5], floor: 'ground' },
   { id: 'poi_hc_wc_south_g', type: 'hc_restroom', label: 'HC WC', subLabel: 'Universell', coords: [8, 1.3, 21], floor: 'ground' },
 
   // First Aid / AED (Red Hjertestarter)
@@ -43,8 +43,8 @@ export const MAZEMAP_POIS: MazeMapPOI[] = [
   { id: 'poi_locker_foyer', type: 'locker', label: 'Pakkeskap', subLabel: 'Lockers', coords: [-7, 1.3, 22], floor: 'ground' },
 
   // Lecture Theater Seating & Podiums
-  { id: 'poi_s1_ground', type: 'lecture_podium', label: 'S1', subLabel: 'Auditorium', coords: [20, 1.3, 0], floor: 'ground' },
-  { id: 'poi_s3_ground', type: 'lecture_podium', label: 'S3', subLabel: 'Seminar 1', coords: [12, 1.3, -20], floor: 'ground' },
+  { id: 'poi_s1_ground', type: 'lecture_podium', label: 'S1', subLabel: 'Auditorium', coords: [17.0, 1.3, 0], floor: 'ground' },
+  { id: 'poi_s3_ground', type: 'lecture_podium', label: 'S3', subLabel: 'Seminar 1', coords: [14.5, 1.3, -20], floor: 'ground' },
 
   // ==========================================
   // FIRST FLOOR POIs
@@ -59,15 +59,15 @@ export const MAZEMAP_POIS: MazeMapPOI[] = [
   { id: 'poi_lift_east_1f', type: 'elevator', label: 'Heis', subLabel: 'Lift 1', coords: [14.2, 4.0, 4], floor: 'first' },
   { id: 'poi_lift_west_1f', type: 'elevator', label: 'Heis', subLabel: 'Lift 2', coords: [-14.2, 4.0, 4], floor: 'first' },
 
-  // Restrooms First Floor
-  { id: 'poi_wc_east_1f', type: 'restroom', label: 'WC', subLabel: 'East 1F', coords: [20, 4.0, -24.5], floor: 'first' },
-  { id: 'poi_wc_west_1f', type: 'restroom', label: 'WC', subLabel: 'West 1F', coords: [-20, 4.0, -24.5], floor: 'first' },
-  { id: 'poi_wc_north_1f', type: 'restroom', label: 'WC', subLabel: 'North 1F', coords: [-12.5, 4.0, -18.5], floor: 'first' },
-  { id: 'poi_hc_wc_south_1f', type: 'hc_restroom', label: 'HC WC', subLabel: 'South 1F', coords: [-12.5, 4.0, 21], floor: 'first' },
+  // Restrooms First Floor (Placed at veranda doorways)
+  { id: 'poi_wc_east_1f', type: 'restroom', label: 'WC', subLabel: 'East 1F', coords: [17.5, 4.0, -24.5], floor: 'first' },
+  { id: 'poi_wc_west_1f', type: 'restroom', label: 'WC', subLabel: 'West 1F', coords: [-17.5, 4.0, -24.5], floor: 'first' },
+  { id: 'poi_wc_north_1f', type: 'restroom', label: 'WC', subLabel: 'North 1F', coords: [-12.5, 4.0, -16.2], floor: 'first' },
+  { id: 'poi_hc_wc_south_1f', type: 'hc_restroom', label: 'HC WC', subLabel: 'South 1F', coords: [-12.5, 4.0, 18.5], floor: 'first' },
 
   // Upper Lecture Theaters
-  { id: 'poi_s2_upper', type: 'lecture_podium', label: 'S2', subLabel: 'LT-24', coords: [20, 4.0, 7], floor: 'first' },
-  { id: 'poi_s4_upper', type: 'lecture_podium', label: 'S4', subLabel: 'Audi 1F', coords: [-6.5, 4.0, 21], floor: 'first' },
+  { id: 'poi_s2_upper', type: 'lecture_podium', label: 'S2', subLabel: 'LT-24', coords: [17.0, 4.0, 7], floor: 'first' },
+  { id: 'poi_s4_upper', type: 'lecture_podium', label: 'S4', subLabel: 'Audi 1F', coords: [-10.0, 4.0, 18.5], floor: 'first' },
 ];
 
 export const MazeMapIconsLayer: React.FC = () => {

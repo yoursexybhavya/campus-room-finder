@@ -29,29 +29,6 @@ export const FirstFloor: React.FC = () => {
       position={[0, explodedElevation, 0]}
       visible={isVisible}
     >
-      {/* Architectural Exploded Alignment Guides in ALL mode */}
-      {isAllMode && (
-        <group name="exploded-alignment-guides" position={[0, -explodedElevation, 0]}>
-          {[
-            [-14.25, -14.25],
-            [14.25, -14.25],
-            [-14.25, 14.25],
-            [14.25, 14.25],
-          ].map(([cx, cz], idx) => (
-            <mesh key={`guide-${idx}`} position={[cx, (2.65 + explodedElevation) / 2, cz]}>
-              <cylinderGeometry args={[0.08, 0.08, explodedElevation, 16]} />
-              <meshStandardMaterial
-                color={isDark ? '#38bdf8' : '#0284c7'}
-                emissive={isDark ? '#38bdf8' : '#0284c7'}
-                emissiveIntensity={0.5}
-                roughness={0.2}
-                transparent
-                opacity={0.65}
-              />
-            </mesh>
-          ))}
-        </group>
-      )}
       {/* ======================================================== */}
       {/* STRUCTURAL SOLID FIRST FLOOR FOUNDATION SLABS            */}
       {/* Completely non-overlapping, solid foundation under rooms */}

@@ -5,22 +5,6 @@ export const CampusTerrain: React.FC = () => {
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
-  // Symmetrical courtyard planter trees centered in the 4 open grass quadrangle lawns
-  // Safely offset from cross-walkways (|x|, |z| > 1.6m) and corridors (|x|, |z| < 12.5m)
-  const courtyardTreePositions: [number, number, number][] = [
-    [-6.5, 0, -6.5], [6.5, 0, -6.5],
-    [-6.5, 0, 6.5], [6.5, 0, 6.5],
-  ];
-
-  // Perimeter campus landscape trees positioned cleanly on outer green lawns
-  // Safely clear of all building slabs (|x|, |z| > 36m), roads, and entrance porches
-  const perimeterTrees: [number, number, number][] = [
-    [-45, 0, 24], [-45, 0, 0], [-45, 0, -24], [-45, 0, 38], [-45, 0, -38],
-    [45, 0, 24], [45, 0, 0], [45, 0, -24], [45, 0, 38], [45, 0, -38],
-    [-22, 0, -45], [22, 0, -45], [-35, 0, -45], [35, 0, -45],
-    [-32, 0, 45], [32, 0, 45],
-  ];
-
   // Architectural color palette depending on theme
   const groundColor = isDark ? '#0f172a' : '#f8fafc';
   const roadColor = isDark ? '#1e293b' : '#64748b';
@@ -159,41 +143,6 @@ export const CampusTerrain: React.FC = () => {
         <boxGeometry args={[8, 0.2, 8]} />
         <meshStandardMaterial color={porchColor} roughness={0.8} />
       </mesh>
-
-      {/* Courtyard Architectural Foliage (Clean stylized trees along walkways) */}
-      {courtyardTreePositions.map(([x, y, z], idx) => (
-        <group key={`ct-${idx}`} position={[x, y, z]}>
-          {/* Tree Planter Box */}
-          <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
-            <cylinderGeometry args={[1.0, 1.1, 0.3, 16]} />
-            <meshStandardMaterial color={borderStoneColor} roughness={0.7} />
-          </mesh>
-          {/* Trunk */}
-          <mesh position={[0, 0.9, 0]} castShadow>
-            <cylinderGeometry args={[0.15, 0.2, 1.3, 12]} />
-            <meshStandardMaterial color="#78350f" roughness={0.9} />
-          </mesh>
-          {/* Architectural Foliage Canopy */}
-          <mesh position={[0, 2.0, 0]} castShadow>
-            <sphereGeometry args={[1.1, 16, 16]} />
-            <meshStandardMaterial color="#22c55e" roughness={0.7} />
-          </mesh>
-        </group>
-      ))}
-
-      {/* Perimeter Campus Trees */}
-      {perimeterTrees.map(([x, y, z], idx) => (
-        <group key={`pt-${idx}`} position={[x, y, z]}>
-          <mesh position={[0, 0.8, 0]} castShadow>
-            <cylinderGeometry args={[0.2, 0.25, 1.6, 10]} />
-            <meshStandardMaterial color="#78350f" roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 2.1, 0]} castShadow>
-            <coneGeometry args={[1.4, 2.4, 12]} />
-            <meshStandardMaterial color="#15803d" roughness={0.8} />
-          </mesh>
-        </group>
-      ))}
     </group>
   );
 };
