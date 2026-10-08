@@ -281,7 +281,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
           position={[0, -h / 2 + wallH + (room.floor === 'first' && isAllMode ? 0.6 : 0.35), 0]}
           center
           distanceFactor={24}
-          zIndexRange={[10, 0]}
+          zIndexRange={isSelected ? [100, 50] : isHovered ? [50, 20] : [10, 0]}
           className="pointer-events-none select-none transition-all duration-200"
         >
           <div
