@@ -158,6 +158,39 @@ export const GroundFloor: React.FC = () => {
       </mesh>
 
       {/* ======================================================== */}
+      {/* ADMIN BLOCK BREEZEWAY PORTAL & ARCHITECTURAL FINS        */}
+      {/* Ground-truth reference: media_1791463721108.jpg          */}
+      {/* ======================================================== */}
+      {/* Admin Ground-Floor Breezeway Portal to Sports Ground & Parking */}
+      <group position={[20.5, 1.4, 0]} name="admin-breezeway-portal">
+        {/* Left Portal Pier */}
+        <mesh position={[0, 0, -1.5]} castShadow receiveShadow>
+          <boxGeometry args={[1.2, 2.6, 0.4]} />
+          <meshStandardMaterial color="#991b1b" roughness={0.5} />
+        </mesh>
+        {/* Right Portal Pier */}
+        <mesh position={[0, 0, 1.5]} castShadow receiveShadow>
+          <boxGeometry args={[1.2, 2.6, 0.4]} />
+          <meshStandardMaterial color="#991b1b" roughness={0.5} />
+        </mesh>
+        {/* Portal Overhead Lintel */}
+        <mesh position={[0, 1.3, 0]} castShadow receiveShadow>
+          <boxGeometry args={[1.3, 0.4, 3.4]} />
+          <meshStandardMaterial color="#991b1b" roughness={0.5} />
+        </mesh>
+      </group>
+
+      {/* East Admin Wing Red Architectural Fins (Courtyard Facade) */}
+      <group name="admin-architectural-fins">
+        {[-10, -5, 5, 10].map((zPos, idx) => (
+          <mesh key={`admin-fin-${idx}`} position={[16.05, 1.3, zPos]} castShadow>
+            <boxGeometry args={[0.25, 2.4, 0.35]} />
+            <meshStandardMaterial color="#991b1b" roughness={0.5} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* ======================================================== */}
       {/* STRUCTURAL VERANDA COLUMNS (MazeMap Architectural Pillars) */}
       {/* ======================================================== */}
       <group name="veranda-pillars">
