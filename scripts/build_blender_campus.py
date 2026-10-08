@@ -1,27 +1,23 @@
 """
-JIET Campus Digital Twin - Complete Procedural 3D Prototype Generator (v2)
+JIET Campus Digital Twin - Complete Procedural 3D Architectural Twin (v3)
 ========================================================================
 Built for Blender 5.2.2 LTS / 4.x.
-Generates an authentic, color-coded, physically accurate 3D prototype of
-the JIET Jodhpur campus based on architectural blueprints, ground-truth photos,
-and satellite imagery:
-  1. 4 lawn quadrants with concrete curbs in the central courtyard.
-  2. Central axial walkway (South seating to North stage) and transverse walkway
-     (connecting West Admin to East wing), matching media_1791470686695.jpg.
-  3. Admin Wing located strictly on the LEFT (West wing).
-  4. Outdoor amphitheater stage at the North wall with brick-red plinth base,
-     light platform deck, access steps, crimson backdrop wall, and forward-facing
-     white 3D "JIET" typography facing South into the courtyard.
-  5. Stepped amphitheater seating tiers at South courtyard with alternating wavy
-     terracotta and cream paver bands, viewed from veranda just like media_1791470686695.jpg.
-  6. 4 curved/helical corner rotunda staircases with green marble treads, white
-     risers, and tubular white safety balustrades connecting Ground to First floor.
-  7. Two full floors (Ground Floor + First Floor) with MazeMap-style functional
-     color-coding (Amber Admin, Emerald Labs, Cyan Classrooms, Rose Library, etc.).
-  8. Architectural typography on room floors for instant identification.
-  9. Multi-angle cameras matching ground-truth user perspectives.
-  10. STRICTLY ZERO rooftop solar panels.
-  11. STRICTLY ZERO unrequested trees.
+Grounded strictly in official CAD blueprints (24.4.2014) & site photography:
+  1. ZERO Viewport Glitch / Z-Fighting: Staggered elevations and clip_start = 0.1m.
+  2. Unblocked Corridors & Authentic Staircases: 10-foot continuous curved hallway
+     around all 4 corners; 4 radiating outer Lecture Halls; inner rotunda helical
+     staircases with central white column, dark granite treads, black tubular railings,
+     completely recessed in dedicated bays with zero corridor obstruction.
+  3. JIET Stage Refinements: Front face of red-brick plinth is completely flat and
+     unbroken facing courtyard audience (NO front stairs); stairs placed strictly on
+     the sides (West and East flanks); centered 3D white "JIET" text on crimson backdrop.
+  4. Room-by-Room Blueprint Extraction: All individual rooms on Ground and First Floor
+     (Admin Director, Registrar, Board Room, Reception, Microprocessor Lab, High Voltage
+     Lab, ECE Lab, Conference Hall, Library, Drawing Halls, LTs) with real walls, door
+     openings into corridors, and MazeMap functional colors.
+  5. Courtyard: 4 manicured lawn quadrants with concrete curbs, cross-axial paved
+     walkways, and South stepped amphitheater seating tiers with alternating wavy pavers.
+  6. STRICTLY ZERO rooftop solar panels, zero unrequested trees, zero fountains.
 """
 
 import math
@@ -32,35 +28,49 @@ import bmesh
 from mathutils import Vector, Matrix, Euler
 
 # =============================================================================
-# 1. CONSTANTS & SPECIFICATIONS
+# 1. CONSTANTS & PHYSICAL DIMENSIONS (METERS)
 # =============================================================================
-CAMPUS_SIZE = 72.0               # Outer footprint 72m x 72m
-COURTYARD_SIZE = 36.0            # Inner courtyard 36m x 36m ([-18, 18])
-WING_DEPTH = 18.0                # Depth of each wing
-VERANDA_WIDTH = 3.0              # Inner covered corridor width
-GF_HEIGHT = 3.6                  # Ground floor height
-SLAB_THICKNESS = 0.25            # Floor slab thickness
-FF_HEIGHT = 3.4                  # First floor height
-WALL_THICKNESS_EXT = 0.35        # Exterior perimeter wall thickness
-WALL_THICKNESS_INT = 0.20        # Interior partition wall thickness
+CAMPUS_SIZE = 72.0                # Total building footprint: 72m x 72m
+COURTYARD_SIZE = 36.0             # Courtyard opening: 36m x 36m ([-18, 18])
+WING_DEPTH = 18.0                 # Depth of each quadrangle wing: 18m
+CORRIDOR_WIDTH = 3.05             # Authentic 10-foot wide corridor (3.05m)
+PLINTH_HEIGHT = 0.20              # Ground floor plinth elevation above courtyard
+GF_HEIGHT = 3.65                  # Ground floor ceiling height
+SLAB_THICKNESS = 0.25             # Floor slab thickness
+FF_HEIGHT = 3.55                  # First floor ceiling height
+ROOF_PARAPET_H = 0.60             # Clean architectural roof parapet height
 
-STAGE_WIDTH = 15.0               # Stage width (X)
-STAGE_DEPTH = 4.8                # Stage depth (Y)
-STAGE_HEIGHT = 1.05              # Stage plinth height (Z)
-STAGE_Y_CENTER = 15.6            # North courtyard wall is Y = 18.0
+WALL_EXT_TH = 0.35                # 14-inch exterior wall thickness
+WALL_INT_TH = 0.20                # 8-inch interior partition thickness
+DOOR_WIDTH = 1.20                 # Standard classroom/lab door opening
+DOOR_HEIGHT = 2.20                # Standard door height
 
-# System font paths for macOS
-FONT_PATHS = [
-    '/System/Library/Fonts/Supplemental/Arial.ttf',
-    '/System/Library/Fonts/Helvetica.ttc',
-    '/Library/Fonts/Arial.ttf'
-]
+STAGE_WIDTH = 15.0                # Stage width along X
+STAGE_DEPTH = 4.80                # Stage depth along Y
+STAGE_HEIGHT = 1.05               # Stage plinth height
+STAGE_Y_CENTER = 15.60            # Plinth center Y (front wall at Y = 13.20)
+
+# Vertical Elevation Offsets (Eliminating all coplanar Z-fighting)
+Z_GROUND_BASE = -0.20             # Sub-base foundation
+Z_COURTYARD_BASE = 0.00           # Courtyard paver base level
+Z_LAWN_TOP = 0.07                 # Manicured grass surface
+Z_CURB_TOP = 0.15                 # Concrete curb top
+Z_WALKWAY_TOP = 0.055             # Paved walkway surface
+Z_GF_PLINTH = 0.18                # Building plinth slab top
+Z_GF_FLOOR = 0.21                 # GF finished floor layer
+Z_GF_WALL_BASE = 0.21             # Base of GF walls
+Z_GF_CEILING = Z_GF_WALL_BASE + GF_HEIGHT  # 3.86m
+Z_FF_SLAB_TOP = Z_GF_CEILING + SLAB_THICKNESS # 4.11m
+Z_FF_FLOOR = Z_FF_SLAB_TOP + 0.02 # 4.13m
+Z_FF_WALL_BASE = Z_FF_FLOOR
+Z_FF_CEILING = Z_FF_WALL_BASE + FF_HEIGHT # 7.68m
+Z_ROOF_TOP = Z_FF_CEILING + SLAB_THICKNESS # 7.93m
 
 # =============================================================================
-# 2. HELPER FUNCTIONS: MATERIALS & SCENE MANAGEMENT
+# 2. HELPER FUNCTIONS & MESH UTILITIES
 # =============================================================================
 def clean_scene():
-    """Removes all default objects, meshes, materials, and lights."""
+    """Wipes the scene and configures metric units."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     scene.unit_settings.system = 'METRIC'
@@ -76,6 +86,7 @@ def get_or_create_material(name, hex_color, roughness=0.35, metallic=0.0, emissi
     if mat:
         return mat
     mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
     rgb = hex_to_rgb(hex_color)
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
     if bsdf:
@@ -107,6 +118,11 @@ def get_collection(name, parent=None):
     return coll
 
 def make_mesh_object(name, bm, collection, material=None):
+    try:
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    except Exception:
+        pass
+    bm.normal_update()
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
@@ -117,49 +133,58 @@ def make_mesh_object(name, bm, collection, material=None):
     collection.objects.link(obj)
     return obj
 
+def add_box(bm, cx, cy, sx, sy, z0, z1):
+    """Adds an axis-aligned box with center (cx, cy) and dimensions (sx, sy)."""
+    hx, hy = sx * 0.5, sy * 0.5
+    v1 = bm.verts.new((cx - hx, cy - hy, z0))
+    v2 = bm.verts.new((cx + hx, cy - hy, z0))
+    v3 = bm.verts.new((cx + hx, cy + hy, z0))
+    v4 = bm.verts.new((cx - hx, cy + hy, z0))
+    v5 = bm.verts.new((cx - hx, cy - hy, z1))
+    v6 = bm.verts.new((cx + hx, cy - hy, z1))
+    v7 = bm.verts.new((cx + hx, cy + hy, z1))
+    v8 = bm.verts.new((cx - hx, cy + hy, z1))
+
+    # 6 Quad faces
+    bm.faces.new([v4, v3, v2, v1]) # Bottom
+    bm.faces.new([v5, v6, v7, v8]) # Top
+    bm.faces.new([v1, v2, v6, v5]) # Front
+    bm.faces.new([v2, v3, v7, v6]) # Right
+    bm.faces.new([v3, v4, v8, v7]) # Back
+    bm.faces.new([v4, v1, v5, v8]) # Left
+
 def add_prism(bm, pts_2d, z0, z1):
-    clean = []
-    for p in pts_2d:
-        if not clean or (math.hypot(p[0] - clean[-1][0], p[1] - clean[-1][1]) > 1e-4):
-            clean.append(p)
-    if len(clean) > 1 and math.hypot(clean[0][0] - clean[-1][0], clean[0][1] - clean[-1][1]) < 1e-4:
-        clean.pop()
-    n = len(clean)
-    if n < 3:
+    """Extrudes a 2D polygon from z0 to z1 with guaranteed outward-pointing normals."""
+    if len(pts_2d) < 3:
         return
-    area = 0.5 * sum(clean[i][0] * clean[(i+1)%n][1] - clean[(i+1)%n][0] * clean[i][1] for i in range(n))
-    if area < 0:
-        clean = clean[::-1]
-    bot = [bm.verts.new((x, y, z0)) for x, y in clean]
-    top = [bm.verts.new((x, y, z1)) for x, y in clean]
-    try:
-        bm.faces.new(top)
-        bm.faces.new(bot[::-1])
-        for i in range(n):
-            j = (i + 1) % n
-            bm.faces.new((bot[i], bot[j], top[j], top[i]))
-    except Exception:
-        pass
+    # Ensure Counter-Clockwise winding (positive signed 2D area)
+    signed_area = sum(pts_2d[i][0] * pts_2d[(i+1)%len(pts_2d)][1] - pts_2d[(i+1)%len(pts_2d)][0] * pts_2d[i][1] for i in range(len(pts_2d))) * 0.5
+    if signed_area < 0:
+        pts_2d = list(reversed(pts_2d))
 
-def add_box(bm, center_x, center_y, width, depth, z0, z1):
-    hx, hy = width * 0.5, depth * 0.5
-    pts = [
-        (center_x - hx, center_y - hy),
-        (center_x + hx, center_y - hy),
-        (center_x + hx, center_y + hy),
-        (center_x - hx, center_y + hy)
-    ]
-    add_prism(bm, pts, z0, z1)
+    bottom_verts = [bm.verts.new((p[0], p[1], z0)) for p in pts_2d]
+    top_verts = [bm.verts.new((p[0], p[1], z1)) for p in pts_2d]
+    n = len(pts_2d)
+    bm.faces.new(list(reversed(bottom_verts)))
+    bm.faces.new(top_verts)
+    for i in range(n):
+        i_next = (i + 1) % n
+        bm.faces.new([bottom_verts[i], bottom_verts[i_next], top_verts[i_next], top_verts[i]])
 
-def add_cylinder(bm, center_x, center_y, radius, z0, z1, segments=32):
+def add_cylinder(bm, cx, cy, r, z0, z1, segments=16):
     pts = []
     for i in range(segments):
-        a = 2.0 * math.pi * i / segments
-        pts.append((center_x + radius * math.cos(a), center_y + radius * math.sin(a)))
+        ang = 2.0 * math.pi * i / segments
+        pts.append((cx + r * math.cos(ang), cy + r * math.sin(ang)))
     add_prism(bm, pts, z0, z1)
 
 def get_font():
-    for p in FONT_PATHS:
+    font_paths = [
+        '/System/Library/Fonts/Supplemental/Arial.ttf',
+        '/System/Library/Fonts/Helvetica.ttc',
+        '/Library/Fonts/Arial.ttf'
+    ]
+    for p in font_paths:
         if os.path.exists(p):
             try:
                 return bpy.data.fonts.load(p)
@@ -168,62 +193,65 @@ def get_font():
     return None
 
 # =============================================================================
-# 3. COURTYARD GROUND & LAWN QUADRANTS
+# 3. COURTYARD GROUND & LAWN PARTITIONS (ZERO Z-FIGHTING)
 # =============================================================================
 def build_courtyard(coll, mats):
     """
-    Builds the central courtyard:
-      - 4 Lawn Quadrants (NW, NE, SW, SE) with concrete curbs
-      - Central Axial Walkway (South seating to North Stage)
-      - Transverse Walkway (Admin on West to East wing, matching red arrow in media_1791470686695.jpg)
-      - South Amphitheater Stepped Seating (5 wide tiered paver terraces)
+    Builds the central courtyard ground without coplanar surface interference:
+      - Deep foundation base at Z = -0.20 to 0.00
+      - 4 distinct green lawn quadrants bounded by raised curbs
+      - Cross-axial paved walkways (N-S axial and E-W transverse)
+      - South stepped amphitheater seating tiers with alternating wavy paver colors
     """
-    # 1. Base courtyard sub-base
+    # 1. Base campus ground sub-foundation (84m x 84m, underlying full quadrangle)
     bm_base = bmesh.new()
-    add_box(bm_base, 0.0, 0.0, COURTYARD_SIZE + 4.0, COURTYARD_SIZE + 4.0, -0.30, 0.0)
-    make_mesh_object("Courtyard_Base_Slab", bm_base, coll, mats["paver_ground"])
+    add_box(bm_base, 0.0, 0.0, 84.0, 84.0, Z_GROUND_BASE, Z_COURTYARD_BASE)
+    make_mesh_object("Courtyard_Base_Foundation", bm_base, coll, mats["paver_ground"])
 
-    # 2. Four Lawn Quadrants with Raised Concrete Curbs
+    # 2. Four Lawn Quadrants with Raised Curbs
     quadrants = [
-        ("NW", -15.5, -2.2,  2.2, 13.5),
-        ("NE",   2.2, 15.5,  2.2, 13.5),
-        ("SW", -15.5, -2.2, -10.5, -2.2),
-        ("SE",   2.2, 15.5, -10.5, -2.2),
+        ("NW", -15.2, -2.4,  2.4, 13.2),
+        ("NE",   2.4, 15.2,  2.4, 13.2),
+        ("SW", -15.2, -2.4, -10.2, -2.4),
+        ("SE",   2.4, 15.2, -10.2, -2.4),
     ]
 
     bm_lawn = bmesh.new()
     bm_curb = bmesh.new()
     curb_w = 0.22
-    curb_h = 0.12
 
     for name, x0, x1, y0, y1 in quadrants:
         gx0, gx1 = x0 + curb_w, x1 - curb_w
         gy0, gy1 = y0 + curb_w, y1 - curb_w
         pts_lawn = [(gx0, gy0), (gx1, gy0), (gx1, gy1), (gx0, gy1)]
-        add_prism(bm_lawn, pts_lawn, 0.0, 0.06)
+        add_prism(bm_lawn, pts_lawn, Z_COURTYARD_BASE, Z_LAWN_TOP)
 
-        # 4 Curb segments enclosing the lawn
-        add_box(bm_curb, (x0 + x1)*0.5, y0 + curb_w*0.5, (x1 - x0), curb_w, 0.0, curb_h)
-        add_box(bm_curb, (x0 + x1)*0.5, y1 - curb_w*0.5, (x1 - x0), curb_w, 0.0, curb_h)
-        add_box(bm_curb, x0 + curb_w*0.5, (y0 + y1)*0.5, curb_w, (y1 - y0), 0.0, curb_h)
-        add_box(bm_curb, x1 - curb_w*0.5, (y0 + y1)*0.5, curb_w, (y1 - y0), 0.0, curb_h)
+        # Non-overlapping concrete curbs (shorten horizontal curbs by 2*curb_w)
+        add_box(bm_curb, (x0 + x1)*0.5, y0 + curb_w*0.5, (x1 - x0) - 2*curb_w, curb_w, Z_COURTYARD_BASE, Z_CURB_TOP)
+        add_box(bm_curb, (x0 + x1)*0.5, y1 - curb_w*0.5, (x1 - x0) - 2*curb_w, curb_w, Z_COURTYARD_BASE, Z_CURB_TOP)
+        add_box(bm_curb, x0 + curb_w*0.5, (y0 + y1)*0.5, curb_w, (y1 - y0), Z_COURTYARD_BASE, Z_CURB_TOP)
+        add_box(bm_curb, x1 - curb_w*0.5, (y0 + y1)*0.5, curb_w, (y1 - y0), Z_COURTYARD_BASE, Z_CURB_TOP)
 
     make_mesh_object("Courtyard_4_Lawns", bm_lawn, coll, mats["grass"])
     make_mesh_object("Courtyard_Lawn_Curbs", bm_curb, coll, mats["curb"])
 
-    # 3. Central Axial Walkway (N-S, connecting South seating to Stage)
-    bm_axial = bmesh.new()
-    add_box(bm_axial, 0.0, 1.5, 4.4, 30.0, 0.0, 0.02)
-    make_mesh_object("Courtyard_Axial_Walkway", bm_axial, coll, mats["walkway_paved"])
+    # 3. Cross-Axial Paved Walkways (Unified non-overlapping pieces: ZERO coplanar artifacts)
+    bm_walkway = bmesh.new()
+    walk_w = 4.4
+    half_w = walk_w * 0.5
+    # Central intersection square
+    add_box(bm_walkway, 0.0, 0.0, walk_w, walk_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
+    # North arm (center to Stage front plinth at Y=16.25)
+    add_box(bm_walkway, 0.0, (half_w + 16.25)*0.5, walk_w, 16.25 - half_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
+    # South arm (center to South veranda at Y=-18.0)
+    add_box(bm_walkway, 0.0, (-half_w - 18.0)*0.5, walk_w, 18.0 - half_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
+    # West arm (West veranda at X=-17.9 to center)
+    add_box(bm_walkway, (-17.9 - half_w)*0.5, 0.0, 17.9 - half_w, walk_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
+    # East arm (center to East veranda at X=17.9)
+    add_box(bm_walkway, (17.9 + half_w)*0.5, 0.0, 17.9 - half_w, walk_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
+    make_mesh_object("Courtyard_Paved_Cross_Walkways", bm_walkway, coll, mats["walkway_paved"])
 
-    # 4. Transverse Walkway (E-W, connecting West Admin to East wing)
-    # Exactly matching the red arrow where people walk from Admin across to the other side!
-    bm_trans = bmesh.new()
-    add_box(bm_trans, 0.0, 0.0, 36.0, 4.4, 0.0, 0.025)
-    make_mesh_object("Courtyard_Transverse_Walkway_AdminToWing", bm_trans, coll, mats["walkway_paved"])
-
-    # 5. South Amphitheater Stepped Seating (Bleachers)
-    # 5 wide terraces rising from Z=0.0 at Y=-10.5 to Z=1.0 at Y=-18.0
+    # 4. South Amphitheater Stepped Seating (Split West & East to keep central walkway completely clear)
     bm_bleachers_cream = bmesh.new()
     bm_bleachers_terracotta = bmesh.new()
     bm_bleacher_curbs = bmesh.new()
@@ -231,64 +259,80 @@ def build_courtyard(coll, mats):
     num_tiers = 5
     tier_depth = 1.45
     tier_rise = 0.20
-    seat_x0, seat_x1 = -16.0, 16.0
+    seat_flanks = [(-16.0, -2.6), (2.6, 16.0)]
 
-    for i in range(num_tiers):
-        t_y0 = -18.0 + (i * tier_depth)
-        t_y1 = t_y0 + tier_depth
-        t_z0 = 0.0
-        t_z1 = 1.0 - (i * tier_rise)
-        
-        pts = [(seat_x0, t_y0), (seat_x1, t_y0), (seat_x1, t_y1), (seat_x0, t_y1)]
-        target_bm = bm_bleachers_terracotta if (i % 2 == 0) else bm_bleachers_cream
-        add_prism(target_bm, pts, t_z0, t_z1)
+    for seat_x0, seat_x1 in seat_flanks:
+        for i in range(num_tiers):
+            t_y0 = -18.0 + (i * tier_depth)
+            t_y1 = t_y0 + tier_depth
+            t_z0 = Z_COURTYARD_BASE
+            t_z1 = Z_COURTYARD_BASE + 1.05 - (i * tier_rise)
+            
+            pts = [(seat_x0, t_y0), (seat_x1, t_y0), (seat_x1, t_y1), (seat_x0, t_y1)]
+            target_bm = bm_bleachers_terracotta if (i % 2 == 0) else bm_bleachers_cream
+            add_prism(target_bm, pts, t_z0, t_z1)
 
-        # Front riser curb
-        add_box(bm_bleacher_curbs, 0.0, t_y1, (seat_x1 - seat_x0), 0.15, t_z1 - tier_rise, t_z1)
+            # Front riser curb
+            add_box(bm_bleacher_curbs, (seat_x0 + seat_x1)*0.5, t_y1, (seat_x1 - seat_x0), 0.15, t_z1 - tier_rise, t_z1)
 
     make_mesh_object("Amphitheater_Seating_Terracotta", bm_bleachers_terracotta, coll, mats["paver_terracotta"])
     make_mesh_object("Amphitheater_Seating_Cream", bm_bleachers_cream, coll, mats["paver_cream"])
     make_mesh_object("Amphitheater_Seating_Curbs", bm_bleacher_curbs, coll, mats["curb_red"])
 
 # =============================================================================
-# 4. OUTDOOR AMPHITHEATER STAGE (NORTH WALL)
+# 4. JIET OUTDOOR STAGE (NO FRONT STAIRS, STAIRS ON SIDES ONLY)
 # =============================================================================
 def build_outdoor_stage(coll, mats):
     """
-    Builds the authentic JIET Outdoor Stage:
-      - Deep brick-red plinth platform (15m wide x 4.8m deep x 1.05m high)
-      - Light smooth stone platform deck
-      - Front access steps
-      - Rich crimson backdrop wall with forward-facing extruded 3D white "JIET" text
+    Builds the authentic JIET Outdoor Stage against North Wall (IMG_3030.jpeg):
+      - Solid flat brick-red plinth facing audience (NO FRONT STAIRS).
+      - Access stairs positioned strictly on the East and West FLANKS.
+      - Smooth light platform deck.
+      - Rich crimson backdrop wall with white 3D "JIET" typography.
     """
-    # 1. Brick-red plinth base
+    # 1. Solid Brick-red Plinth Base (Clean flat front face at Y = 13.20)
     bm_plinth = bmesh.new()
-    add_box(bm_plinth, 0.0, STAGE_Y_CENTER, STAGE_WIDTH, STAGE_DEPTH, 0.0, STAGE_HEIGHT)
-    make_mesh_object("Stage_Brick_Plinth", bm_plinth, coll, mats["stage_brick"])
+    add_box(bm_plinth, 0.0, STAGE_Y_CENTER, STAGE_WIDTH, STAGE_DEPTH, Z_COURTYARD_BASE, STAGE_HEIGHT)
+    make_mesh_object("Stage_Brick_Plinth_SolidFront", bm_plinth, coll, mats["stage_brick"])
 
     # 2. Smooth polished stone deck slab
     bm_deck = bmesh.new()
     add_box(bm_deck, 0.0, STAGE_Y_CENTER, STAGE_WIDTH + 0.3, STAGE_DEPTH + 0.3, STAGE_HEIGHT, STAGE_HEIGHT + 0.08)
     make_mesh_object("Stage_Stone_Deck", bm_deck, coll, mats["stage_deck"])
 
-    # 3. Front access steps (3 wide steps leading up from courtyard to stage deck)
-    bm_steps = bmesh.new()
-    step_width = 8.0
-    for s in range(3):
-        sy = STAGE_Y_CENTER - (STAGE_DEPTH * 0.5) - (0.35 * (s + 1))
-        sz = STAGE_HEIGHT * (3 - s) / 4.0
-        add_box(bm_steps, 0.0, sy + 0.175, step_width, 0.35, 0.0, sz)
-    make_mesh_object("Stage_Front_Steps", bm_steps, coll, mats["stage_steps"])
+    # 3. SIDE ACCESS STAIRS ONLY (West Flank and East Flank)
+    bm_side_steps = bmesh.new()
+    num_side_steps = 5
+    stair_w = 1.35
+    stair_l = 3.60
+    stair_step_l = stair_l / num_side_steps
+    stair_step_h = STAGE_HEIGHT / num_side_steps
+
+    # West Flank Stairs (X: -7.5m to -8.85m, rising from front South to North)
+    x_w = - (STAGE_WIDTH * 0.5) - (stair_w * 0.5)
+    for s in range(num_side_steps):
+        sy = (STAGE_Y_CENTER - STAGE_DEPTH*0.5) + (s * stair_step_l) + (stair_step_l * 0.5)
+        sz = (s + 1) * stair_step_h
+        add_box(bm_side_steps, x_w, sy, stair_w, stair_step_l, Z_COURTYARD_BASE, sz)
+
+    # East Flank Stairs (X: +7.5m to +8.85m, rising from front South to North)
+    x_e = (STAGE_WIDTH * 0.5) + (stair_w * 0.5)
+    for s in range(num_side_steps):
+        sy = (STAGE_Y_CENTER - STAGE_DEPTH*0.5) + (s * stair_step_l) + (stair_step_l * 0.5)
+        sz = (s + 1) * stair_step_h
+        add_box(bm_side_steps, x_e, sy, stair_w, stair_step_l, Z_COURTYARD_BASE, sz)
+
+    make_mesh_object("Stage_Side_Access_Stairs", bm_side_steps, coll, mats["stage_steps"])
 
     # 4. Crimson Backdrop Wall
     bm_back = bmesh.new()
     wall_y = 17.80
-    wall_w = 8.6
-    wall_h = 3.4
+    wall_w = 8.60
+    wall_h = 3.40
     add_box(bm_back, 0.0, wall_y, wall_w, 0.40, STAGE_HEIGHT, STAGE_HEIGHT + wall_h)
     make_mesh_object("Stage_Crimson_Backdrop_Wall", bm_back, coll, mats["stage_backdrop"])
 
-    # 5. Bold 3D White "JIET" Typography
+    # 5. Bold 3D White "JIET" Typography (centered on backdrop wall)
     font_loaded = get_font()
     curve = bpy.data.curves.new(name="JIET_Stage_Text_Curve", type='FONT')
     curve.body = "JIET"
@@ -314,279 +358,478 @@ def build_outdoor_stage(coll, mats):
     text_obj.select_set(False)
 
 # =============================================================================
-# 5. CORNER ROTUNDA HELICAL STAIRCASES (IMG_3052.jpeg)
+# 5. UNBLOCKED CORRIDORS & AUTHENTIC ROTUNDA HELICAL STAIRCASES
 # =============================================================================
-def build_curved_staircase(coll, mats, name_prefix, center_x, center_y, start_angle, end_angle):
+def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y):
     """
-    Builds an authentic curved helical staircase matching IMG_3052.jpeg:
-      - Dark polished green marble treads
-      - White risers
-      - White tubular safety handrail with horizontal bars and vertical stanchions
-      - Curved rotunda drum enclosure wall
+    Builds the authentic CAD blueprint corner configuration (24.4.2014):
+      - Corner origin is at (cx, cy) = (quad_sign_x * 18.0, quad_sign_y * 18.0).
+      - Inner Rotunda Staircase Bay: r in [0, 2.3m], recessed with central white pillar, green marble helical treads, tubular railings.
+      - Continuous 10-foot Curved Corridor: r in [2.4m, 5.45m] (width = 3.05m = 10 ft), sweeping 90 degrees, completely open and unobstructed!
+      - Radiating Wedge Lecture Halls (LTs): r in [5.60m, 17.60m] (depth = 12m), divided into radiating lecture halls with radial walls and doors.
+      - Outer Curved Perimeter Sandstone Facade: r in [17.60m, 18.00m], connecting exterior facades smoothly.
     """
-    bm_treads = bmesh.new()
-    bm_risers = bmesh.new()
-    bm_railings = bmesh.new()
-    bm_drum = bmesh.new()
+    bm_lts = bmesh.new()
+    bm_corridor = bmesh.new()
+    bm_walls = bmesh.new()
+    bm_stair_treads = bmesh.new()
+    bm_stair_risers = bmesh.new()
+    bm_stair_rails = bmesh.new()
+    bm_rotunda_wall = bmesh.new()
 
-    num_steps = 22
-    r_in = 1.3
-    r_out = 3.6
-    z_start = 0.0
-    z_end = GF_HEIGHT + SLAB_THICKNESS  # 3.85m
-    total_angle = end_angle - start_angle
-    step_angle = total_angle / num_steps
-    step_height = (z_end - z_start) / num_steps
+    cx = quad_sign_x * 18.0
+    cy = quad_sign_y * 18.0
 
-    # 1. Helical Step Treads & Risers
-    for i in range(num_steps):
-        a0 = math.radians(start_angle + i * step_angle)
-        a1 = math.radians(start_angle + (i + 1) * step_angle)
-        z0 = z_start + i * step_height
-        z1 = z0 + step_height
+    r_stair_in = 0.38
+    r_stair_out = 2.10
+    r_stair_col = 0.35
+    r_rot_wall = 2.25
 
-        p_in0 = (center_x + r_in * math.cos(a0), center_y + r_in * math.sin(a0))
-        p_out0 = (center_x + r_out * math.cos(a0), center_y + r_out * math.sin(a0))
-        p_out1 = (center_x + r_out * math.cos(a1), center_y + r_out * math.sin(a1))
-        p_in1 = (center_x + r_in * math.cos(a1), center_y + r_in * math.sin(a1))
+    r_corr_in = 2.40
+    r_corr_out = 5.45
 
-        # Green marble tread (top slab)
-        tread_pts = [p_in0, p_out0, p_out1, p_in1]
-        add_prism(bm_treads, tread_pts, z1 - 0.05, z1)
+    r_rooms_in = 5.60
+    r_rooms_out = 17.60
+    r_facade_out = 18.00
 
-        # White riser block under tread
-        add_prism(bm_risers, tread_pts, z0, z1 - 0.05)
+    def get_pt(r, phi_rad):
+        # phi=0 aligns with Y wing; phi=pi/2 aligns with X wing
+        x = cx + quad_sign_x * r * math.sin(phi_rad)
+        y = cy + quad_sign_y * r * math.cos(phi_rad)
+        return (x, y)
 
-    # 2. Outer Safety Handrail & Intermediate Bars (White tubular railing)
-    r_rail = r_out - 0.15
-    rail_height = 0.95
-    rail_pts_top = []
-    rail_pts_mid1 = []
-    rail_pts_mid2 = []
+    # 1. 10-Foot Wide Curved Corridor Floor Arc (Unobstructed continuous passage)
+    corr_segments = 16
+    for i in range(corr_segments):
+        p0 = (i / corr_segments) * (math.pi * 0.5)
+        p1 = ((i + 1) / corr_segments) * (math.pi * 0.5)
+        p0_in = get_pt(r_corr_in, p0)
+        p1_in = get_pt(r_corr_in, p1)
+        p1_out = get_pt(r_corr_out, p1)
+        p0_out = get_pt(r_corr_out, p0)
+        add_prism(bm_corridor, [p0_in, p1_in, p1_out, p0_out], Z_GF_PLINTH, Z_GF_FLOOR)
 
-    for i in range(num_steps + 1):
-        a = math.radians(start_angle + i * step_angle)
-        z_tread = z_start + i * step_height
-        rx = center_x + r_rail * math.cos(a)
-        ry = center_y + r_rail * math.sin(a)
-        
-        rail_pts_top.append((rx, ry, z_tread + rail_height))
-        rail_pts_mid1.append((rx, ry, z_tread + rail_height * 0.66))
-        rail_pts_mid2.append((rx, ry, z_tread + rail_height * 0.33))
+    # 2. Four Radiating Lecture Halls (Outer Quadrant Arc)
+    num_rooms = 4
+    for r_idx in range(num_rooms):
+        p0 = (r_idx / num_rooms) * (math.pi * 0.5)
+        p1 = ((r_idx + 1) / num_rooms) * (math.pi * 0.5)
+        pts_room = []
+        seg_sub = 6
+        for s in range(seg_sub + 1):
+            sa = p0 + (s / seg_sub) * (p1 - p0)
+            pts_room.append(get_pt(r_rooms_in, sa))
+        for s in range(seg_sub, -1, -1):
+            sa = p0 + (s / seg_sub) * (p1 - p0)
+            pts_room.append(get_pt(r_rooms_out, sa))
+        add_prism(bm_lts, pts_room, Z_GF_PLINTH, Z_GF_FLOOR)
 
-        if i % 3 == 0:
-            add_cylinder(bm_railings, rx, ry, 0.035, z_tread, z_tread + rail_height, segments=12)
+        # Radial partition wall
+        p_in = get_pt(r_rooms_in, p0)
+        p_out = get_pt(r_rooms_out, p0)
+        dx, dy = p_out[0] - p_in[0], p_out[1] - p_in[1]
+        L = math.hypot(dx, dy)
+        if L > 0:
+            nx, ny = -dy / L * (WALL_INT_TH * 0.5), dx / L * (WALL_INT_TH * 0.5)
+            pts_wall = [
+                (p_in[0] - nx, p_in[1] - ny),
+                (p_in[0] + nx, p_in[1] + ny),
+                (p_out[0] + nx, p_out[1] + ny),
+                (p_out[0] - nx, p_out[1] - ny)
+            ]
+            add_prism(bm_walls, pts_wall, Z_GF_WALL_BASE, Z_GF_CEILING)
 
-    for p_list in [rail_pts_top, rail_pts_mid1, rail_pts_mid2]:
-        for i in range(len(p_list) - 1):
-            p1, p2 = p_list[i], p_list[i+1]
-            mx, my = (p1[0] + p2[0])*0.5, (p1[1] + p2[1])*0.5
-            mz0, mz1 = min(p1[2], p2[2]), max(p1[2], p2[2]) + 0.045
-            add_cylinder(bm_railings, mx, my, 0.03, mz0, mz1, segments=12)
+        # Inner corridor wall with door gap
+        door_ang_width = math.radians(4.0)
+        p_mid = (p0 + p1) * 0.5
+        d0 = p_mid - door_ang_width * 0.5
+        d1 = p_mid + door_ang_width * 0.5
 
-    # 3. Outer Rotunda Drum Wall (curved enclosure)
-    drum_segments = 24
-    drum_r_in = r_out + 0.10
-    drum_r_out = drum_r_in + WALL_THICKNESS_EXT
-    drum_angle_span = 270.0
-    for i in range(drum_segments):
-        da0 = math.radians(start_angle + i * (drum_angle_span / drum_segments))
-        da1 = math.radians(start_angle + (i + 1) * (drum_angle_span / drum_segments))
-        p0_in = (center_x + drum_r_in * math.cos(da0), center_y + drum_r_in * math.sin(da0))
-        p1_in = (center_x + drum_r_in * math.cos(da1), center_y + drum_r_in * math.sin(da1))
-        p1_out = (center_x + drum_r_out * math.cos(da1), center_y + drum_r_out * math.sin(da1))
-        p0_out = (center_x + drum_r_out * math.cos(da0), center_y + drum_r_out * math.sin(da0))
-        add_prism(bm_drum, [p0_in, p1_in, p1_out, p0_out], 0.0, GF_HEIGHT)
-        add_prism(bm_drum, [p0_in, p1_in, p1_out, p0_out], GF_HEIGHT + SLAB_THICKNESS, GF_HEIGHT + SLAB_THICKNESS + FF_HEIGHT)
+        for a_start, a_end in [(p0, d0), (d1, p1)]:
+            pts_cw = []
+            for s in range(4):
+                ca = a_start + (s / 3.0) * (a_end - a_start)
+                pts_cw.append(get_pt(r_rooms_in - WALL_INT_TH, ca))
+            for s in range(3, -1, -1):
+                ca = a_start + (s / 3.0) * (a_end - a_start)
+                pts_cw.append(get_pt(r_rooms_in, ca))
+            add_prism(bm_walls, pts_cw, Z_GF_WALL_BASE, Z_GF_CEILING)
 
-    make_mesh_object(f"{name_prefix}_Treads_GreenMarble", bm_treads, coll, mats["stair_green_marble"])
-    make_mesh_object(f"{name_prefix}_Risers_White", bm_risers, coll, mats["stair_riser"])
-    make_mesh_object(f"{name_prefix}_Tubular_Railings", bm_railings, coll, mats["stair_railing"])
-    make_mesh_object(f"{name_prefix}_Rotunda_Drum_Wall", bm_drum, coll, mats["wall_sandstone"])
+        # Door lintel
+        pts_lintel = []
+        for s in range(4):
+            ca = d0 + (s / 3.0) * (d1 - d0)
+            pts_lintel.append(get_pt(r_rooms_in - WALL_INT_TH, ca))
+        for s in range(3, -1, -1):
+            ca = d0 + (s / 3.0) * (d1 - d0)
+            pts_lintel.append(get_pt(r_rooms_in, ca))
+        add_prism(bm_walls, pts_lintel, Z_GF_WALL_BASE + DOOR_HEIGHT, Z_GF_CEILING)
 
-def build_all_corner_staircases(coll, mats):
-    build_curved_staircase(coll, mats, "Stair_NW", -18.0, 18.0, 0.0, 260.0)
-    build_curved_staircase(coll, mats, "Stair_NE", 18.0, 18.0, 90.0, 350.0)
-    build_curved_staircase(coll, mats, "Stair_SW", -18.0, -18.0, 270.0, 530.0)
-    build_curved_staircase(coll, mats, "Stair_SE", 18.0, -18.0, 180.0, 440.0)
+    # 3. Outer Curved Perimeter Sandstone Facade Wall
+    pts_ext = []
+    ext_segs = 16
+    for s in range(ext_segs + 1):
+        ca = (s / ext_segs) * (math.pi * 0.5)
+        pts_ext.append(get_pt(r_rooms_out, ca))
+    for s in range(ext_segs, -1, -1):
+        ca = (s / ext_segs) * (math.pi * 0.5)
+        pts_ext.append(get_pt(r_facade_out, ca))
+    add_prism(bm_walls, pts_ext, Z_GF_WALL_BASE, Z_GF_CEILING)
+
+    # 4. Central Column & Helical Staircase (IMG_3068 - IMG_3070)
+    add_cylinder(bm_walls, cx, cy, r_stair_col, Z_GF_WALL_BASE, Z_FF_CEILING, segments=16)
+
+    num_helical_steps = 22
+    stair_dz = (Z_FF_FLOOR - Z_GF_FLOOR) / num_helical_steps
+    step_ang_span = 270.0
+
+    # Direction from rotunda center towards courtyard / corridor
+    dir_to_courtyard = math.degrees(math.atan2(-quad_sign_y, -quad_sign_x))
+    # Direction towards outer building corner
+    dir_to_outer = math.degrees(math.atan2(quad_sign_y, quad_sign_x))
+
+    # Bottom stair step starts at the corridor entrance archway
+    stair_base_rot = dir_to_courtyard - 35.0
+
+    for s in range(num_helical_steps):
+        sa0 = math.radians(stair_base_rot + (s / num_helical_steps) * step_ang_span)
+        sa1 = math.radians(stair_base_rot + ((s + 1) / num_helical_steps) * step_ang_span)
+        sz0 = Z_GF_FLOOR + s * stair_dz
+        sz1 = sz0 + stair_dz
+
+        p0_in = (cx + r_stair_in * math.cos(sa0), cy + r_stair_in * math.sin(sa0))
+        p1_in = (cx + r_stair_in * math.cos(sa1), cy + r_stair_in * math.sin(sa1))
+        p1_out = (cx + r_stair_out * math.cos(sa1), cy + r_stair_out * math.sin(sa1))
+        p0_out = (cx + r_stair_out * math.cos(sa0), cy + r_stair_out * math.sin(sa0))
+
+        add_prism(bm_stair_treads, [p0_in, p1_in, p1_out, p0_out], sz1 - 0.05, sz1)
+        add_prism(bm_stair_risers, [p0_in, p1_in, p1_out, p0_out], sz0, sz1 - 0.05)
+
+        r_rail = r_stair_out - 0.10
+        rx = cx + r_rail * math.cos(sa0)
+        ry = cy + r_rail * math.sin(sa0)
+        if s % 2 == 0:
+            add_cylinder(bm_stair_rails, rx, ry, 0.03, sz1, sz1 + 0.95, segments=8)
+
+    # Rotunda Enclosure Wall: encloses the outer 200 degrees, leaving a wide 160-degree archway open directly to the corridor
+    rot_segs = 14
+    wall_span = 200.0
+    wall_start = dir_to_outer - wall_span * 0.5
+    for w in range(rot_segs):
+        wa0 = math.radians(wall_start + (w / rot_segs) * wall_span)
+        wa1 = math.radians(wall_start + ((w + 1) / rot_segs) * wall_span)
+        p0_in = (cx + r_rot_wall * math.cos(wa0), cy + r_rot_wall * math.sin(wa0))
+        p1_in = (cx + r_rot_wall * math.cos(wa1), cy + r_rot_wall * math.sin(wa1))
+        p1_out = (cx + (r_rot_wall + WALL_INT_TH) * math.cos(wa1), cy + (r_rot_wall + WALL_INT_TH) * math.sin(wa1))
+        p0_out = (cx + (r_rot_wall + WALL_INT_TH) * math.cos(wa0), cy + (r_rot_wall + WALL_INT_TH) * math.sin(wa0))
+        add_prism(bm_rotunda_wall, [p0_in, p1_in, p1_out, p0_out], Z_GF_WALL_BASE, Z_GF_CEILING)
+
+    make_mesh_object(f"{corner_name}_Radiating_LTs_Floor", bm_lts, coll, mats["mazemap_lt"])
+    make_mesh_object(f"{corner_name}_Unblocked_Curved_Corridor", bm_corridor, coll, mats["corridor_floor"])
+    make_mesh_object(f"{corner_name}_Corridor_Partition_Walls", bm_walls, coll, mats["wall_sandstone"])
+    make_mesh_object(f"{corner_name}_Stair_Treads_Granite", bm_stair_treads, coll, mats["stair_green_marble"])
+    make_mesh_object(f"{corner_name}_Stair_Risers_White", bm_stair_risers, coll, mats["stair_riser"])
+    make_mesh_object(f"{corner_name}_Stair_Tubular_Railings", bm_stair_rails, coll, mats["stair_railing"])
+    make_mesh_object(f"{corner_name}_Rotunda_Bay_Wall", bm_rotunda_wall, coll, mats["wall_sandstone"])
+
+def build_all_corners(coll, mats):
+    """Builds all 4 corners matching authentic blueprint geometry."""
+    build_authentic_corner(coll, mats, "Corner_NW", -1.0,  1.0)
+    build_authentic_corner(coll, mats, "Corner_NE",  1.0,  1.0)
+    build_authentic_corner(coll, mats, "Corner_SW", -1.0, -1.0)
+    build_authentic_corner(coll, mats, "Corner_SE",  1.0, -1.0)
 
 # =============================================================================
-# 6. GROUND FLOOR ARCHITECTURE (ROOMS, VERANDAS & PILLARS)
+# 6. GROUND FLOOR ARCHITECTURE (BLUEPRINT ROOM EXTRACTION)
 # =============================================================================
 def build_ground_floor(coll, mats):
     """
-    Builds the complete Ground Floor:
-      - West Wing (Admin Block): Amber gold flooring (#d97706)
-      - North Wing (Labs): Emerald green flooring (#059669)
-      - East Wing (Classrooms & LTs): Cyan flooring (#0284c7)
-      - South Wing (Entrance Foyer & Seminar): Coral flooring (#ea580c)
-      - Veranda corridors with polished floor and sandstone pillars every 4m
-      - Sandstone exterior walls and crisp off-white interior partitions
+    Builds the authentic Ground Floor from blueprint CO-ED UP TO DATE 24.4.2014-Model.pdf 2.pdf:
+      - Continuous 10-foot inner veranda corridor with square sandstone pillars every 4m.
+      - South Wing: Entrance Porch, Portico, Lobby, Board Room, Admin Director,
+        Registrar, ECE Lab, Microprocessor Lab.
+      - West Wing: Electronic Lab, Computer Labs 1 & 2, Tutorial Rooms, Faculty Rooms, Toilets.
+      - North Wing: High Voltage Lab, 47' Lecture Hall, Computer Lab, Bridge to Workshop.
+      - East Wing: Conference Hall, Language Lab, Machine Lab, EMI Lab.
     """
-    bm_admin = bmesh.new()
-    bm_labs = bmesh.new()
-    bm_class = bmesh.new()
-    bm_entrance = bmesh.new()
     bm_corridor = bmesh.new()
-
-    # West Wing: Admin [X: -36 to -21, Y: -36 to 36]
-    add_box(bm_admin, -28.5, 0.0, 15.0, 72.0, 0.0, 0.05)
-
-    # North Wing: Engineering Labs [X: -21 to 21, Y: 21 to 36]
-    add_box(bm_labs, 0.0, 28.5, 42.0, 15.0, 0.0, 0.05)
-
-    # East Wing: Classrooms & LTs [X: 21 to 36, Y: -36 to 36]
-    add_box(bm_class, 28.5, 0.0, 15.0, 72.0, 0.0, 0.05)
-
-    # South Wing: Entrance Foyer & Seminar [X: -21 to 21, Y: -36 to -21]
-    add_box(bm_entrance, 0.0, -28.5, 42.0, 15.0, 0.0, 0.05)
-
-    # Verandas: 3m wide corridors surrounding the courtyard
-    add_box(bm_corridor, -19.5, 0.0, 3.0, 36.0, 0.0, 0.04)
-    add_box(bm_corridor,  19.5, 0.0, 3.0, 36.0, 0.0, 0.04)
-    add_box(bm_corridor, 0.0,  19.5, 36.0, 3.0, 0.0, 0.04)
-    add_box(bm_corridor, 0.0, -19.5, 36.0, 3.0, 0.0, 0.04)
-
-    make_mesh_object("GF_Floor_Admin_West", bm_admin, coll, mats["mazemap_admin"])
-    make_mesh_object("GF_Floor_Labs_North", bm_labs, coll, mats["mazemap_lab"])
-    make_mesh_object("GF_Floor_Classrooms_East", bm_class, coll, mats["mazemap_lt"])
-    make_mesh_object("GF_Floor_Entrance_South", bm_entrance, coll, mats["mazemap_seminar"])
-    make_mesh_object("GF_Floor_Veranda_Corridors", bm_corridor, coll, mats["corridor_floor"])
-
-    # 2. Veranda Pillars (Jodhpur Sandstone square columns along courtyard border)
     bm_pillars = bmesh.new()
-    pillar_size = 0.50
-    for x in range(-16, 17, 4):
-        add_box(bm_pillars, x, 18.25, pillar_size, pillar_size, 0.0, GF_HEIGHT)
-        add_box(bm_pillars, x, -18.25, pillar_size, pillar_size, 0.0, GF_HEIGHT)
-    for y in range(-16, 17, 4):
-        add_box(bm_pillars, -18.25, y, pillar_size, pillar_size, 0.0, GF_HEIGHT)
-        add_box(bm_pillars, 18.25, y, pillar_size, pillar_size, 0.0, GF_HEIGHT)
-
-    make_mesh_object("GF_Veranda_Sandstone_Pillars", bm_pillars, coll, mats["pillar_sandstone"])
-
-    # 3. Exterior Facade Walls & Interior Partitions
     bm_ext_walls = bmesh.new()
     bm_int_walls = bmesh.new()
 
-    # Outer perimeter facade walls
-    add_box(bm_ext_walls, -36.0 + WALL_THICKNESS_EXT*0.5, 0.0, WALL_THICKNESS_EXT, 72.0, 0.0, GF_HEIGHT)
-    add_box(bm_ext_walls, 36.0 - WALL_THICKNESS_EXT*0.5, 0.0, WALL_THICKNESS_EXT, 72.0, 0.0, GF_HEIGHT)
-    add_box(bm_ext_walls, 0.0, 36.0 - WALL_THICKNESS_EXT*0.5, 72.0, WALL_THICKNESS_EXT, 0.0, GF_HEIGHT)
-    add_box(bm_ext_walls, 0.0, -36.0 + WALL_THICKNESS_EXT*0.5, 72.0, WALL_THICKNESS_EXT, 0.0, GF_HEIGHT)
+    # 1. Continuous 10-foot covered veranda corridor around courtyard
+    add_box(bm_corridor, 0.0, -19.5, 36.0, CORRIDOR_WIDTH, Z_GF_PLINTH, Z_GF_FLOOR) # South
+    add_box(bm_corridor, 0.0,  19.5, 36.0, CORRIDOR_WIDTH, Z_GF_PLINTH, Z_GF_FLOOR) # North
+    add_box(bm_corridor, -19.5, 0.0, CORRIDOR_WIDTH, 36.0, Z_GF_PLINTH, Z_GF_FLOOR) # West
+    add_box(bm_corridor,  19.5, 0.0, CORRIDOR_WIDTH, 36.0, Z_GF_PLINTH, Z_GF_FLOOR) # East
+    make_mesh_object("GF_Veranda_10ft_Corridors", bm_corridor, coll, mats["corridor_floor"])
 
-    # Veranda inner dividing wall (between corridor and rooms)
-    add_box(bm_int_walls, -21.0, 0.0, WALL_THICKNESS_INT, 60.0, 0.0, GF_HEIGHT)
-    add_box(bm_int_walls, 21.0, 0.0, WALL_THICKNESS_INT, 60.0, 0.0, GF_HEIGHT)
-    add_box(bm_int_walls, 0.0, 21.0, 42.0, WALL_THICKNESS_INT, 0.0, GF_HEIGHT)
-    add_box(bm_int_walls, 0.0, -21.0, 42.0, WALL_THICKNESS_INT, 0.0, GF_HEIGHT)
+    # 2. Sandstone Square Pillars along Courtyard Veranda (IMG_3051.jpeg)
+    pillar_sz = 0.50
+    for x in range(-16, 17, 4):
+        add_box(bm_pillars, x, -18.25, pillar_sz, pillar_sz, Z_COURTYARD_BASE, Z_GF_CEILING)
+        add_box(bm_pillars, x,  18.25, pillar_sz, pillar_sz, Z_COURTYARD_BASE, Z_GF_CEILING)
+    for y in range(-16, 17, 4):
+        add_box(bm_pillars, -18.25, y, pillar_sz, pillar_sz, Z_COURTYARD_BASE, Z_GF_CEILING)
+        add_box(bm_pillars,  18.25, y, pillar_sz, pillar_sz, Z_COURTYARD_BASE, Z_GF_CEILING)
+    make_mesh_object("GF_Sandstone_Veranda_Pillars", bm_pillars, coll, mats["pillar_sandstone"])
 
-    # Room partition walls
-    for y in [-24.0, -12.0, 0.0, 12.0, 24.0]:
-        add_box(bm_int_walls, -28.5, y, 15.0, WALL_THICKNESS_INT, 0.0, GF_HEIGHT)
-        add_box(bm_int_walls, 28.5, y, 15.0, WALL_THICKNESS_INT, 0.0, GF_HEIGHT)
-    for x in [-14.0, 0.0, 14.0]:
-        add_box(bm_int_walls, x, 28.5, WALL_THICKNESS_INT, 15.0, 0.0, GF_HEIGHT)
+    # 3. Outer Perimeter Facade Walls (Straight wings, 36m length)
+    add_box(bm_ext_walls, 0.0, -36.0 + WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING) # South
+    add_box(bm_ext_walls, 0.0,  36.0 - WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING) # North
+    add_box(bm_ext_walls, -36.0 + WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_GF_WALL_BASE, Z_GF_CEILING) # West
+    add_box(bm_ext_walls,  36.0 - WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_GF_WALL_BASE, Z_GF_CEILING) # East
+
+    # Corridor inner dividing walls with door cutouts
+    # South Corridor Wall (Y = -21.0)
+    add_box(bm_int_walls, -14.0, -21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls,  14.0, -21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls,   0.0, -21.0,  8.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    # North Corridor Wall (Y = 21.0)
+    add_box(bm_int_walls, -14.0, 21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls,  14.0, 21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls,   0.0, 21.0,  8.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    # West Corridor Wall (X = -21.0)
+    add_box(bm_int_walls, -21.0, -14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls, -21.0,  14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls, -21.0,   0.0, WALL_INT_TH,  8.0, Z_GF_WALL_BASE, Z_GF_CEILING)
+    # East Corridor Wall (X = 21.0)
+    add_box(bm_int_walls,  21.0, -14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls,  21.0,  14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_int_walls,  21.0,   0.0, WALL_INT_TH,  8.0, Z_GF_WALL_BASE, Z_GF_CEILING)
 
     make_mesh_object("GF_Exterior_Facade_Walls", bm_ext_walls, coll, mats["wall_sandstone"])
-    make_mesh_object("GF_Interior_Partition_Walls", bm_int_walls, coll, mats["wall_interior"])
+    make_mesh_object("GF_Corridor_Dividing_Walls", bm_int_walls, coll, mats["wall_interior"])
+
+    # 4. INDIVIDUAL ROOM FLOORS & PARTITIONS (GROUND FLOOR BLUEPRINT)
+    gf_rooms_spec = [
+        # South Wing (Admin & Entrance) - strictly within X in [-17.5, 17.5], Y in [-35.7, -21.2]
+        ("Room_GF_Main_Entrance_Porch", 0.0, -38.5, 9.0, 5.0, mats["mazemap_admin"], "ENTRANCE PORCH"),
+        ("Room_GF_Lobby_Reception", 0.0, -28.5, 10.1, 14.4, mats["mazemap_admin"], "RECEPTION & LOBBY"),
+        ("Room_GF_Board_Room", -9.35, -31.9, 8.1, 7.6, mats["mazemap_admin"], "BOARD ROOM"),
+        ("Room_GF_Admin_Director", -9.35, -24.5, 8.1, 6.4, mats["mazemap_admin"], "ACAD. DIRECTOR"),
+        ("Room_GF_Registrar_Office", 9.35, -31.9, 8.1, 7.6, mats["mazemap_admin"], "REGISTRAR CELL"),
+        ("Room_GF_Campus_Director", 9.35, -24.5, 8.1, 6.4, mats["mazemap_admin"], "CAMPUS DIRECTOR"),
+        ("Room_GF_ECE_Lab", -15.65, -28.5, 4.1, 14.4, mats["mazemap_lab"], "ECE LAB"),
+        ("Room_GF_Microprocessor_Lab", 15.65, -28.5, 4.1, 14.4, mats["mazemap_lab"], "MICROPROCESSOR LAB"),
+
+        # West Wing (Academic & Labs) - strictly within X in [-35.7, -21.2], Y in [-17.5, 17.5]
+        ("Room_GF_Electronic_Lab", -28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "ELECTRONIC LAB"),
+        ("Room_GF_Computer_Lab_1", -28.5, 0.0, 14.4, 11.1, mats["mazemap_cs_lab"], "COMPUTER LAB 1"),
+        ("Room_GF_Computer_Lab_2", -28.5, 11.75, 14.4, 11.5, mats["mazemap_cs_lab"], "COMPUTER LAB 2"),
+
+        # North Wing (Engineering Labs & Passage) - strictly within X in [-17.5, 17.5], Y in [21.2, 35.7]
+        ("Room_GF_Computer_Lab_North", -11.75, 28.5, 11.5, 14.4, mats["mazemap_cs_lab"], "COMPUTER LAB N"),
+        ("Room_GF_Lecture_Hall_47", 0.0, 28.5, 11.1, 14.4, mats["mazemap_lt"], "LECTURE HALL 47'"),
+        ("Room_GF_High_Voltage_Lab", 11.75, 28.5, 11.5, 14.4, mats["mazemap_lab"], "HIGH VOLTAGE LAB"),
+        ("Room_GF_Workshop_Bridge", 0.0, 39.0, 4.5, 6.5, mats["walkway_paved"], "WORKSHOP BRIDGE"),
+
+        # East Wing (Conference & Machine Labs) - strictly within X in [21.2, 35.7], Y in [-17.5, 17.5]
+        ("Room_GF_EMI_Lab", 28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "EMI LAB"),
+        ("Room_GF_Electronic_Machine_Lab", 28.5, 0.0, 14.4, 11.1, mats["mazemap_lab"], "MACHINE LAB"),
+        ("Room_GF_Conference_Hall", 28.5, 11.75, 14.4, 11.5, mats["mazemap_seminar"], "CONFERENCE HALL"),
+    ]
+
+    for obj_name, cx, cy, sx, sy, room_mat, label in gf_rooms_spec:
+        bm_room = bmesh.new()
+        add_box(bm_room, cx, cy, sx, sy, Z_GF_PLINTH, Z_GF_FLOOR)
+        make_mesh_object(obj_name, bm_room, coll, room_mat)
+
+    # Clean Ground Floor Interior Partition Walls (Non-overlapping)
+    bm_partitions = bmesh.new()
+    # West Wing partition walls (along X)
+    add_box(bm_partitions, -28.5, -5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions, -28.5,  5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+
+    # East Wing partition walls (along X)
+    add_box(bm_partitions,  28.5, -5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions,  28.5,  5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+
+    # North Wing partition walls (along Y)
+    add_box(bm_partitions, -5.85, 28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions,  5.85, 28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
+
+    # South Wing partition walls
+    add_box(bm_partitions,  -5.20, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions,   5.20, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions, -13.55, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions,  13.55, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions,  -9.35, -27.8, 8.1, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_box(bm_partitions,   9.35, -27.8, 8.1, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+
+    make_mesh_object("GF_Room_Partition_Walls", bm_partitions, coll, mats["wall_interior"])
 
 # =============================================================================
-# 7. FIRST FLOOR ARCHITECTURE
+# 7. FIRST FLOOR ARCHITECTURE (BLUEPRINT ROOM EXTRACTION)
 # =============================================================================
 def build_first_floor(coll, mats):
     """
-    Builds the First Floor:
-      - Structural floor slab between GF and FF at Z = 3.6m to 3.85m
-      - West Wing: Computer Science & AI Labs (Mint #10b981)
-      - North Wing: Central Library & Digital Reading Room (Rose #e11d48)
-      - East Wing: Upper Lecture Theatres LT-9 to LT-14 (Sky Blue #0ea5e9)
-      - South Wing: Drawing Halls & Seminar 2 (Orange #f97316)
-      - Continuous Veranda Balcony with safety parapet overlooking courtyard
-      - STRICTLY ZERO SOLAR PANELS ON ROOF
+    Builds the First Floor from blueprint CO-ED UP TO DATE 24.4.2014-Model.pdf:
+      - Structural floor slab at Z = 3.86m to 4.11m with central courtyard opening.
+      - Veranda balustrade (1.05m high white railing) overlooking courtyard.
+      - South Wing: Central Library & Digital Reading Room, Faculty Rooms.
+      - West Wing: Antenna Lab, Communication Lab, Computer Labs.
+      - North Wing: Multipurpose Hall, Upper Lecture Theatres, Back Canteen Annex.
+      - East Wing: Drawing Halls 1 & 2, Physics Lab, Chemistry Lab.
+      - Clean architectural roof parapet (STRICTLY ZERO SOLAR PANELS).
     """
-    z_slab0 = GF_HEIGHT
-    z_slab1 = GF_HEIGHT + SLAB_THICKNESS
-    z_ff_top = z_slab1 + FF_HEIGHT
-
-    # 1. Structural intermediate floor slab with open central courtyard
+    # 1. Structural Floor Slab with Open Courtyard and Rounded Corners
     bm_slab = bmesh.new()
-    add_box(bm_slab, -27.0, 0.0, 18.0, 72.0, z_slab0, z_slab1)   # West
-    add_box(bm_slab,  27.0, 0.0, 18.0, 72.0, z_slab0, z_slab1)   # East
-    add_box(bm_slab, 0.0,  27.0, 36.0, 18.0, z_slab0, z_slab1)   # North
-    add_box(bm_slab, 0.0, -27.0, 36.0, 18.0, z_slab0, z_slab1)   # South
+    add_box(bm_slab, -27.0, 0.0, 18.0, 36.0, Z_GF_CEILING, Z_FF_SLAB_TOP) # West
+    add_box(bm_slab,  27.0, 0.0, 18.0, 36.0, Z_GF_CEILING, Z_FF_SLAB_TOP) # East
+    add_box(bm_slab, 0.0,  27.0, 36.0, 18.0, Z_GF_CEILING, Z_FF_SLAB_TOP) # North
+    add_box(bm_slab, 0.0, -27.0, 36.0, 18.0, Z_GF_CEILING, Z_FF_SLAB_TOP) # South
+
+    # 4 rounded corner quadrant slabs
+    for qx, qy in [(-1.0, 1.0), (1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]:
+        ccx, ccy = qx * 18.0, qy * 18.0
+        pts_slab_corner = [(ccx, ccy)]
+        for s in range(13):
+            sa = (s / 12.0) * (math.pi * 0.5)
+            pts_slab_corner.append((ccx + qx * 18.0 * math.sin(sa), ccy + qy * 18.0 * math.cos(sa)))
+        add_prism(bm_slab, pts_slab_corner, Z_GF_CEILING, Z_FF_SLAB_TOP)
+
     make_mesh_object("FF_Structural_Floor_Slab", bm_slab, coll, mats["slab_concrete"])
 
-    # 2. First Floor Rooms Floor Finishes (MazeMap Functional Color Coding)
-    bm_cs_labs = bmesh.new()
-    bm_library = bmesh.new()
-    bm_upper_lts = bmesh.new()
-    bm_drawing = bmesh.new()
-    bm_ff_corridor = bmesh.new()
+    # 2. First Floor 10-foot Veranda Corridors (Straight wings + 4 curved corner arcs)
+    bm_ff_corr = bmesh.new()
+    add_box(bm_ff_corr, 0.0, -19.5, 36.0, CORRIDOR_WIDTH, Z_FF_SLAB_TOP, Z_FF_FLOOR)
+    add_box(bm_ff_corr, 0.0,  19.5, 36.0, CORRIDOR_WIDTH, Z_FF_SLAB_TOP, Z_FF_FLOOR)
+    add_box(bm_ff_corr, -19.5, 0.0, CORRIDOR_WIDTH, 36.0, Z_FF_SLAB_TOP, Z_FF_FLOOR)
+    add_box(bm_ff_corr,  19.5, 0.0, CORRIDOR_WIDTH, 36.0, Z_FF_SLAB_TOP, Z_FF_FLOOR)
 
-    add_box(bm_cs_labs, -28.5, 0.0, 15.0, 72.0, z_slab1, z_slab1 + 0.03)
-    add_box(bm_library, 0.0, 28.5, 42.0, 15.0, z_slab1, z_slab1 + 0.03)
-    add_box(bm_upper_lts, 28.5, 0.0, 15.0, 72.0, z_slab1, z_slab1 + 0.03)
-    add_box(bm_drawing, 0.0, -28.5, 42.0, 15.0, z_slab1, z_slab1 + 0.03)
+    # 4 curved corner corridor arcs on First Floor
+    for qx, qy in [(-1.0, 1.0), (1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]:
+        ccx, ccy = qx * 18.0, qy * 18.0
+        corr_segs = 12
+        for i in range(corr_segs):
+            p0 = (i / corr_segs) * (math.pi * 0.5)
+            p1 = ((i + 1) / corr_segs) * (math.pi * 0.5)
+            p0_in = (ccx + qx * 2.40 * math.sin(p0), ccy + qy * 2.40 * math.cos(p0))
+            p1_in = (ccx + qx * 2.40 * math.sin(p1), ccy + qy * 2.40 * math.cos(p1))
+            p1_out = (ccx + qx * 5.45 * math.sin(p1), ccy + qy * 5.45 * math.cos(p1))
+            p0_out = (ccx + qx * 5.45 * math.sin(p0), ccy + qy * 5.45 * math.cos(p0))
+            add_prism(bm_ff_corr, [p0_in, p1_in, p1_out, p0_out], Z_FF_SLAB_TOP, Z_FF_FLOOR)
 
-    add_box(bm_ff_corridor, -19.5, 0.0, 3.0, 36.0, z_slab1, z_slab1 + 0.02)
-    add_box(bm_ff_corridor,  19.5, 0.0, 3.0, 36.0, z_slab1, z_slab1 + 0.02)
-    add_box(bm_ff_corridor, 0.0,  19.5, 36.0, 3.0, z_slab1, z_slab1 + 0.02)
-    add_box(bm_ff_corridor, 0.0, -19.5, 36.0, 3.0, z_slab1, z_slab1 + 0.02)
+    make_mesh_object("FF_Veranda_10ft_Corridors", bm_ff_corr, coll, mats["corridor_floor"])
 
-    make_mesh_object("FF_Floor_CS_Labs_West", bm_cs_labs, coll, mats["mazemap_cs_lab"])
-    make_mesh_object("FF_Floor_Library_North", bm_library, coll, mats["mazemap_library"])
-    make_mesh_object("FF_Floor_LectureTheatres_East", bm_upper_lts, coll, mats["mazemap_lt_upper"])
-    make_mesh_object("FF_Floor_DrawingHalls_South", bm_drawing, coll, mats["mazemap_drawing"])
-    make_mesh_object("FF_Floor_Veranda_Corridors", bm_ff_corridor, coll, mats["corridor_floor"])
+    # 3. Veranda Safety Balustrade (1.05m high overlooking courtyard)
+    bm_balustrade = bmesh.new()
+    bal_h = 1.05
+    bal_th = 0.20
+    add_box(bm_balustrade, 0.0, -18.1, 36.0, bal_th, Z_FF_SLAB_TOP, Z_FF_SLAB_TOP + bal_h)
+    add_box(bm_balustrade, 0.0,  18.1, 36.0, bal_th, Z_FF_SLAB_TOP, Z_FF_SLAB_TOP + bal_h)
+    add_box(bm_balustrade, -18.1, 0.0, bal_th, 36.0, Z_FF_SLAB_TOP, Z_FF_SLAB_TOP + bal_h)
+    add_box(bm_balustrade,  18.1, 0.0, bal_th, 36.0, Z_FF_SLAB_TOP, Z_FF_SLAB_TOP + bal_h)
+    make_mesh_object("FF_Veranda_Safety_Balustrade", bm_balustrade, coll, mats["balustrade_white"])
 
-    # 3. First Floor Walls
+    # 4. First Floor Rooms (Floor Finishes & Partition Layouts)
+    ff_rooms_spec = [
+        # South Wing: Central Library & Reading Hall - strictly within X in [-17.5, 17.5], Y in [-35.7, -21.2]
+        ("Room_FF_Faculty_South", -13.85, -28.5, 7.3, 14.4, mats["mazemap_admin"], "FACULTY CABINS"),
+        ("Room_FF_Central_Library", 0.0, -28.5, 19.6, 14.4, mats["mazemap_library"], "CENTRAL LIBRARY"),
+        ("Room_FF_Tutorial_South", 13.85, -28.5, 7.3, 14.4, mats["mazemap_lt"], "TUTORIAL HALL"),
+
+        # West Wing: Communication & Advanced Labs - strictly within X in [-35.7, -21.2], Y in [-17.5, 17.5]
+        ("Room_FF_Antenna_Lab", -28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "ANTENNA LAB"),
+        ("Room_FF_Communication_Lab", -28.5, 0.0, 14.4, 11.1, mats["mazemap_lab"], "COMMUNICATION LAB"),
+        ("Room_FF_CS_Lab_Upper", -28.5, 11.75, 14.4, 11.5, mats["mazemap_cs_lab"], "CS LAB UPPER"),
+
+        # North Wing: Multipurpose Hall & Canteen Annex - strictly within X in [-17.5, 17.5], Y in [21.2, 35.7]
+        ("Room_FF_Lecture_Hall_North_Upper", -13.85, 28.5, 7.3, 14.4, mats["mazemap_lt_upper"], "LECTURE HALL 11"),
+        ("Room_FF_Multipurpose_Hall", 0.0, 28.5, 19.6, 14.4, mats["mazemap_seminar"], "MULTIPURPOSE HALL"),
+        ("Room_FF_Seminar_North_Upper", 13.85, 28.5, 7.3, 14.4, mats["mazemap_lt"], "SEMINAR HALL"),
+        ("Room_FF_Canteen_Annex", 0.0, 42.0, 16.0, 11.0, mats["mazemap_admin"], "CANTEEN & KITCHEN"),
+
+        # East Wing: Drawing Halls & Science Labs - strictly within X in [21.2, 35.7], Y in [-17.5, 17.5]
+        ("Room_FF_Chemistry_Lab", 28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "CHEMISTRY LAB"),
+        ("Room_FF_Physics_Lab", 28.5, 0.0, 14.4, 11.1, mats["mazemap_lab"], "PHYSICS LAB"),
+        ("Room_FF_Drawing_Hall_1", 28.5, 11.75, 14.4, 11.5, mats["mazemap_drawing"], "DRAWING HALL 1"),
+    ]
+
+    for obj_name, cx, cy, sx, sy, room_mat, label in ff_rooms_spec:
+        bm_room = bmesh.new()
+        add_box(bm_room, cx, cy, sx, sy, Z_FF_SLAB_TOP, Z_FF_FLOOR)
+        make_mesh_object(obj_name, bm_room, coll, room_mat)
+
+    # Clean First Floor Interior Partition Walls (Non-overlapping)
+    bm_ff_partitions = bmesh.new()
+    # West Wing partition walls (along X)
+    add_box(bm_ff_partitions, -28.5, -5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_box(bm_ff_partitions, -28.5,  5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+
+    # East Wing partition walls (along X)
+    add_box(bm_ff_partitions,  28.5, -5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_box(bm_ff_partitions,  28.5,  5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+
+    # North Wing partition walls (along Y)
+    add_box(bm_ff_partitions, -10.0, 28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_box(bm_ff_partitions,  10.0, 28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
+
+    # South Wing partition walls (along Y)
+    add_box(bm_ff_partitions, -10.0, -28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_box(bm_ff_partitions,  10.0, -28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
+
+    make_mesh_object("FF_Room_Partition_Walls", bm_ff_partitions, coll, mats["wall_interior"])
+
+    # First Floor Corner Radiating Rooms
+    bm_ff_corner_rooms = bmesh.new()
+    for qx, qy, cname in [(-1.0, 1.0, "NW"), (1.0, 1.0, "NE"), (-1.0, -1.0, "SW"), (1.0, -1.0, "SE")]:
+        ccx, ccy = qx * 18.0, qy * 18.0
+        for r_idx in range(4):
+            p0 = (r_idx / 4.0) * (math.pi * 0.5)
+            p1 = ((r_idx + 1) / 4.0) * (math.pi * 0.5)
+            pts_r = []
+            for s in range(5):
+                sa = p0 + (s / 4.0) * (p1 - p0)
+                pts_r.append((ccx + qx * 5.60 * math.sin(sa), ccy + qy * 5.60 * math.cos(sa)))
+            for s in range(4, -1, -1):
+                sa = p0 + (s / 4.0) * (p1 - p0)
+                pts_r.append((ccx + qx * 17.60 * math.sin(sa), ccy + qy * 17.60 * math.cos(sa)))
+            add_prism(bm_ff_corner_rooms, pts_r, Z_FF_SLAB_TOP, Z_FF_FLOOR)
+    make_mesh_object("FF_Corner_Radiating_LTs_Floor", bm_ff_corner_rooms, coll, mats["mazemap_lt_upper"])
+
+    # 5. First Floor Exterior Walls (Straight wings, 36m length)
     bm_ff_ext = bmesh.new()
-    bm_ff_int = bmesh.new()
-
-    add_box(bm_ff_ext, -36.0 + WALL_THICKNESS_EXT*0.5, 0.0, WALL_THICKNESS_EXT, 72.0, z_slab1, z_ff_top)
-    add_box(bm_ff_ext,  36.0 - WALL_THICKNESS_EXT*0.5, 0.0, WALL_THICKNESS_EXT, 72.0, z_slab1, z_ff_top)
-    add_box(bm_ff_ext, 0.0,  36.0 - WALL_THICKNESS_EXT*0.5, 72.0, WALL_THICKNESS_EXT, z_slab1, z_ff_top)
-    add_box(bm_ff_ext, 0.0, -36.0 + WALL_THICKNESS_EXT*0.5, 72.0, WALL_THICKNESS_EXT, z_slab1, z_ff_top)
-
-    add_box(bm_ff_int, -21.0, 0.0, WALL_THICKNESS_INT, 60.0, z_slab1, z_ff_top)
-    add_box(bm_ff_int,  21.0, 0.0, WALL_THICKNESS_INT, 60.0, z_slab1, z_ff_top)
-    add_box(bm_ff_int, 0.0,  21.0, 42.0, WALL_THICKNESS_INT, z_slab1, z_ff_top)
-    add_box(bm_ff_int, 0.0, -21.0, 42.0, WALL_THICKNESS_INT, z_slab1, z_ff_top)
-
-    for y in [-24.0, -12.0, 0.0, 12.0, 24.0]:
-        add_box(bm_ff_int, -28.5, y, 15.0, WALL_THICKNESS_INT, z_slab1, z_ff_top)
-        add_box(bm_ff_int,  28.5, y, 15.0, WALL_THICKNESS_INT, z_slab1, z_ff_top)
-    for x in [-14.0, 0.0, 14.0]:
-        add_box(bm_ff_int, x, 28.5, WALL_THICKNESS_INT, 15.0, z_slab1, z_ff_top)
-
+    add_box(bm_ff_ext, 0.0, -36.0 + WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_box(bm_ff_ext, 0.0,  36.0 - WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_box(bm_ff_ext, -36.0 + WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_box(bm_ff_ext,  36.0 - WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_FF_WALL_BASE, Z_FF_CEILING)
+    # 4 curved corner exterior walls
+    for qx, qy in [(-1.0, 1.0), (1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]:
+        ccx, ccy = qx * 18.0, qy * 18.0
+        pts_ext_ff = []
+        for s in range(9):
+            sa = (s / 8.0) * (math.pi * 0.5)
+            pts_ext_ff.append((ccx + qx * 17.60 * math.sin(sa), ccy + qy * 17.60 * math.cos(sa)))
+        for s in range(8, -1, -1):
+            sa = (s / 8.0) * (math.pi * 0.5)
+            pts_ext_ff.append((ccx + qx * 18.00 * math.sin(sa), ccy + qy * 18.00 * math.cos(sa)))
+        add_prism(bm_ff_ext, pts_ext_ff, Z_FF_WALL_BASE, Z_FF_CEILING)
     make_mesh_object("FF_Exterior_Facade_Walls", bm_ff_ext, coll, mats["wall_sandstone"])
-    make_mesh_object("FF_Interior_Partition_Walls", bm_ff_int, coll, mats["wall_interior"])
 
-    # 4. Veranda Safety Parapet / Balustrade (1.05m high overlooking courtyard)
-    bm_parapet = bmesh.new()
-    parapet_h = 1.05
-    parapet_th = 0.20
-    add_box(bm_parapet, 0.0, 18.1, 36.0, parapet_th, z_slab1, z_slab1 + parapet_h)
-    add_box(bm_parapet, 0.0, -18.1, 36.0, parapet_th, z_slab1, z_slab1 + parapet_h)
-    add_box(bm_parapet, -18.1, 0.0, parapet_th, 36.0, z_slab1, z_slab1 + parapet_h)
-    add_box(bm_parapet,  18.1, 0.0, parapet_th, 36.0, z_slab1, z_slab1 + parapet_h)
-    make_mesh_object("FF_Veranda_Safety_Balustrade", bm_parapet, coll, mats["balustrade_white"])
-
-    # 5. Roof Cap Parapets (Clean architectural roof perimeter, NO SOLAR PANELS)
-    bm_roof_edge = bmesh.new()
-    roof_h = 0.60
-    add_box(bm_roof_edge, -36.0 + WALL_THICKNESS_EXT*0.5, 0.0, WALL_THICKNESS_EXT, 72.0, z_ff_top, z_ff_top + roof_h)
-    add_box(bm_roof_edge,  36.0 - WALL_THICKNESS_EXT*0.5, 0.0, WALL_THICKNESS_EXT, 72.0, z_ff_top, z_ff_top + roof_h)
-    add_box(bm_roof_edge, 0.0,  36.0 - WALL_THICKNESS_EXT*0.5, 72.0, WALL_THICKNESS_EXT, z_ff_top, z_ff_top + roof_h)
-    add_box(bm_roof_edge, 0.0, -36.0 + WALL_THICKNESS_EXT*0.5, 72.0, WALL_THICKNESS_EXT, z_ff_top, z_ff_top + roof_h)
-    make_mesh_object("Roof_Perimeter_Parapet_Clean", bm_roof_edge, coll, mats["wall_sandstone"])
+    # 6. Roof Parapet Cap (Clean Architecture, Rounded Corners, ZERO Solar Panels)
+    bm_roof_parapet = bmesh.new()
+    add_box(bm_roof_parapet, 0.0, -36.0 + WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_ROOF_TOP, Z_ROOF_TOP + ROOF_PARAPET_H)
+    add_box(bm_roof_parapet, 0.0,  36.0 - WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_ROOF_TOP, Z_ROOF_TOP + ROOF_PARAPET_H)
+    add_box(bm_roof_parapet, -36.0 + WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_ROOF_TOP, Z_ROOF_TOP + ROOF_PARAPET_H)
+    add_box(bm_roof_parapet,  36.0 - WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_ROOF_TOP, Z_ROOF_TOP + ROOF_PARAPET_H)
+    for qx, qy in [(-1.0, 1.0), (1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]:
+        ccx, ccy = qx * 18.0, qy * 18.0
+        pts_parapet = []
+        for s in range(9):
+            sa = (s / 8.0) * (math.pi * 0.5)
+            pts_parapet.append((ccx + qx * 17.60 * math.sin(sa), ccy + qy * 17.60 * math.cos(sa)))
+        for s in range(8, -1, -1):
+            sa = (s / 8.0) * (math.pi * 0.5)
+            pts_parapet.append((ccx + qx * 18.00 * math.sin(sa), ccy + qy * 18.00 * math.cos(sa)))
+        add_prism(bm_roof_parapet, pts_parapet, Z_ROOF_TOP, Z_ROOF_TOP + ROOF_PARAPET_H)
+    make_mesh_object("Roof_Perimeter_Parapet_Clean", bm_roof_parapet, coll, mats["wall_sandstone"])
 
 # =============================================================================
-# 8. MAZEMAP-STYLE 3D FLOATING PINS & ROOM LABELS
+# 8. ARCHITECTURAL LABELS & LIGHTING
 # =============================================================================
 def add_floor_label(coll, mats, text, x, y, z, size=0.85):
-    """Adds a flat architectural typography label resting on room floor."""
     font = get_font()
     curve = bpy.data.curves.new(name=f"Label_{text[:8]}", type='FONT')
     curve.body = text
@@ -599,7 +842,6 @@ def add_floor_label(coll, mats, text, x, y, z, size=0.85):
 
     obj = bpy.data.objects.new(f"FloorLabel_{text}", curve)
     obj.location = (x, y, z)
-    obj.rotation_euler = (0.0, 0.0, 0.0)  # flat on floor, readable from top
     obj.data.materials.append(mats["dark_slate_text"])
     coll.objects.link(obj)
 
@@ -612,191 +854,166 @@ def add_floor_label(coll, mats, text, x, y, z, size=0.85):
     obj.select_set(False)
 
 def build_floor_typography(coll, mats):
-    """Adds architectural labels directly on room floors."""
-    # Ground Floor Labels
-    gf_labels = [
-        ("DIRECTOR", -28.5, 27.0, 0.08),
-        ("DEAN ACADEMICS", -28.5, 18.0, 0.08),
-        ("REGISTRAR", -28.5, 6.0, 0.08),
-        ("ADMIN OFFICES", -28.5, -6.0, 0.08),
-        ("EXAM CELL", -28.5, -18.0, 0.08),
-        ("ACCOUNTS", -28.5, -27.0, 0.08),
-        ("PHYSICS LAB", -7.0, 28.5, 0.08),
-        ("CHEMISTRY LAB", 7.0, 28.5, 0.08),
-        ("LT-1", 28.5, 18.0, 0.08),
-        ("LT-2", 28.5, 0.0, 0.08),
-        ("LT-3", 28.5, -18.0, 0.08),
-        ("MAIN ENTRANCE", 0.0, -32.0, 0.08),
-        ("SEMINAR HALL 1", 0.0, -25.0, 0.08),
+    labels = [
+        # Ground Floor South Wing
+        ("BOARD ROOM", -9.35, -31.9, Z_GF_FLOOR + 0.01),
+        ("RECEPTION", 0.0, -28.5, Z_GF_FLOOR + 0.01),
+        ("REGISTRAR", 9.35, -31.9, Z_GF_FLOOR + 0.01),
+        ("ACAD. DIRECTOR", -9.35, -24.5, Z_GF_FLOOR + 0.01),
+        ("CAMPUS DIRECTOR", 9.35, -24.5, Z_GF_FLOOR + 0.01),
+        ("ECE LAB", -15.65, -28.5, Z_GF_FLOOR + 0.01),
+        ("MICROPROCESSOR", 15.65, -28.5, Z_GF_FLOOR + 0.01),
+
+        # Ground Floor West Wing
+        ("ELECTRONIC LAB", -28.5, -11.75, Z_GF_FLOOR + 0.01),
+        ("COMPUTER LAB 1", -28.5, 0.0, Z_GF_FLOOR + 0.01),
+        ("COMPUTER LAB 2", -28.5, 11.75, Z_GF_FLOOR + 0.01),
+
+        # Ground Floor North Wing
+        ("COMPUTER LAB N", -11.75, 28.5, Z_GF_FLOOR + 0.01),
+        ("LECTURE HALL 47'", 0.0, 28.5, Z_GF_FLOOR + 0.01),
+        ("HIGH VOLTAGE LAB", 11.75, 28.5, Z_GF_FLOOR + 0.01),
+
+        # Ground Floor East Wing
+        ("EMI LAB", 28.5, -11.75, Z_GF_FLOOR + 0.01),
+        ("MACHINE LAB", 28.5, 0.0, Z_GF_FLOOR + 0.01),
+        ("CONFERENCE HALL", 28.5, 11.75, Z_GF_FLOOR + 0.01),
+
+        # First Floor
+        ("CENTRAL LIBRARY", 0.0, -28.5, Z_FF_FLOOR + 0.01),
+        ("FACULTY CABINS", -13.85, -28.5, Z_FF_FLOOR + 0.01),
+        ("TUTORIAL HALL", 13.85, -28.5, Z_FF_FLOOR + 0.01),
+        ("ANTENNA LAB", -28.5, -11.75, Z_FF_FLOOR + 0.01),
+        ("COMMUNICATION LAB", -28.5, 0.0, Z_FF_FLOOR + 0.01),
+        ("CS LAB UPPER", -28.5, 11.75, Z_FF_FLOOR + 0.01),
+        ("LECTURE HALL 11", -13.85, 28.5, Z_FF_FLOOR + 0.01),
+        ("MULTIPURPOSE HALL", 0.0, 28.5, Z_FF_FLOOR + 0.01),
+        ("SEMINAR HALL", 13.85, 28.5, Z_FF_FLOOR + 0.01),
+        ("CHEMISTRY LAB", 28.5, -11.75, Z_FF_FLOOR + 0.01),
+        ("PHYSICS LAB", 28.5, 0.0, Z_FF_FLOOR + 0.01),
+        ("DRAWING HALL 1", 28.5, 11.75, Z_FF_FLOOR + 0.01),
     ]
-    for txt, lx, ly, lz in gf_labels:
-        add_floor_label(coll, mats, txt, lx, ly, lz, size=0.95)
+    for text, x, y, z in labels:
+        add_floor_label(coll, mats, text, x, y, z, size=0.65)
 
-def build_floating_badge(coll, mats, name, text_label, x, y, z, hex_color):
-    """Creates a sleek 3D wayfinding badge pin hovering over a POI."""
-    mat_pin = get_or_create_material(f"Mat_Pin_{name}", hex_color, roughness=0.2, emission=0.35)
-    
-    bm_badge = bmesh.new()
-    # Sleek circular disc
-    add_cylinder(bm_badge, x, y, 0.95, z, z + 0.22, segments=16)
-    # Thin elegant needle
-    add_cylinder(bm_badge, x, y, 0.025, z - 1.4, z, segments=8)
-    make_mesh_object(f"Pin_Badge_{name}", bm_badge, coll, mat_pin)
-
-    font_loaded = get_font()
-    curve = bpy.data.curves.new(name=f"TextCurve_{name}", type='FONT')
-    curve.body = text_label
-    if font_loaded:
-        curve.font = font_loaded
-    curve.size = 0.50
-    curve.extrude = 0.04
-    curve.align_x = 'CENTER'
-    curve.align_y = 'CENTER'
-
-    txt_obj = bpy.data.objects.new(f"Pin_Label_{name}", curve)
-    txt_obj.location = (x, y, z + 0.40)
-    txt_obj.rotation_euler = (math.radians(55.0), 0.0, 0.0)
-    txt_obj.data.materials.append(mats["white_text"])
-    coll.objects.link(txt_obj)
-
-    bpy.context.view_layer.objects.active = txt_obj
-    txt_obj.select_set(True)
-    try:
-        bpy.ops.object.convert(target='MESH')
-    except Exception:
-        pass
-    txt_obj.select_set(False)
-
-def build_all_signage_pins(coll, mats):
-    """Builds prominent 3D pins for campus landmarks."""
-    pins = [
-        ("AdminBlock", "ADMIN BLOCK", -28.5, 0.0, 6.5, "#d97706"),
-        ("JIETStage", "JIET STAGE", 0.0, STAGE_Y_CENTER, 6.2, "#991b1b"),
-        ("Amphitheater", "AMPHITHEATER", 0.0, -14.0, 5.8, "#b45309"),
-        ("LectureTheatres", "LECTURE THEATRES", 28.5, 0.0, 6.5, "#0284c7"),
-        ("EngineeringLabs", "ENGINEERING LABS", 0.0, 28.5, 6.5, "#059669"),
-        ("CentralLibrary", "CENTRAL LIBRARY (1F)", 0.0, 28.5, 9.8, "#e11d48"),
-        ("MainEntrance", "MAIN ENTRANCE", 0.0, -34.0, 6.5, "#ea580c"),
-        ("StairNW", "NW STAIRS", -18.0, 18.0, 6.5, "#475569"),
-        ("StairNE", "NE STAIRS",  18.0, 18.0, 6.5, "#475569"),
-    ]
-    for key, label, px, py, pz, color in pins:
-        build_floating_badge(coll, mats, key, label, px, py, pz, color)
-
-# =============================================================================
-# 9. LIGHTING & MULTI-ANGLE CAMERAS SETUP
-# =============================================================================
 def setup_lighting(coll):
-    """Sets up high-quality studio architectural sun and sky bounce."""
-    # Key Sun: Warm sunlight
-    sun_data = bpy.data.lights.new(name="Sun_Key", type='SUN')
-    sun_data.energy = 2.6
-    sun_data.color = (1.0, 0.98, 0.95)
-    sun_data.use_shadow = True
-    sun_obj = bpy.data.objects.new("Sun_Key", sun_data)
-    sun_obj.rotation_euler = (math.radians(52.0), math.radians(18.0), math.radians(-38.0))
+    # Sun light (warm sunlight)
+    sun_data = bpy.data.lights.new("Sun_Jodhpur", type='SUN')
+    sun_data.energy = 4.5
+    sun_data.color = (1.0, 0.96, 0.90)
+    sun_obj = bpy.data.objects.new("Sun_Jodhpur", sun_data)
+    sun_obj.location = (45.0, -35.0, 65.0)
+    sun_obj.rotation_euler = (math.radians(52.0), math.radians(12.0), math.radians(-38.0))
     coll.objects.link(sun_obj)
 
-    # Soft Fill Sun
-    fill_data = bpy.data.lights.new(name="Sun_Fill", type='SUN')
-    fill_data.energy = 1.4
-    fill_data.color = (0.94, 0.97, 1.0)
-    fill_data.use_shadow = False
-    fill_obj = bpy.data.objects.new("Sun_Fill", fill_data)
-    fill_obj.rotation_euler = (math.radians(-42.0), math.radians(-20.0), math.radians(140.0))
-    coll.objects.link(fill_obj)
-
-    # World background
-    scene = bpy.context.scene
-    world = scene.world or bpy.data.worlds.new("World")
-    scene.world = world
+    # Ambient sky fill
+    world = bpy.context.scene.world
+    if not world:
+        world = bpy.data.worlds.new("World_Sky")
+        bpy.context.scene.world = world
+    world.use_nodes = True
     bg = world.node_tree.nodes.get("Background")
     if bg:
-        bg.inputs["Color"].default_value = (0.95, 0.97, 1.0, 1.0)
-        bg.inputs["Strength"].default_value = 1.1
+        bg.inputs["Color"].default_value = (0.78, 0.88, 0.98, 1.0)
+        bg.inputs["Strength"].default_value = 1.15
 
-def create_camera(coll, name, location, target, lens=38.0):
+def create_targeted_camera(coll, name, location, target, lens=28.0):
     cam_data = bpy.data.cameras.new(name)
     cam_data.lens = lens
+    cam_data.clip_start = 0.1
+    cam_data.clip_end = 500.0
     cam_obj = bpy.data.objects.new(name, cam_data)
-    coll.objects.link(cam_obj)
-    cam_obj.location = location
+    cam_obj.location = Vector(location)
 
     direction = Vector(target) - Vector(location)
-    rot_quat = direction.to_track_quat('-Z', 'Y')
-    cam_obj.rotation_euler = rot_quat.to_euler()
+    if direction.length > 0:
+        rot_quat = direction.to_track_quat('-Z', 'Y')
+        cam_obj.rotation_euler = rot_quat.to_euler()
+
+    coll.objects.link(cam_obj)
     return cam_obj
 
 def setup_cameras(coll):
-    """
-    Sets up multi-angle cameras matching ground-truth user perspectives:
-      1. Courtyard View: From South veranda looking down across amphitheater bleachers
-         and 4 lawn quadrants to stage, Admin on LEFT (media_1791470686695.jpg & IMG_3030.jpeg).
-      2. Top-Down: Satellite overview matching Google Maps (media_1791470363143.jpg).
-      3. Isometric: 2.5D architectural isometric matching MazeMap.
-      4. Stage Close-Up: Looking at stage, JIET text, brick plinth.
-      5. Corner Staircase Close-Up: Looking at curved helical green marble stairs (IMG_3052.jpeg).
-    """
     cameras = {}
-    # 1. Courtyard View (Standing on top bleacher tier, looking down across all tiers, 4 lawns, and to stage)
-    # Perfectly captures media_1791470686695.jpg & IMG_3030.jpeg
-    cam_courtyard = create_camera(
-        coll, "Camera_Courtyard_Admin_To_Stage",
-        location=(0.0, -17.0, 3.0),
-        target=(0.0, 13.5, 1.1),
-        lens=22.0
+
+    # 1. Courtyard View (standing elevated on amphitheater bleachers, looking down across courtyard to stage)
+    cam_courtyard = create_targeted_camera(
+        coll, "courtyard_view_admin_to_stage",
+        location=(0.0, -16.5, 2.8),
+        target=(0.0, 15.6, 1.2),
+        lens=24.0
     )
     cameras["courtyard_view_admin_to_stage"] = cam_courtyard
 
-    # 2. Top-Down Satellite Overview (Matches media_1791470363143.jpg)
-    cam_topdown = create_camera(
-        coll, "Camera_TopDown_Overview",
-        location=(0.0, 0.0, 92.0),
-        target=(0.0, 0.0, 0.0),
-        lens=35.0
-    )
-    cameras["topdown_overview"] = cam_topdown
-
-    # 3. Isometric Campus View (Matches MazeMap 2.5D angle)
-    cam_iso = create_camera(
-        coll, "Camera_Isometric_Campus",
-        location=(58.0, -58.0, 52.0),
-        target=(0.0, 0.0, 2.5),
-        lens=50.0
-    )
-    cameras["isometric_campus_view"] = cam_iso
-
-    # 4. Stage Close-Up (Eye-level shot looking at stage platform, steps, and JIET text)
-    cam_stage = create_camera(
-        coll, "Camera_Stage_CloseUp",
-        location=(0.0, 7.5, 1.8),
-        target=(0.0, 16.5, 1.8),
-        lens=30.0
+    # 2. Stage Close-Up (eye level, centered facing flat front brick plinth and 3D JIET lettering)
+    cam_stage = create_targeted_camera(
+        coll, "stage_close_up",
+        location=(0.0, 5.0, 2.0),
+        target=(0.0, 15.6, 1.5),
+        lens=32.0
     )
     cameras["stage_close_up"] = cam_stage
 
-    # 5. Corner Staircase Close-Up (Matches IMG_3052.jpeg)
-    cam_stairs = create_camera(
-        coll, "Camera_Corner_Staircase_CloseUp",
-        location=(-13.8, 14.5, 1.8),
-        target=(-18.0, 18.0, 2.2),
-        lens=28.0
+    # 3. Corner Staircase Close-Up (standing in corridor looking directly into NW helical rotunda bay)
+    cam_stairs = create_targeted_camera(
+        coll, "corner_staircase_close_up",
+        location=(-14.5, 14.5, 1.8),
+        target=(-18.0, 18.0, 1.6),
+        lens=24.0
     )
     cameras["corner_staircase_close_up"] = cam_stairs
 
+    # 4. Unblocked Corridor View (looking straight North down the 10ft wide sandstone colonnade)
+    cam_corridor = create_targeted_camera(
+        coll, "corridor_unblocked_view",
+        location=(-19.5, -8.0, 1.7),
+        target=(-19.5, 12.0, 1.7),
+        lens=26.0
+    )
+    cameras["corridor_unblocked_view"] = cam_corridor
+
+    # 5. Top-Down Overview (wide architectural lens, entire 72m squircle framed within 1920x1080)
+    cam_topdown = create_targeted_camera(
+        coll, "topdown_overview",
+        location=(0.0, 0.0, 115.0),
+        target=(0.0, 0.0, 0.0),
+        lens=24.0
+    )
+    cam_topdown.rotation_euler = Euler((0.0, 0.0, 0.0), 'XYZ')
+    cameras["topdown_overview"] = cam_topdown
+
+    # 6. Isometric Campus View (2.5D architectural isometric matching MazeMap)
+    cam_iso = create_targeted_camera(
+        coll, "isometric_campus_view",
+        location=(62.0, -62.0, 52.0),
+        target=(0.0, 0.0, 2.0),
+        lens=45.0
+    )
+    cameras["isometric_campus_view"] = cam_iso
+
     return cameras
 
+def configure_viewport_clipping():
+    """Sets clip_start = 0.1m and clip_end = 500.0m on all 3D viewports."""
+    for screen in bpy.data.screens:
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        space.clip_start = 0.1
+                        space.clip_end = 500.0
+
 # =============================================================================
-# 10. MAIN EXECUTION & EXPORT PIPELINE
+# 9. MAIN EXECUTION PIPELINE
 # =============================================================================
 def main():
     print("=" * 70)
-    print("JIET JODHPUR CAMPUS DIGITAL TWIN - BLENDER 3D PROTOTYPE GENERATOR (v2)")
+    print("JIET JODHPUR CAMPUS DIGITAL TWIN - ARCHITECTURAL TWIN GENERATOR (v3)")
     print("=" * 70)
 
-    # 1. Initialize Scene
+    # 1. Clean Scene & Initialize Collections
     scene = clean_scene()
-    root_coll = bpy.context.scene.collection
+    root_coll = scene.collection
 
     coll_ground = get_collection("01_Courtyard_Ground", root_coll)
     coll_stage = get_collection("02_Outdoor_Stage", root_coll)
@@ -804,8 +1021,7 @@ def main():
     coll_gf = get_collection("04_Ground_Floor_Architecture", root_coll)
     coll_ff = get_collection("05_First_Floor_Architecture", root_coll)
     coll_labels = get_collection("06_Floor_Typography", root_coll)
-    coll_signs = get_collection("07_Signage_Pins", root_coll)
-    coll_env = get_collection("08_Lighting_and_Cameras", root_coll)
+    coll_env = get_collection("07_Lighting_and_Cameras", root_coll)
 
     # 2. Materials Palette (PBR, Authentic & MazeMap Inspired)
     mats = {
@@ -824,7 +1040,7 @@ def main():
         "dark_slate_text": get_or_create_material("Mat_Dark_Slate_Text", "#1e293b", roughness=0.3),
         "stair_green_marble": get_or_create_material("Mat_Stair_Green_Marble", "#143828", roughness=0.20),
         "stair_riser": get_or_create_material("Mat_Stair_Riser_White", "#f8fafc", roughness=0.35),
-        "stair_railing": get_or_create_material("Mat_Stair_Tubular_Railing", "#e2e8f0", roughness=0.25, metallic=0.2),
+        "stair_railing": get_or_create_material("Mat_Stair_Tubular_Railing", "#111827", roughness=0.25, metallic=0.7),
         "wall_sandstone": get_or_create_material("Mat_Jodhpur_Sandstone", "#d49b6a", roughness=0.60),
         "wall_interior": get_or_create_material("Mat_Interior_OffWhite", "#f8fafc", roughness=0.4),
         "pillar_sandstone": get_or_create_material("Mat_Sandstone_Pillar", "#c69263", roughness=0.55),
@@ -846,28 +1062,26 @@ def main():
     print("-> Building Courtyard Ground, Lawns & Seating Bleachers...")
     build_courtyard(coll_ground, mats)
 
-    print("-> Building Outdoor Stage & 3D JIET Typography...")
+    print("-> Building Outdoor Stage (Solid Front, Side Access Stairs)...")
     build_outdoor_stage(coll_stage, mats)
 
-    print("-> Building Corner Rotunda Helical Staircases (NW, NE, SW, SE)...")
-    build_all_corner_staircases(coll_stairs, mats)
+    print("-> Building Unblocked Corridors, Radiating LTs & Rotunda Staircases...")
+    build_all_corners(coll_stairs, mats)
 
-    print("-> Building Ground Floor Architecture & Colonnades...")
+    print("-> Building Ground Floor Blueprint Rooms & Veranda Colonnades...")
     build_ground_floor(coll_gf, mats)
 
-    print("-> Building First Floor Architecture & Balustrades...")
+    print("-> Building First Floor Blueprint Architecture & Balustrades...")
     build_first_floor(coll_ff, mats)
 
     print("-> Adding Architectural Floor Typography Labels...")
     build_floor_typography(coll_labels, mats)
 
-    print("-> Building MazeMap 3D Floating Wayfinding Pins...")
-    build_all_signage_pins(coll_signs, mats)
-
     # 4. Setup Lighting and Cameras
     print("-> Setting up Lighting & Multi-Angle Cameras...")
     setup_lighting(coll_env)
     cameras = setup_cameras(coll_env)
+    configure_viewport_clipping()
 
     # 5. Update View Layer
     bpy.context.view_layer.update()
@@ -906,14 +1120,9 @@ def main():
     for view_name, cam_obj in cameras.items():
         render_output = os.path.join(renders_dir, f"{view_name}.png")
         print(f"   Rendering {view_name} -> {render_output}")
-        if view_name in ["courtyard_view_admin_to_stage", "stage_close_up", "corner_staircase_close_up"]:
-            coll_signs.hide_render = True
-        else:
-            coll_signs.hide_render = False
         scene.camera = cam_obj
         scene.render.filepath = render_output
         bpy.ops.render.render(write_still=True)
-    coll_signs.hide_render = False
 
     print("=" * 70)
     print("BLENDER PROTOTYPE GENERATION & RENDERING COMPLETE!")
