@@ -60,35 +60,64 @@ export const ActiveClassBanner: React.FC = () => {
       {/* IN SESSION STATUS */}
       {status === 'IN_SESSION' && activeSlot && (
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              In Session
-            </span>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-[11px] font-mono text-cyan-600 dark:text-cyan-400">
-                <Clock className="w-3 h-3" />
-                <span>{minutesRemaining}m</span>
+          {isCollapsed ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                <span className="text-xs font-bold truncate">
+                  {activeSlot.courseCode} ({activeRoom?.code || activeSlot.roomId})
+                </span>
+                <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-mono shrink-0">
+                  {minutesRemaining}m
+                </span>
               </div>
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="text-slate-400 hover:text-white p-0.5 rounded"
-                title={isCollapsed ? 'Expand class details' : 'Collapse banner'}
-              >
-                {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={handleNavigateToActive}
+                  data-testid="take-me-to-class-btn"
+                  className="p-1 rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/30 transition-colors"
+                  title="Take me to class"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setIsCollapsed(false)}
+                  className="p-1 text-slate-400 hover:text-slate-200"
+                  title="Expand class details"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
-          </div>
-
-          <h3 className="text-xs sm:text-sm font-bold line-clamp-1 leading-snug">
-            {activeSlot.courseName}
-          </h3>
-          <p className={`text-[11px] mt-0.5 ${textMutedClass}`}>
-            {activeSlot.courseCode} • {activeSlot.slotType}
-          </p>
-
-          {!isCollapsed && (
+          ) : (
             <>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  In Session
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-[11px] font-mono text-cyan-600 dark:text-cyan-400">
+                    <Clock className="w-3 h-3" />
+                    <span>{minutesRemaining}m</span>
+                  </div>
+                  <button
+                    onClick={() => setIsCollapsed(true)}
+                    className="text-slate-400 hover:text-white p-0.5 rounded"
+                    title="Collapse banner"
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <h3 className="text-xs sm:text-sm font-bold line-clamp-1 leading-snug">
+                {activeSlot.courseName}
+              </h3>
+              <p className={`text-[11px] mt-0.5 ${textMutedClass}`}>
+                {activeSlot.courseCode} • {activeSlot.slotType}
+              </p>
+
               <div className={`mt-2 pt-2 border-t ${borderSubtleClass} flex items-center justify-between gap-2 text-xs`}>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <MapPin className="w-3.5 h-3.5 text-cyan-500 shrink-0" />

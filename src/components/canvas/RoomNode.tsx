@@ -464,7 +464,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       {shouldRenderFlatFloorText && (
         <group position={[0, -h / 2 + 0.082, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <Text
-            position={[0, 0, 0]}
+            position={[0, Math.min(w, d) > 3.0 ? 0.28 : 0, 0]}
             fontSize={Math.min(1.2, Math.max(0.65, Math.min(w, d) * 0.16))}
             color={isSelected ? '#ea580c' : isDark ? '#f8fafc' : '#1e293b'}
             anchorX="center"
@@ -472,6 +472,18 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
           >
             {room.code}
           </Text>
+          {Math.min(w, d) > 3.0 && (
+            <Text
+              position={[0, -0.45, 0]}
+              fontSize={Math.min(0.5, Math.max(0.32, Math.min(w, d) * 0.075))}
+              color={isSelected ? '#ea580c' : isDark ? '#94a3b8' : '#64748b'}
+              anchorX="center"
+              anchorY="middle"
+              maxWidth={w * 0.85}
+            >
+              {room.name.replace(/\(.*?\)/g, '').trim()}
+            </Text>
+          )}
         </group>
       )}
 

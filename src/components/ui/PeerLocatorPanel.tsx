@@ -218,7 +218,7 @@ export const PeerLocatorPanel: React.FC = () => {
           </div>
 
           {/* Manual Check-in Dropdown */}
-          <div className="flex items-center gap-2 pt-1 w-full min-w-0">
+          <div className="flex items-center gap-2 pt-1 w-full min-w-0 max-w-full overflow-hidden">
             <select
               value={manualRoomSelection}
               onChange={(e) => {
@@ -226,14 +226,14 @@ export const PeerLocatorPanel: React.FC = () => {
                 handleManualCheckIn(e.target.value);
               }}
               data-testid="room-checkin-select"
-              className={`w-full min-w-0 max-w-full flex-1 border rounded-xl px-2.5 py-1.5 text-xs truncate focus:outline-none focus:border-cyan-500 ${
+              className={`w-0 min-w-0 max-w-full flex-1 border rounded-xl px-2.5 py-1.5 text-xs truncate focus:outline-none focus:border-cyan-500 ${
                 isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
               }`}
             >
               <option value="">Quick Check-in to Room...</option>
               {campusRooms.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.code} - {r.name} ({r.floor === 'ground' ? 'GF' : '1F'})
+                  {r.code} - {r.name.length > 20 ? r.name.substring(0, 20) + '...' : r.name} ({r.floor === 'ground' ? 'GF' : '1F'})
                 </option>
               ))}
             </select>

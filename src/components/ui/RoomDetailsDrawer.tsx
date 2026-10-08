@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   X,
   Users,
@@ -17,6 +17,8 @@ import {
   ArrowRightLeft,
   MapPin,
   Play,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { campusRooms } from '../../data/campusRooms';
 import { useCampusStore } from '../../stores/useCampusStore';
@@ -26,6 +28,7 @@ import { getRoomDailySchedule } from '../../services/time/datetimeEngine';
 import { findDetailedPathToRoom } from '../../services/routing/pathfinding';
 
 export const RoomDetailsDrawer: React.FC = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const selectedRoomId = useCampusStore((state) => state.selectedRoomId);
   const selectRoom = useCampusStore((state) => state.selectRoom);
   const setCameraTarget = useCampusStore((state) => state.setCameraTarget);
@@ -109,10 +112,18 @@ export const RoomDetailsDrawer: React.FC = () => {
   return (
     <div
       data-testid="room-details-drawer"
-      className={`fixed inset-x-0 bottom-0 max-h-[65vh] md:max-h-[82vh] md:inset-auto md:top-20 md:right-4 md:bottom-24 w-full md:w-96 z-50 pointer-events-auto border rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-right duration-300 ${containerBgClass}`}
+      className={`fixed inset-x-0 bottom-0 ${
+        isExpanded ? 'max-h-[75vh]' : 'max-h-[46vh]'
+      } md:max-h-[82vh] md:inset-auto md:top-20 md:right-4 md:bottom-24 w-full md:w-96 z-50 pointer-events-auto border rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-right duration-300 ${containerBgClass}`}
     >
-      {/* Mobile drag handle bar */}
-      <div className="md:hidden w-12 h-1.5 rounded-full bg-slate-400/40 mx-auto mt-2.5 mb-1 shrink-0" />
+      {/* Mobile drag handle & expand toggle bar */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="md:hidden w-full py-2 flex flex-col items-center justify-center shrink-0 cursor-pointer active:opacity-60"
+        title={isExpanded ? 'Collapse peek sheet' : 'Expand full details'}
+      >
+        <div className="w-12 h-1.5 rounded-full bg-slate-400/40" />
+      </button>
 
       {/* Drawer Header */}
       <div className={`p-4 sm:p-5 border-b flex items-start justify-between gap-3 ${headerBgClass}`}>
