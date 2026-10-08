@@ -83,17 +83,11 @@ export const MazeMapIconsLayer: React.FC = () => {
   const cameraPos: [number, number, number] = [camera.position.x, camera.position.y, camera.position.z];
   const slabY = 2.65 + explodedElevation;
 
-  // Filter POIs according to active floor and First Floor slab occlusion
+  // Filter POIs according to active floor
   const visiblePois = MAZEMAP_POIS.filter((poi) => {
     if (activeFloorFilter === 'ground') return poi.floor === 'ground';
     if (activeFloorFilter === 'first') return poi.floor === 'first';
-    // In ALL mode: hide ground POIs if line of sight from camera passes through First Floor slab
-    if (isAllMode && poi.floor === 'ground') {
-      if (isPointOccludedByFirstFloor(poi.coords, cameraPos, slabY)) {
-        return false;
-      }
-    }
-    return true; // 'all' mode shows both floors when unoccluded
+    return true; // 'all' mode shows both floors with Drei occlude checking
   });
 
   return (

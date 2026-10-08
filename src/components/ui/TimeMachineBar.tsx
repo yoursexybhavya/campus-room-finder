@@ -71,9 +71,9 @@ export const TimeMachineBar: React.FC = () => {
   return (
     <div
       data-testid="time-machine-bar"
-      className={`absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-4xl w-[95%] sm:w-auto border rounded-2xl p-2 sm:p-2.5 shadow-2xl items-center justify-between gap-2 sm:gap-3 select-none animate-in fade-in slide-in-from-bottom duration-300 ${
+      className={`absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-4xl w-[95%] sm:w-auto border rounded-2xl p-1.5 sm:p-2.5 shadow-2xl flex items-center justify-between gap-1.5 sm:gap-3 select-none animate-in fade-in slide-in-from-bottom duration-300 ${
         isCoveredBySheet ? 'hidden md:flex' : 'flex'
-      } flex-wrap sm:flex-nowrap ${containerBgClass}`}
+      } flex-nowrap overflow-x-auto no-scrollbar ${containerBgClass}`}
     >
       {/* Clock Status & Display */}
       <div className="flex items-center gap-2.5 px-2">

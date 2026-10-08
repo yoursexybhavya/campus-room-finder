@@ -1,7 +1,7 @@
 import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Edges, Html } from '@react-three/drei';
+import { Edges, Html, Text } from '@react-three/drei';
 import { CampusRoom, FloorFilter } from '../../types/campus';
 import { campusRooms } from '../../data/campusRooms';
 import { useCampusStore } from '../../stores/useCampusStore';
@@ -283,20 +283,15 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     );
 
   // Determine whether to display the 3D billboard label
-  // In 'ALL' mode: display key anchors, selected, or hovered rooms; suppress shadowed/occluded ground rooms
-  // In single floor mode ('ground' / 'first'): display all rooms on that floor
+  // In ALL mode: show badge only for selected or hovered rooms (MazeMap style: all rooms have flat floor codes, pin/badge appears on focus)
+  // In single floor mode ('ground' / 'first'): display major anchors or hovered/selected rooms
   const shouldRenderLabel =
     isFloorActive &&
-    !isGroundOccluded &&
     (!isPanelOpen || isSelected || isHovered) &&
-    (!isAllMode || ((isMajorAnchor && !isCoveredByFirstFloor) || isSelected || isHovered));
+    (isSelected || isHovered || (!isAllMode && isMajorAnchor));
 
-  // In ALL mode: Ground floor flat typography is suppressed if covered or occluded by First Floor to prevent double-printed text
-  const shouldRenderFlatFloorText =
-    isFloorActive &&
-    !isSelected &&
-    !isGroundOccluded &&
-    (!isAllMode || room.floor === 'first' || isHovered);
+  // Flat room typography on floor tiles: always active on visible floors matching MazeMap reference
+  const shouldRenderFlatFloorText = isFloorActive;
 
   // Lecture Theater Seating Grid Rows (MazeMap style S1, S3)
   const isLectureHall =
@@ -465,19 +460,18 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
         />
       </mesh>
 
-      {/* 6. FLAT ARCHITECTURAL ROOM LABEL (Printed directly on floor tiles) */}
+      {/* 6. FLAT ARCHITECTURAL ROOM LABEL (Rendered directly on floor tiles like MazeMap) */}
       {shouldRenderFlatFloorText && (
         <group position={[0, -h / 2 + 0.082, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <Html occlude transform center distanceFactor={28} className="pointer-events-none select-none">
-            <div className="flex flex-col items-center justify-center text-center opacity-85">
-              <span className="font-mono font-black text-[10px] leading-tight tracking-wider text-slate-800 dark:text-slate-100">
-                {room.code}
-              </span>
-              <span className="font-sans font-medium text-[7.5px] leading-tight text-slate-600 dark:text-slate-300 max-w-[80px] truncate mt-0.5">
-                {room.name.replace(/\(.*?\)/g, '').trim()}
-              </span>
-            </div>
-          </Html>
+          <Text
+            position={[0, 0, 0]}
+            fontSize={Math.min(1.2, Math.max(0.65, Math.min(w, d) * 0.16))}
+            color={isSelected ? '#ea580c' : isDark ? '#f8fafc' : '#1e293b'}
+            anchorX="center"
+            anchorY="middle"
+          >
+            {room.code}
+          </Text>
         </group>
       )}
 

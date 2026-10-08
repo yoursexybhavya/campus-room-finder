@@ -109,7 +109,7 @@ export const RoomDetailsDrawer: React.FC = () => {
   return (
     <div
       data-testid="room-details-drawer"
-      className={`fixed inset-x-0 bottom-0 max-h-[82vh] md:inset-auto md:top-20 md:right-4 md:bottom-24 w-full md:w-96 z-50 pointer-events-auto border rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-right duration-300 ${containerBgClass}`}
+      className={`fixed inset-x-0 bottom-0 max-h-[65vh] md:max-h-[82vh] md:inset-auto md:top-20 md:right-4 md:bottom-24 w-full md:w-96 z-50 pointer-events-auto border rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-right duration-300 ${containerBgClass}`}
     >
       {/* Mobile drag handle bar */}
       <div className="md:hidden w-12 h-1.5 rounded-full bg-slate-400/40 mx-auto mt-2.5 mb-1 shrink-0" />

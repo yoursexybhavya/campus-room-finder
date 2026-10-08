@@ -142,11 +142,11 @@ export const Header: React.FC = () => {
           )}
         </button>
 
-        {/* MazeMap Authentic Compass Rose */}
+        {/* MazeMap Authentic Compass Rose (Desktop / Tablet) */}
         <button
           onClick={resetView}
           data-testid="compass-rose-btn"
-          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
+          className={`hidden sm:flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
           title="Align Camera to True North (113° Bearing)"
         >
           <div className="relative w-4 h-4 flex items-center justify-center">
@@ -156,11 +156,11 @@ export const Header: React.FC = () => {
           <span className="hidden md:inline font-mono text-[11px]">113°</span>
         </button>
 
-        {/* Reset Camera View Button */}
+        {/* Reset Camera View Button (Desktop / Tablet) */}
         <button
           onClick={resetView}
           data-testid="reset-view-btn"
-          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
+          className={`hidden sm:flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
           title="Reset Camera View to Default"
         >
           <RotateCcw className="w-3.5 h-3.5" />

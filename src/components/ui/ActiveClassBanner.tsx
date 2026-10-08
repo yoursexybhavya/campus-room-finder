@@ -53,7 +53,7 @@ export const ActiveClassBanner: React.FC = () => {
   return (
     <div
       data-testid="active-class-banner"
-      className={`absolute top-28 sm:top-[138px] left-3 sm:left-4 z-30 pointer-events-auto w-[calc(100%-80px)] sm:w-80 border rounded-2xl p-3 shadow-2xl select-none transition-all duration-300 animate-in fade-in slide-in-from-top ${
+      className={`absolute top-28 sm:top-[138px] left-3 right-20 sm:right-auto sm:w-80 z-30 pointer-events-auto border rounded-2xl p-2.5 sm:p-3 shadow-2xl select-none transition-all duration-300 animate-in fade-in slide-in-from-top ${
         isCoveredBySheet ? 'hidden md:block' : 'block'
       } ${containerBgClass}`}
     >

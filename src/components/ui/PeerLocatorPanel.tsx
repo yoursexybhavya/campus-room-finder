@@ -218,7 +218,7 @@ export const PeerLocatorPanel: React.FC = () => {
           </div>
 
           {/* Manual Check-in Dropdown */}
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-1 w-full min-w-0">
             <select
               value={manualRoomSelection}
               onChange={(e) => {
@@ -226,7 +226,7 @@ export const PeerLocatorPanel: React.FC = () => {
                 handleManualCheckIn(e.target.value);
               }}
               data-testid="room-checkin-select"
-              className={`flex-1 border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-500 ${
+              className={`w-full min-w-0 max-w-full flex-1 border rounded-xl px-2.5 py-1.5 text-xs truncate focus:outline-none focus:border-cyan-500 ${
                 isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
               }`}
             >
