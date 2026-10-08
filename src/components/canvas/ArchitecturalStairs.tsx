@@ -1,116 +1,195 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { FloorFilter } from '../../types/campus';
 
-interface StairFlightProps {
+interface CornerRotundaStaircaseProps {
   position: [number, number, number];
-  rotationY: number;
+  startAngle: number;
   isDark: boolean;
+  activeFloorFilter: FloorFilter;
 }
 
-const StairFlight: React.FC<StairFlightProps> = ({ position, rotationY, isDark }) => {
-  const stepCount = 15;
+const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
+  position,
+  startAngle,
+  isDark,
+  activeFloorFilter,
+}) => {
+  const stepCount = 16;
   const totalRise = 2.55; // from y=0.10 to y=2.65
-  const stepHeight = totalRise / stepCount; // 0.17m per step
-  const stepDepth = 0.22; // 0.22m per step
-  const stepWidth = 2.2; // comfortable wide architectural flight
-  const flightLength = stepCount * stepDepth; // 3.3m total run
+  const stepHeight = totalRise / stepCount; // 0.159m per step
+  const rInner = 0.65;
+  const rOuter = 2.15;
+  const rMid = (rInner + rOuter) / 2; // 1.4m
+  const radialLength = rOuter - rInner; // 1.5m
+  const arcSpan = Math.PI * 0.85; // ~153 degrees curved fan
+  const deltaTheta = arcSpan / stepCount;
 
-  const concreteColor = isDark ? '#334155' : '#e2e8f0';
-  const treadColor = isDark ? '#1e293b' : '#cbd5e1';
-  const nosingColor = isDark ? '#0f172a' : '#475569';
-  const wallColor = isDark ? '#1e293b' : '#94a3b8';
+  // Colors
+  const columnColor = isDark ? '#334155' : '#cbd5e1';
+  const collarColor = isDark ? '#1e293b' : '#94a3b8';
+  const concreteColor = isDark ? '#1e293b' : '#e2e8f0';
+  const treadColor = isDark ? '#0f172a' : '#cbd5e1';
+  const nosingColor = isDark ? '#38bdf8' : '#0284c7';
+  const balustradeColor = isDark ? '#334155' : '#94a3b8';
   const handrailColor = isDark ? '#38bdf8' : '#0284c7';
 
-  // Incline angle for handrails and stringers
-  const inclineAngle = Math.atan2(totalRise, flightLength);
-  const hypotenuseLength = Math.hypot(totalRise, flightLength);
+  // Determine which steps to show based on floor filter
+  const isGroundOnly = activeFloorFilter === 'ground';
+  const isFirstOnly = activeFloorFilter === 'first';
+
+  // Ground view: show lower flight up to ground ceiling (steps 0 to 9)
+  // First floor view: show upper arrival flight (steps 7 to 15)
+  // All view: show all 16 steps
+  const minStep = isFirstOnly ? 7 : 0;
+  const maxStep = isGroundOnly ? 9 : 15;
+
+  const steps = useMemo(() => {
+    const list = [];
+    for (let i = minStep; i <= maxStep; i++) {
+      const theta = startAngle + i * deltaTheta;
+      const heightUnder = (i + 1) * stepHeight;
+      const yCenter = 0.10 + heightUnder / 2;
+      const x = rMid * Math.cos(theta);
+      const z = rMid * Math.sin(theta);
+      const rotY = -theta + Math.PI / 2;
+
+      // Arc step width at mid-radius
+      const arcWidth = rMid * deltaTheta * 1.15;
+
+      list.push({
+        index: i,
+        x,
+        z,
+        yCenter,
+        treadY: 0.10 + heightUnder,
+        rotY,
+        theta,
+        heightUnder,
+        arcWidth,
+      });
+    }
+    return list;
+  }, [minStep, maxStep, startAngle, deltaTheta, rMid, stepHeight]);
+
+  const columnHeight = isGroundOnly ? 1.8 : 3.6;
+  const columnCenterY = isGroundOnly ? 0.98 : 1.88;
 
   return (
-    <group position={position} rotation={[0, rotationY, 0]} name="architectural-stair-flight">
-      {/* 1. Solid monolithic steps (each step rises from ground y=0.10 to step height) */}
-      {Array.from({ length: stepCount }).map((_, i) => {
-        const heightFromGround = (i + 1) * stepHeight;
-        const centerY = 0.10 + heightFromGround / 2;
-        const centerZ = (i + 0.5) * stepDepth;
+    <group position={position} name="architectural-rotunda-staircase">
+      {/* 1. Central Rotunda Core Column (Rajasthan Architectural Pillar) */}
+      <mesh position={[0, columnCenterY, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[rInner * 0.9, rInner * 0.9, columnHeight, 24]} />
+        <meshStandardMaterial
+          color={columnColor}
+          roughness={0.5}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
+      </mesh>
+      {/* Base Plinth Collar */}
+      {!isFirstOnly && (
+        <mesh position={[0, 0.18, 0]}>
+          <cylinderGeometry args={[rInner * 1.1, rInner * 1.15, 0.2, 24]} />
+          <meshStandardMaterial color={collarColor} roughness={0.4} />
+        </mesh>
+      )}
+      {/* Capital Top Collar */}
+      <mesh position={[0, isGroundOnly ? 1.8 : 3.55, 0]}>
+        <cylinderGeometry args={[rInner * 1.15, rInner * 1.05, 0.16, 24]} />
+        <meshStandardMaterial color={collarColor} roughness={0.4} />
+      </mesh>
+
+      {/* 2. Solid Monolithic Radial Steps */}
+      {steps.map((st) => (
+        <group key={`step-${st.index}`}>
+          {/* Solid Concrete Riser Block extending to ground */}
+          <mesh
+            position={[st.x, st.yCenter, st.z]}
+            rotation={[0, st.rotY, 0]}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry args={[radialLength, st.heightUnder, st.arcWidth]} />
+            <meshStandardMaterial
+              color={concreteColor}
+              roughness={0.6}
+              polygonOffset
+              polygonOffsetFactor={-1}
+              polygonOffsetUnits={-1}
+              depthWrite
+            />
+          </mesh>
+
+          {/* Polished Stone Tread Surface */}
+          <mesh
+            position={[st.x, st.treadY + 0.01, st.z]}
+            rotation={[0, st.rotY, 0]}
+            receiveShadow
+          >
+            <boxGeometry args={[radialLength + 0.04, 0.02, st.arcWidth + 0.03]} />
+            <meshStandardMaterial
+              color={treadColor}
+              roughness={0.35}
+              polygonOffset
+              polygonOffsetFactor={-2}
+              polygonOffsetUnits={-2}
+              depthWrite
+            />
+          </mesh>
+
+          {/* High-Contrast Non-Slip Nosing Strip */}
+          <mesh
+            position={[st.x, st.treadY + 0.015, st.z]}
+            rotation={[0, st.rotY, 0]}
+          >
+            <boxGeometry args={[radialLength + 0.04, 0.025, 0.04]} />
+            <meshStandardMaterial color={nosingColor} roughness={0.25} metalness={0.5} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 3. Outer Swept Curved Balustrade Wall & Steel Handrails */}
+      {steps.map((st) => {
+        const balustradeR = rOuter + 0.06;
+        const bx = balustradeR * Math.cos(st.theta);
+        const bz = balustradeR * Math.sin(st.theta);
 
         return (
-          <group key={`step-${i}`}>
-            {/* Solid concrete riser block underneath */}
-            <mesh position={[0, centerY, centerZ]} castShadow receiveShadow>
-              <boxGeometry args={[stepWidth, heightFromGround, stepDepth]} />
+          <group key={`balustrade-${st.index}`}>
+            {/* Parapet Balustrade Segment */}
+            <mesh
+              position={[bx, st.treadY + 0.42, bz]}
+              rotation={[0, st.rotY, 0]}
+              castShadow
+            >
+              <boxGeometry args={[0.1, 0.82, st.arcWidth * 1.05]} />
               <meshStandardMaterial
-                color={concreteColor}
-                roughness={0.6}
-                polygonOffset
-                polygonOffsetFactor={-1}
-                polygonOffsetUnits={-1}
+                color={balustradeColor}
+                roughness={0.5}
+                depthWrite
               />
             </mesh>
 
-            {/* Dark stone tread surface with non-slip bullnose */}
-            <mesh position={[0, 0.10 + heightFromGround + 0.01, centerZ]} receiveShadow>
-              <boxGeometry args={[stepWidth + 0.02, 0.02, stepDepth + 0.02]} />
+            {/* Brushed Handrail Top Segment */}
+            <mesh
+              position={[bx, st.treadY + 0.86, bz]}
+              rotation={[0, st.rotY, 0]}
+              castShadow
+            >
+              <cylinderGeometry args={[0.035, 0.035, st.arcWidth * 1.1, 10]} />
               <meshStandardMaterial
-                color={treadColor}
-                roughness={0.4}
-                polygonOffset
-                polygonOffsetFactor={-2}
-                polygonOffsetUnits={-2}
+                color={handrailColor}
+                metalness={0.8}
+                roughness={0.2}
               />
-            </mesh>
-
-            {/* Contrast nosing strip at step edge */}
-            <mesh position={[0, 0.10 + heightFromGround + 0.015, centerZ + stepDepth / 2 - 0.015]}>
-              <boxGeometry args={[stepWidth + 0.02, 0.025, 0.03]} />
-              <meshStandardMaterial color={nosingColor} roughness={0.3} />
             </mesh>
           </group>
         );
       })}
-
-      {/* 2. Solid Architectural Stringer / Parapet Walls on left & right */}
-      {/* Left Stringer Wall */}
-      <mesh
-        position={[-stepWidth / 2 - 0.08, 0.10 + totalRise / 2 + 0.4, flightLength / 2]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[0.16, totalRise + 0.8, flightLength + 0.4]} />
-        <meshStandardMaterial color={wallColor} roughness={0.6} />
-      </mesh>
-
-      {/* Right Stringer Wall */}
-      <mesh
-        position={[stepWidth / 2 + 0.08, 0.10 + totalRise / 2 + 0.4, flightLength / 2]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[0.16, totalRise + 0.8, flightLength + 0.4]} />
-        <meshStandardMaterial color={wallColor} roughness={0.6} />
-      </mesh>
-
-      {/* 3. Sleek Architectural Handrails on top of stringers */}
-      {/* Left Handrail */}
-      <mesh
-        position={[-stepWidth / 2 - 0.08, 0.10 + totalRise / 2 + 0.85, flightLength / 2]}
-        rotation={[inclineAngle, 0, 0]}
-        castShadow
-      >
-        <cylinderGeometry args={[0.04, 0.04, hypotenuseLength + 0.3, 12]} />
-        <meshStandardMaterial color={handrailColor} metalness={0.7} roughness={0.2} />
-      </mesh>
-
-      {/* Right Handrail */}
-      <mesh
-        position={[stepWidth / 2 + 0.08, 0.10 + totalRise / 2 + 0.85, flightLength / 2]}
-        rotation={[inclineAngle, 0, 0]}
-        castShadow
-      >
-        <cylinderGeometry args={[0.04, 0.04, hypotenuseLength + 0.3, 12]} />
-        <meshStandardMaterial color={handrailColor} metalness={0.7} roughness={0.2} />
-      </mesh>
     </group>
   );
 };
@@ -120,35 +199,38 @@ export const ArchitecturalStairs: React.FC = () => {
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
-  // Staircases are solid permanent architectural structures at the 4 corner cores
   return (
     <group name="campus-architectural-staircases">
-      {/* South-West Staircase: rises from z = 10.95 to z = 14.25 towards SW corner */}
-      <StairFlight
-        position={[-14.25, 0, 10.95]}
-        rotationY={0}
+      {/* South-West Stair Rotunda Core */}
+      <CornerRotundaStaircase
+        position={[-14.25, 0, 14.25]}
+        startAngle={-Math.PI / 2}
         isDark={isDark}
+        activeFloorFilter={activeFloorFilter}
       />
 
-      {/* South-East Staircase: rises from z = 10.95 to z = 14.25 towards SE corner */}
-      <StairFlight
-        position={[14.25, 0, 10.95]}
-        rotationY={0}
+      {/* South-East Stair Rotunda Core */}
+      <CornerRotundaStaircase
+        position={[14.25, 0, 14.25]}
+        startAngle={Math.PI}
         isDark={isDark}
+        activeFloorFilter={activeFloorFilter}
       />
 
-      {/* North-West Staircase: rises from z = -10.95 to z = -14.25 towards NW corner */}
-      <StairFlight
-        position={[-14.25, 0, -10.95]}
-        rotationY={Math.PI}
+      {/* North-West Stair Rotunda Core */}
+      <CornerRotundaStaircase
+        position={[-14.25, 0, -14.25]}
+        startAngle={0}
         isDark={isDark}
+        activeFloorFilter={activeFloorFilter}
       />
 
-      {/* North-East Staircase: rises from z = -10.95 to z = -14.25 towards NE corner */}
-      <StairFlight
-        position={[14.25, 0, -10.95]}
-        rotationY={Math.PI}
+      {/* North-East Stair Rotunda Core */}
+      <CornerRotundaStaircase
+        position={[14.25, 0, -14.25]}
+        startAngle={Math.PI / 2}
         isDark={isDark}
+        activeFloorFilter={activeFloorFilter}
       />
     </group>
   );

@@ -15,7 +15,6 @@ export const GroundFloor: React.FC = () => {
 
   // When First Floor is selected, hide Ground Floor completely to eliminate bleed-through & z-fighting
   const isVisible = activeFloorFilter !== 'first';
-  const slabOpacity = 0.98;
 
   // Architectural flooring colors matching MazeMap aesthetic
   const floorSlabColor = isDark ? '#1e293b' : '#f1f5f9';
@@ -26,11 +25,11 @@ export const GroundFloor: React.FC = () => {
       {/* ======================================================== */}
       {/* CONTINUOUS QUADRANGLE CORRIDOR SLAB LOOP (Ground Floor)   */}
       {/* Authentic 3.5m-wide covered veranda connecting all rooms  */}
-      {/* Clean, unobstructed architectural walkways matching MazeMap */}
+      {/* Clean, non-overlapping architectural walkways             */}
       {/* ======================================================== */}
-      {/* West Corridor Slab (width: 3.5m, x: -16 to -12.5, length: 32m) */}
+      {/* West Corridor Slab (x: -16 to -12.5, z: -12.5 to 12.5) */}
       <mesh position={[-14.25, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[3.5, 0.1, 32]} />
+        <boxGeometry args={[3.5, 0.1, 25]} />
         <meshStandardMaterial
           color={floorSlabColor}
           roughness={0.4}
@@ -42,17 +41,17 @@ export const GroundFloor: React.FC = () => {
       </mesh>
       {/* West Corridor Border Inlay Strips */}
       <mesh position={[-15.85, 0.14, 0]}>
-        <boxGeometry args={[0.18, 0.02, 32]} />
+        <boxGeometry args={[0.18, 0.02, 25]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
       <mesh position={[-12.65, 0.14, 0]}>
-        <boxGeometry args={[0.18, 0.02, 32]} />
+        <boxGeometry args={[0.18, 0.02, 25]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
 
-      {/* East Corridor Slab (width: 3.5m, x: 12.5 to 16, length: 32m) */}
+      {/* East Corridor Slab (x: 12.5 to 16, z: -12.5 to 12.5) */}
       <mesh position={[14.25, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[3.5, 0.1, 32]} />
+        <boxGeometry args={[3.5, 0.1, 25]} />
         <meshStandardMaterial
           color={floorSlabColor}
           roughness={0.4}
@@ -64,17 +63,17 @@ export const GroundFloor: React.FC = () => {
       </mesh>
       {/* East Corridor Border Inlay Strips */}
       <mesh position={[15.85, 0.14, 0]}>
-        <boxGeometry args={[0.18, 0.02, 32]} />
+        <boxGeometry args={[0.18, 0.02, 25]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
       <mesh position={[12.65, 0.14, 0]}>
-        <boxGeometry args={[0.18, 0.02, 32]} />
+        <boxGeometry args={[0.18, 0.02, 25]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
 
-      {/* North Corridor Slab (length: 32m, depth: 3.5m, z: -16 to -12.5) */}
+      {/* North Corridor Slab (x: -12.5 to 12.5, z: -16 to -12.5) */}
       <mesh position={[0, 0.08, -14.25]} receiveShadow>
-        <boxGeometry args={[32, 0.1, 3.5]} />
+        <boxGeometry args={[25, 0.1, 3.5]} />
         <meshStandardMaterial
           color={floorSlabColor}
           roughness={0.4}
@@ -86,17 +85,17 @@ export const GroundFloor: React.FC = () => {
       </mesh>
       {/* North Corridor Border Inlay Strips */}
       <mesh position={[0, 0.14, -15.85]}>
-        <boxGeometry args={[32, 0.02, 0.18]} />
+        <boxGeometry args={[25, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
       <mesh position={[0, 0.14, -12.65]}>
-        <boxGeometry args={[32, 0.02, 0.18]} />
+        <boxGeometry args={[25, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
 
-      {/* South Corridor Slab (length: 32m, depth: 3.5m, z: 12.5 to 16) */}
+      {/* South Corridor Slab (x: -12.5 to 12.5, z: 12.5 to 16) */}
       <mesh position={[0, 0.08, 14.25]} receiveShadow>
-        <boxGeometry args={[32, 0.1, 3.5]} />
+        <boxGeometry args={[25, 0.1, 3.5]} />
         <meshStandardMaterial
           color={floorSlabColor}
           roughness={0.4}
@@ -108,11 +107,11 @@ export const GroundFloor: React.FC = () => {
       </mesh>
       {/* South Corridor Border Inlay Strips */}
       <mesh position={[0, 0.14, 15.85]}>
-        <boxGeometry args={[32, 0.02, 0.18]} />
+        <boxGeometry args={[25, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
       <mesh position={[0, 0.14, 12.65]}>
-        <boxGeometry args={[32, 0.02, 0.18]} />
+        <boxGeometry args={[25, 0.02, 0.18]} />
         <meshStandardMaterial color={blackBorderColor} roughness={0.3} />
       </mesh>
 
@@ -139,22 +138,22 @@ export const GroundFloor: React.FC = () => {
       {/* ======================================================== */}
       {/* South Entrance Main Arterial Passage (Connecting Porch to Courtyard) */}
       <mesh position={[0, 0.08, 20]} receiveShadow>
-        <boxGeometry args={[4.2, 0.1, 8.2]} />
+        <boxGeometry args={[4.2, 0.1, 8.0]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
       {/* North Culvert Workshop Passage */}
       <mesh position={[0, 0.08, -20]} receiveShadow>
-        <boxGeometry args={[4.2, 0.1, 8.2]} />
+        <boxGeometry args={[4.2, 0.1, 8.0]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
       {/* West Mid-Wing Cross-Passage */}
-      <mesh position={[-20, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[8.0, 0.1, 2.8]} />
+      <mesh position={[-20.5, 0.08, 0]} receiveShadow>
+        <boxGeometry args={[9.0, 0.1, 2.8]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
       {/* East Mid-Wing Cross-Passage */}
-      <mesh position={[20, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[8.0, 0.1, 2.8]} />
+      <mesh position={[20.5, 0.08, 0]} receiveShadow>
+        <boxGeometry args={[9.0, 0.1, 2.8]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
 
@@ -162,27 +161,34 @@ export const GroundFloor: React.FC = () => {
       {groundRooms.map((room) => {
         const [rx, ry, rz] = room.position;
         const [rw, rh, rd] = room.dimensions;
-        let thresholdPos: [number, number, number] = [rx, 0.09, rz];
-        let thresholdArgs: [number, number, number] = [1.4, 0.02, 0.2];
+        let thresholdPos: [number, number, number] = [rx, 0.14, rz];
+        let thresholdArgs: [number, number, number] = [1.4, 0.02, 0.22];
 
         if (room.wing === 'East') {
-          thresholdPos = [rx - rw / 2, 0.09, rz];
-          thresholdArgs = [0.2, 0.02, 1.4];
+          thresholdPos = [rx - rw / 2, 0.14, rz];
+          thresholdArgs = [0.22, 0.02, 1.4];
         } else if (room.wing === 'West') {
-          thresholdPos = [rx + rw / 2, 0.09, rz];
-          thresholdArgs = [0.2, 0.02, 1.4];
+          thresholdPos = [rx + rw / 2, 0.14, rz];
+          thresholdArgs = [0.22, 0.02, 1.4];
         } else if (room.wing === 'North') {
-          thresholdPos = [rx, 0.09, rz + rd / 2];
-          thresholdArgs = [1.4, 0.02, 0.2];
+          thresholdPos = [rx, 0.14, rz + rd / 2];
+          thresholdArgs = [1.4, 0.02, 0.22];
         } else {
-          thresholdPos = [rx, 0.09, rz - rd / 2];
-          thresholdArgs = [1.4, 0.02, 0.2];
+          thresholdPos = [rx, 0.14, rz - rd / 2];
+          thresholdArgs = [1.4, 0.02, 0.22];
         }
 
         return (
           <mesh key={`gf-threshold-${room.id}`} position={thresholdPos} receiveShadow>
             <boxGeometry args={thresholdArgs} />
-            <meshStandardMaterial color={room.color} roughness={0.3} metalness={0.2} />
+            <meshStandardMaterial
+              color={room.color}
+              roughness={0.3}
+              metalness={0.2}
+              polygonOffset
+              polygonOffsetFactor={-3}
+              polygonOffsetUnits={-3}
+            />
           </mesh>
         );
       })}

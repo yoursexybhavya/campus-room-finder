@@ -182,10 +182,6 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
   }, [w, h, d, room.wing, wallH, wallT, doorW]);
 
   const isAllMode = floorFilter === 'all';
-  const isFirstFloorInAll = isAllMode && room.floor === 'first';
-
-  const floorOpacity = !isFloorActive ? 0.15 : isFirstFloorInAll ? 0.55 : 0.95;
-  const wallOpacity = !isFloorActive ? 0.12 : isFirstFloorInAll ? 0.55 : 0.95;
 
   // Key anchor rooms to prioritize in All Floors overview to prevent 61 overlapping labels
   const isMajorAnchor =
