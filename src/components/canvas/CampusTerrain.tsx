@@ -2,101 +2,6 @@ import React from 'react';
 import { Text } from '@react-three/drei';
 import { useThemeStore } from '../../stores/useThemeStore';
 
-/**
- * Procedural Fan Palm Tree matching the real landscaping along the Admin Wing curb
- * Ground-truth reference: media_1791463721108.jpg
- */
-interface PalmTreeProps {
-  position: [number, number, number];
-}
-
-const FanPalmTree: React.FC<PalmTreeProps> = ({ position }) => {
-  return (
-    <group position={position} name="fan-palm-tree">
-      {/* Circular Raised Planter Curb */}
-      <mesh position={[0, 0.1, 0]} receiveShadow>
-        <cylinderGeometry args={[0.55, 0.6, 0.2, 16]} />
-        <meshStandardMaterial color="#94a3b8" roughness={0.7} />
-      </mesh>
-      {/* Planter Soil */}
-      <mesh position={[0, 0.18, 0]}>
-        <cylinderGeometry args={[0.5, 0.5, 0.04, 16]} />
-        <meshStandardMaterial color="#451a03" roughness={0.9} />
-      </mesh>
-      {/* Textured Palm Trunk */}
-      <mesh position={[0, 1.35, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.11, 0.16, 2.4, 8]} />
-        <meshStandardMaterial color="#78350f" roughness={0.85} />
-      </mesh>
-      {/* Fan Palm Foliage Crown */}
-      <group position={[0, 2.5, 0]}>
-        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, idx) => {
-          const rad = (angle * Math.PI) / 180;
-          return (
-            <mesh
-              key={idx}
-              position={[Math.cos(rad) * 0.45, 0.2 - (idx % 2) * 0.1, Math.sin(rad) * 0.45]}
-              rotation={[Math.sin(rad) * 0.45, -rad, Math.cos(rad) * 0.45]}
-              castShadow
-            >
-              <boxGeometry args={[0.85, 0.02, 0.45]} />
-              <meshStandardMaterial color={idx % 2 === 0 ? '#15803d' : '#16a34a'} roughness={0.6} />
-            </mesh>
-          );
-        })}
-      </group>
-    </group>
-  );
-};
-
-/**
- * Photovoltaic Solar Panel Array matching satellite & photographic evidence
- * Ground-truth reference: media_1791463566133.jpg & media_1791463708802.jpg
- */
-interface SolarArrayProps {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  count?: number;
-}
-
-const SolarPanelArray: React.FC<SolarArrayProps> = ({
-  position,
-  rotation = [0, 0, 0],
-  count = 6,
-}) => {
-  return (
-    <group position={position} rotation={rotation} name="solar-panel-array">
-      {Array.from({ length: count }).map((_, i) => (
-        <group key={i} position={[(i - (count - 1) / 2) * 2.2, 0, 0]}>
-          {/* Support Mount Rack */}
-          <mesh position={[0, 0.25, 0]}>
-            <boxGeometry args={[0.08, 0.5, 1.2]} />
-            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
-          </mesh>
-          {/* Angled Solar Photovoltaic Panel (tilted ~25°) */}
-          <mesh position={[0, 0.55, 0]} rotation={[-0.42, 0, 0]} castShadow>
-            <boxGeometry args={[2.05, 0.04, 1.4]} />
-            <meshStandardMaterial
-              color="#0f172a"
-              roughness={0.2}
-              metalness={0.8}
-            />
-          </mesh>
-          {/* Blue Photovoltaic Silicon Cell Inlay */}
-          <mesh position={[0, 0.58, 0]} rotation={[-0.42, 0, 0]}>
-            <boxGeometry args={[1.95, 0.01, 1.3]} />
-            <meshStandardMaterial
-              color="#1e3a8a"
-              roughness={0.25}
-              metalness={0.7}
-            />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
-};
-
 export const CampusTerrain: React.FC = () => {
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
@@ -107,7 +12,7 @@ export const CampusTerrain: React.FC = () => {
   const roadCurbColor = isDark ? '#334155' : '#cbd5e1';
   const plinthColor = isDark ? '#1e293b' : '#e2e8f0';
 
-  // Courtyard & Paving Ground Truth Palette
+  // Courtyard Ground-Truth Palette (media_1791464704375.jpg & media_1791464704340.jpg)
   const paverColor = isDark ? '#334155' : '#f5ede6'; // Warm pinkish/cream interlocking pavers
   const paverLineColor = isDark ? '#1e293b' : '#e2d9d2';
   const walkwayColor = isDark ? '#475569' : '#e2e8f0';
@@ -116,8 +21,6 @@ export const CampusTerrain: React.FC = () => {
   const stagePlinthRed = '#b91c1c'; // Red fascia plinth apron
   const stageBackdropRed = '#991b1b'; // Crimson backdrop wall
   const stageFloorColor = isDark ? '#334155' : '#f8fafc';
-  const facadeCream = isDark ? '#1e293b' : '#f1f5f9';
-  const facadeSlate = isDark ? '#0f172a' : '#cbd5e1';
 
   const porchColor = isDark ? '#334155' : '#cbd5e1';
   const porchPillars = isDark ? '#94a3b8' : '#e2e8f0';
@@ -177,10 +80,9 @@ export const CampusTerrain: React.FC = () => {
       {/* ======================================================== */}
       {/* AUTHENTIC JIET QUADRANGLE COURTYARD GROUND               */}
       {/* Ground-truth references:                                 */}
-      │ media_1791463566133.jpg (Satellite overview & Stage tag) │
-      │ media_1791463708802.jpg (1st floor view: plaza + lawns)  │
-      │ media_1791463714861.jpg (Elevated Stage & JIET backdrop) │
-      │ media_1791463721108.jpg (East Admin wing & palm trees)   │
+      │ media_1791464691868.jpg (Satellite overview & Stage tag) │
+      │ media_1791464704375.jpg (1st floor view: plaza + lawns)  │
+      │ media_1791464704340.jpg (Elevated Stage & JIET backdrop) │
       {/* ======================================================== */}
 
       {/* 1. NORTH ASSEMBLY PLAZA (z: -12.5m to -2.0m, width 25m) */}
@@ -259,7 +161,7 @@ export const CampusTerrain: React.FC = () => {
 
       {/* ======================================================== */}
       {/* 5. THE ICONIC JIET OUTDOOR AMPHITHEATER STAGE            */}
-      {/* Ground-truth reference: media_1791463714861.jpg          */}
+      {/* Ground-truth reference: media_1791464704340.jpg          */}
       {/* ======================================================== */}
       <group position={[0, 0, 10.4]} name="jiet-outdoor-stage-group">
         {/* Raised Stage Platform Base (15m wide x 3.8m deep x 1.05m high) */}
@@ -313,8 +215,10 @@ export const CampusTerrain: React.FC = () => {
         </mesh>
 
         {/* White 3D Sans-Serif "JIET" Typography on Backdrop Wall */}
+        {/* Rotated 180° around Y (Math.PI) to face forward into the courtyard towards the audience */}
         <Text
           position={[0, 2.75, 1.46]}
+          rotation={[0, Math.PI, 0]}
           fontSize={1.05}
           color="#ffffff"
           anchorX="center"
@@ -347,60 +251,7 @@ export const CampusTerrain: React.FC = () => {
         </group>
       </group>
 
-      {/* 6. SOUTH FACADE ARCHITECTURAL PANELS (Behind Stage) */}
-      {/* Vertical alternating pilaster panels with split AC condenser units */}
-      <group position={[0, 0, 12.6]} name="south-facade-panels">
-        {[-9, -6, -3, 3, 6, 9].map((xPos, idx) => (
-          <group key={`facade-col-${idx}`} position={[xPos, 2.4, 0]}>
-            {/* Vertical Pilaster Strip */}
-            <mesh>
-              <boxGeometry args={[1.6, 4.6, 0.15]} />
-              <meshStandardMaterial
-                color={idx % 2 === 0 ? facadeCream : facadeSlate}
-                roughness={0.6}
-              />
-            </mesh>
-            {/* Split AC Outdoor Condenser Unit */}
-            <mesh position={[0, -0.6, 0.22]}>
-              <boxGeometry args={[0.7, 0.45, 0.25]} />
-              <meshStandardMaterial color="#f8fafc" roughness={0.4} />
-            </mesh>
-            {/* AC Fan Grille */}
-            <mesh position={[0, -0.6, 0.35]}>
-              <circleGeometry args={[0.16, 16]} />
-              <meshStandardMaterial color="#334155" roughness={0.5} />
-            </mesh>
-          </group>
-        ))}
-      </group>
-
-      {/* ======================================================== */}
-      {/* 7. EAST ADMIN VERANDA FAN PALM TREES                     */}
-      {/* Authentic landscaping along the Admin block curb         */}
-      {/* Ground-truth reference: media_1791463721108.jpg          */}
-      {/* ======================================================== */}
-      <FanPalmTree position={[11.8, 0, -7.5]} />
-      <FanPalmTree position={[11.8, 0, -3.5]} />
-      <FanPalmTree position={[11.8, 0, 0.5]} />
-      <FanPalmTree position={[11.8, 0, 4.5]} />
-
-      {/* ======================================================== */}
-      {/* 8. ROOFTOP PHOTOVOLTAIC SOLAR PANEL ARRAYS               */}
-      {/* Mounted along the roof parapets of South & West wings    */}
-      {/* Ground-truth reference: Google Maps & Walkthrough photos │
-      {/* ======================================================== */}
-      {/* South Wing Rooftop Array */}
-      <SolarPanelArray position={[0, 6.8, 14.5]} count={10} />
-      {/* West Wing Rooftop Array */}
-      <SolarPanelArray
-        position={[-14.5, 6.8, 0]}
-        rotation={[0, Math.PI / 2, 0]}
-        count={8}
-      />
-
-      {/* ======================================================== */}
-      {/* South Entrance Porch & Steps (Main Reception Approach)   */}
-      {/* ======================================================== */}
+      {/* South Entrance Porch & Steps (Main Reception Approach) */}
       <group position={[0, 0, 31]}>
         {/* Porch Platform Slab */}
         <mesh position={[0, 0.2, 0]} receiveShadow castShadow>

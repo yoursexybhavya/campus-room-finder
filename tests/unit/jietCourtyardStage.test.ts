@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-describe('Ground-Truth JIET Courtyard, Stage & Architectural Facade Invariants', () => {
+describe('Ground-Truth JIET Courtyard & Stage Invariants (Strict Ground-Only)', () => {
   const terrainPath = path.resolve(__dirname, '../../src/components/canvas/CampusTerrain.tsx');
   const groundFloorPath = path.resolve(__dirname, '../../src/components/canvas/GroundFloor.tsx');
 
-  it('should verify CampusTerrain source file contains the authentic JIET outdoor stage and 3D typography', () => {
+  it('should verify CampusTerrain contains the authentic JIET outdoor stage with forward-facing 3D text', () => {
     const terrainSource = fs.readFileSync(terrainPath, 'utf-8');
 
     // 1. Stage group and platform
@@ -15,10 +15,10 @@ describe('Ground-Truth JIET Courtyard, Stage & Architectural Facade Invariants',
     expect(terrainSource).toContain('Polished Stage Surface Slab');
     expect(terrainSource).toContain('stagePlinthRed');
 
-    // 2. Red backdrop wall & "JIET" 3D text
+    // 2. Red backdrop wall & "JIET" 3D text with forward rotation facing courtyard
     expect(terrainSource).toContain('stageBackdropRed');
     expect(terrainSource).toContain('Crimson Red Backdrop Wall');
-    expect(terrainSource).toMatch(/<Text[^>]*>[\s\S]*?JIET[\s\S]*?<\/Text>/);
+    expect(terrainSource).toMatch(/<Text[^>]*rotation=\{.*?Math\.PI.*?\}[\s\S]*?JIET[\s\S]*?<\/Text>/);
 
     // 3. Stage access steps from central walkway
     expect(terrainSource).toContain('Front Access Steps');
@@ -43,31 +43,23 @@ describe('Ground-Truth JIET Courtyard, Stage & Architectural Facade Invariants',
     expect(terrainSource).toContain('borderStoneColor');
   });
 
-  it('should verify rooftop solar panel arrays and East Admin veranda palm trees in CampusTerrain', () => {
+  it('should enforce STRICT GROUND-ONLY invariants (NO rooftop solar panels, NO unrequested trees)', () => {
     const terrainSource = fs.readFileSync(terrainPath, 'utf-8');
 
-    // Rooftop Photovoltaic Solar Arrays
-    expect(terrainSource).toContain('SolarPanelArray');
-    expect(terrainSource).toContain('ROOFTOP PHOTOVOLTAIC SOLAR PANEL ARRAYS');
-    expect(terrainSource).toContain('#1e3a8a'); // Photovoltaic silicon blue
+    // Strictly NO solar panels on roofs
+    expect(terrainSource).not.toContain('SolarPanelArray');
+    expect(terrainSource).not.toContain('ROOFTOP PHOTOVOLTAIC SOLAR PANEL ARRAYS');
 
-    // Fan Palm Trees along East Admin curb
-    expect(terrainSource).toContain('FanPalmTree');
-    expect(terrainSource).toContain('EAST ADMIN VERANDA FAN PALM TREES');
-    expect(terrainSource).toContain('fan-palm-tree');
-    expect(terrainSource).toContain('#78350f'); // Palm trunk
-    expect(terrainSource).toContain('#15803d'); // Palm fronds
+    // Strictly NO unrequested trees on curb
+    expect(terrainSource).not.toContain('FanPalmTree');
+    expect(terrainSource).not.toContain('EAST ADMIN VERANDA FAN PALM TREES');
   });
 
-  it('should verify Admin Wing breezeway portal and red architectural fins in GroundFloor', () => {
+  it('should enforce NO erroneous East wing admin breezeway portal in GroundFloor', () => {
     const groundSource = fs.readFileSync(groundFloorPath, 'utf-8');
 
-    // Admin Breezeway Portal to sports ground & parking
-    expect(groundSource).toContain('admin-breezeway-portal');
-    expect(groundSource).toContain('Admin Ground-Floor Breezeway Portal');
-
-    // Red architectural fins along East courtyard facade
-    expect(groundSource).toContain('admin-architectural-fins');
-    expect(groundSource).toContain('#991b1b');
+    // Admin Breezeway Portal must NOT be on East wing
+    expect(groundSource).not.toContain('admin-breezeway-portal');
+    expect(groundSource).not.toContain('admin-architectural-fins');
   });
 });
