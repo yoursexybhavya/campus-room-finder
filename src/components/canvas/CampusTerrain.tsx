@@ -107,28 +107,6 @@ export const CampusTerrain: React.FC = () => {
         <meshStandardMaterial color={walkwayColor} roughness={0.6} />
       </mesh>
 
-      {/* Courtyard Garden Seating Benches ("where people talk") */}
-      {[
-        [-5.8, 0.05, 5.8],
-        [5.8, 0.05, 5.8],
-        [-5.8, 0.05, -5.8],
-        [5.8, 0.05, -5.8],
-      ].map(([bx, by, bz], idx) => (
-        <group key={`courtyard-bench-${idx}`} position={[bx, by, bz]}>
-          <mesh position={[-0.6, 0.14, 0]} castShadow>
-            <boxGeometry args={[0.18, 0.28, 0.4]} />
-            <meshStandardMaterial color={borderStoneColor} roughness={0.7} />
-          </mesh>
-          <mesh position={[0.6, 0.14, 0]} castShadow>
-            <boxGeometry args={[0.18, 0.28, 0.4]} />
-            <meshStandardMaterial color={borderStoneColor} roughness={0.7} />
-          </mesh>
-          <mesh position={[0, 0.29, 0]} castShadow receiveShadow>
-            <boxGeometry args={[1.5, 0.05, 0.45]} />
-            <meshStandardMaterial color="#78350f" roughness={0.4} />
-          </mesh>
-        </group>
-      ))}
 
       {/* Peripheral Stone Edging around Courtyard Lawn Boundary */}
       <mesh position={[0, 0.05, 12.5]}>

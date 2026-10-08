@@ -214,40 +214,32 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       <mesh
         ref={meshRef}
         name={`room-${room.id}`}
-        position={[0, -h / 2 + 0.05, 0]}
+        position={[0, -h / 2 + 0.06, 0]}
         onClick={handleClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
         receiveShadow
         castShadow
       >
-        <boxGeometry args={[w - 0.05, 0.1, d - 0.05]} />
+        <boxGeometry args={[w - 0.06, 0.1, d - 0.06]} />
         <meshStandardMaterial
           color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : room.color}
-          roughness={0.35}
-          metalness={0.1}
-          transparent
-          opacity={isFloorActive ? (isDark ? 0.85 : 0.75) : 0.15}
+          roughness={0.4}
+          metalness={0.08}
+          polygonOffset={true}
+          polygonOffsetFactor={-2}
+          polygonOffsetUnits={-2}
+          depthWrite={true}
+          transparent={!isFloorActive}
+          opacity={isFloorActive ? 0.98 : 0.15}
           emissive={isSelected ? '#ea580c' : isHovered ? '#0284c7' : room.color}
-          emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.25 : (isDark ? 0.2 : 0.08)}
+          emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.25 : (isDark ? 0.18 : 0.06)}
         />
         {/* Crisp perimeter outline in category color */}
         <Edges
           scale={1.0}
           threshold={15}
-          color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : room.color}
-        />
-      </mesh>
-
-      {/* Architectural Base Plinth Band in Room Category Color */}
-      <mesh position={[0, -h / 2 + 0.14, 0]}>
-        <boxGeometry args={[w - 0.08, 0.08, d - 0.08]} />
-        <meshStandardMaterial
-          color={room.color}
-          emissive={room.color}
-          emissiveIntensity={isDark ? 0.35 : 0.15}
-          transparent
-          opacity={floorOpacity}
+          color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? '#e2e8f0' : '#475569')}
         />
       </mesh>
 
@@ -267,13 +259,17 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
             color={isSelected ? (isDark ? '#431407' : '#ffedd5') : wallColor}
             roughness={0.6}
             metalness={0.05}
-            transparent
-            opacity={wallOpacity}
+            transparent={!isFloorActive}
+            opacity={isFloorActive ? 0.98 : 0.15}
+            polygonOffset={true}
+            polygonOffsetFactor={-1}
+            polygonOffsetUnits={-1}
+            depthWrite={true}
           />
           <Edges
             scale={1.0}
             threshold={25}
-            color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? room.color : wallTrimColor)}
+            color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? '#64748b' : wallTrimColor)}
           />
         </mesh>
       ))}

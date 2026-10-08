@@ -4,6 +4,7 @@ import { CameraController } from './CameraController';
 import { CampusTerrain } from './CampusTerrain';
 import { GroundFloor } from './GroundFloor';
 import { FirstFloor } from './FirstFloor';
+import { ArchitecturalStairs } from './ArchitecturalStairs';
 import { RoutePathMesh } from './RoutePathMesh';
 import { ActiveRoomBeacon } from './ActiveRoomBeacon';
 import { PeerAvatarsLayer } from './PeerAvatarsLayer';
@@ -60,6 +61,7 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
           <CampusTerrain />
           <GroundFloor />
           <FirstFloor />
+          <ArchitecturalStairs />
           <RoutePathMesh />
           <UserLocationDot />
           <ActiveRoomBeacon />
