@@ -21,7 +21,12 @@ export const FirstFloor: React.FC = () => {
   const blackBorderColor = isDark ? '#090d16' : '#cbd5e1';
 
   const isAllMode = activeFloorFilter === 'all';
-  const explodedElevation = isAllMode ? 7.5 : 0;
+  const explodedElevation = isAllMode ? 3.0 : 0;
+
+  // Intercept pointer events on First Floor slabs to prevent raycasts from reaching Ground Floor underneath
+  const stopEvent = (e: any) => {
+    e.stopPropagation();
+  };
 
   return (
     <group
@@ -34,7 +39,14 @@ export const FirstFloor: React.FC = () => {
       {/* Completely non-overlapping, solid foundation under rooms */}
       {/* ======================================================== */}
       {/* North Wing Structural Floor Slab (Under LIB-02, INET-01, EF-4, DH-3, MTECH-1) */}
-      <mesh position={[0, 2.65, -22]} receiveShadow castShadow>
+      <mesh
+        position={[0, 2.65, -22]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[32, 0.1, 12]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -47,7 +59,14 @@ export const FirstFloor: React.FC = () => {
       </mesh>
 
       {/* South Wing Structural Floor Slab (Under First Floor South Wings) */}
-      <mesh position={[0, 2.65, 22]} receiveShadow castShadow>
+      <mesh
+        position={[0, 2.65, 22]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[32, 0.1, 12]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -60,7 +79,14 @@ export const FirstFloor: React.FC = () => {
       </mesh>
 
       {/* East Wing Structural Floor Slab (Under LT-24, LT-29, LT-33, LT-36) */}
-      <mesh position={[20.5, 2.65, 0]} receiveShadow castShadow>
+      <mesh
+        position={[20.5, 2.65, 0]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[9, 0.1, 56]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -73,7 +99,14 @@ export const FirstFloor: React.FC = () => {
       </mesh>
 
       {/* West Wing Structural Floor Slab (Under EF-3, LAB-4, AICTE Labs) */}
-      <mesh position={[-20.5, 2.65, 0]} receiveShadow castShadow>
+      <mesh
+        position={[-20.5, 2.65, 0]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[9, 0.1, 56]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -90,7 +123,14 @@ export const FirstFloor: React.FC = () => {
       {/* Polished stone flooring with clean non-overlapping slabs */}
       {/* ======================================================== */}
       {/* West Corridor Slab (x: -16 to -12.5, z: -12.5 to 12.5) */}
-      <mesh position={[-14.25, 2.65, 0]} receiveShadow castShadow>
+      <mesh
+        position={[-14.25, 2.65, 0]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[3.5, 0.1, 25]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -112,7 +152,14 @@ export const FirstFloor: React.FC = () => {
       </mesh>
 
       {/* East Corridor Slab (x: 12.5 to 16, z: -12.5 to 12.5) */}
-      <mesh position={[14.25, 2.65, 0]} receiveShadow castShadow>
+      <mesh
+        position={[14.25, 2.65, 0]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[3.5, 0.1, 25]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -134,7 +181,14 @@ export const FirstFloor: React.FC = () => {
       </mesh>
 
       {/* North Corridor Slab (x: -12.5 to 12.5, z: -16 to -12.5) */}
-      <mesh position={[0, 2.65, -14.25]} receiveShadow castShadow>
+      <mesh
+        position={[0, 2.65, -14.25]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[25, 0.1, 3.5]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -156,7 +210,14 @@ export const FirstFloor: React.FC = () => {
       </mesh>
 
       {/* South Corridor Slab (x: -12.5 to 12.5, z: 12.5 to 16) */}
-      <mesh position={[0, 2.65, 14.25]} receiveShadow castShadow>
+      <mesh
+        position={[0, 2.65, 14.25]}
+        receiveShadow
+        castShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[25, 0.1, 3.5]} />
         <meshStandardMaterial
           color={floorSlabColor}
@@ -178,19 +239,43 @@ export const FirstFloor: React.FC = () => {
       </mesh>
 
       {/* 4 Corner Stairwell Landings (At y = 2.65, non-overlapping corner connections) */}
-      <mesh position={[-14.25, 2.65, 14.25]} receiveShadow>
+      <mesh
+        position={[-14.25, 2.65, 14.25]}
+        receiveShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[3.5, 0.1, 3.5]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
-      <mesh position={[14.25, 2.65, 14.25]} receiveShadow>
+      <mesh
+        position={[14.25, 2.65, 14.25]}
+        receiveShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[3.5, 0.1, 3.5]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
-      <mesh position={[-14.25, 2.65, -14.25]} receiveShadow>
+      <mesh
+        position={[-14.25, 2.65, -14.25]}
+        receiveShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[3.5, 0.1, 3.5]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
-      <mesh position={[14.25, 2.65, -14.25]} receiveShadow>
+      <mesh
+        position={[14.25, 2.65, -14.25]}
+        receiveShadow
+        onPointerOver={stopEvent}
+        onPointerDown={stopEvent}
+        onClick={stopEvent}
+      >
         <boxGeometry args={[3.5, 0.1, 3.5]} />
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>

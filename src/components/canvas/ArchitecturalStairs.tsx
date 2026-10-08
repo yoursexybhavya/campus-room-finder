@@ -28,20 +28,20 @@ const CornerRotundaStaircase: React.FC<CornerRotundaStaircaseProps> = ({
   const isAllMode = activeFloorFilter === 'all';
   const isGroundOnly = activeFloorFilter === 'ground';
   const isFirstOnly = activeFloorFilter === 'first';
-  const explodedElevation = isAllMode ? 7.5 : 0;
+  const explodedElevation = isAllMode ? 3.0 : 0;
 
   const totalRise = isAllMode ? 2.55 + explodedElevation : 2.55; // from y=0.10m ground slab to First Floor arrival
-  const stepCount = isAllMode ? 48 : 18;
-  const stepHeight = totalRise / stepCount; // ~0.209m in ALL mode, ~0.142m in single-floor mode
+  const stepCount = isAllMode ? 24 : 18;
+  const stepHeight = totalRise / stepCount; // ~0.231m in ALL mode, ~0.142m in single-floor mode
   const rCore = 0.52; // Central stone column core radius
   const rTreadOuter = 2.22; // Outer tread radius
   const rDrumInner = 2.25; // Drum wall inner radius
   const rDrumOuter = 2.47; // Drum wall outer radius (0.22m thick solid wall)
   const drumHeight = 1.35; // 1.35m cutaway wall height matching room cutaway walls
 
-  // Helical spiral arc span (in ALL mode, winds an extra 720 deg so ending azimuth matches single-floor arrival)
+  // Helical spiral arc span (in ALL mode, winds 1 extra circuit 360 deg so ending azimuth matches single-floor arrival: 270 + 360 = 630 deg)
   const startAngle = doorwayAngle + (35 * Math.PI) / 180;
-  const totalArc = isAllMode ? ((270 + 720) * Math.PI) / 180 : (270 * Math.PI) / 180;
+  const totalArc = isAllMode ? ((270 + 360) * Math.PI) / 180 : (270 * Math.PI) / 180;
   const deltaTheta = totalArc / stepCount;
 
   // Architectural Theme Colors matching MazeMap & Blender render

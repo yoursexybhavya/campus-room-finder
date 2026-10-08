@@ -1,12 +1,13 @@
 import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Edges, Html } from '@react-three/drei';
 import { CampusRoom, FloorFilter } from '../../types/campus';
 import { campusRooms } from '../../data/campusRooms';
 import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useNodePhysics } from '../../services/physics/antiGravityEngine';
+import { isPointOccludedByFirstFloor } from '../../utils/floorOcclusion';
 
 interface RoomNodeProps {
   room: CampusRoom;
@@ -101,8 +102,32 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
   const wallT = 0.14; // Slender, realistic architectural wall thickness
   const doorW = 1.15; // CAD standard clear entrance doorway
 
+  const camera = useThree((state) => state.camera);
+  const isAllMode = floorFilter === 'all';
+  const slabY = 2.65 + (isAllMode ? 3.0 : 0);
+
+  // Check if Ground floor room is currently occluded by First Floor slab
+  const isOccludedCurrent = () => {
+    if (!isAllMode || room.floor !== 'ground') return false;
+    return isPointOccludedByFirstFloor(
+      room.position,
+      [camera.position.x, camera.position.y, camera.position.z],
+      slabY
+    );
+  };
+
+  const isGroundOccluded =
+    isAllMode &&
+    room.floor === 'ground' &&
+    isPointOccludedByFirstFloor(
+      room.position,
+      [camera.position.x, camera.position.y, camera.position.z],
+      slabY
+    );
+
   const handleClick = (e: any) => {
     e.stopPropagation();
+    if (isOccludedCurrent()) return;
     if (!isFloorActive) {
       useCampusStore.getState().setFloorFilter(room.floor);
     }
@@ -111,6 +136,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
 
   const handlePointerOver = (e: any) => {
     e.stopPropagation();
+    if (isOccludedCurrent()) return;
     setHoveredRoom(room.id);
     if (typeof document !== 'undefined') {
       document.body.style.cursor = 'pointer';
@@ -237,8 +263,6 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     }
   }, [w, h, d, room.wing, wallT]);
 
-  const isAllMode = floorFilter === 'all';
-
   // Key anchor rooms to prioritize in All Floors overview to prevent overlapping labels
   const isMajorAnchor =
     room.type === 'lecture_theater' ||
@@ -259,17 +283,19 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     );
 
   // Determine whether to display the 3D billboard label
-  // In 'ALL' mode: display key anchors, selected, or hovered rooms; suppress shadowed ground rooms
+  // In 'ALL' mode: display key anchors, selected, or hovered rooms; suppress shadowed/occluded ground rooms
   // In single floor mode ('ground' / 'first'): display all rooms on that floor
   const shouldRenderLabel =
     isFloorActive &&
+    !isGroundOccluded &&
     (!isPanelOpen || isSelected || isHovered) &&
     (!isAllMode || ((isMajorAnchor && !isCoveredByFirstFloor) || isSelected || isHovered));
 
-  // In ALL mode: Ground floor flat typography is suppressed if covered by First Floor to prevent double-printed text
+  // In ALL mode: Ground floor flat typography is suppressed if covered or occluded by First Floor to prevent double-printed text
   const shouldRenderFlatFloorText =
     isFloorActive &&
     !isSelected &&
+    !isGroundOccluded &&
     (!isAllMode || room.floor === 'first' || isHovered);
 
   // Lecture Theater Seating Grid Rows (MazeMap style S1, S3)
@@ -442,7 +468,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       {/* 6. FLAT ARCHITECTURAL ROOM LABEL (Printed directly on floor tiles) */}
       {shouldRenderFlatFloorText && (
         <group position={[0, -h / 2 + 0.082, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <Html transform center distanceFactor={28} className="pointer-events-none select-none">
+          <Html occlude transform center distanceFactor={28} className="pointer-events-none select-none">
             <div className="flex flex-col items-center justify-center text-center opacity-85">
               <span className="font-mono font-black text-[10px] leading-tight tracking-wider text-slate-800 dark:text-slate-100">
                 {room.code}
@@ -463,6 +489,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       {/* 4. BILLBOARDING ARCHITECTURAL ROOM LABEL */}
       {shouldRenderLabel && (
         <Html
+          occlude
           position={[0, -h / 2 + wallH + (room.floor === 'first' && isAllMode ? 0.6 : 0.35), 0]}
           center
           distanceFactor={24}

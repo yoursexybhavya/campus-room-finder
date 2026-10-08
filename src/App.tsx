@@ -8,19 +8,12 @@ import { NavigationHUD } from './components/ui/NavigationHUD';
 import { TimeMachineBar } from './components/ui/TimeMachineBar';
 import { ActiveClassBanner } from './components/ui/ActiveClassBanner';
 import { PeerLocatorPanel } from './components/ui/PeerLocatorPanel';
-import { AntiGravityBanner } from './components/ui/AntiGravityBanner';
-import { initKonamiListener } from './services/keyboard/konamiListener';
 import { useThemeStore } from './stores/useThemeStore';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 export const App: React.FC = () => {
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
-
-  useEffect(() => {
-    const cleanup = initKonamiListener();
-    return cleanup;
-  }, []);
 
   // Sync dark class on document element
   useEffect(() => {
@@ -52,7 +45,6 @@ export const App: React.FC = () => {
         <RoomDetailsDrawer />
         <TimeMachineBar />
         <PeerLocatorPanel />
-        <AntiGravityBanner />
       </div>
     </ErrorBoundary>
   );

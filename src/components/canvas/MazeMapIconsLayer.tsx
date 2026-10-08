@@ -1,7 +1,9 @@
 import React from 'react';
+import { useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { isPointOccludedByFirstFloor } from '../../utils/floorOcclusion';
 
 export interface MazeMapPOI {
   id: string;
@@ -76,26 +78,36 @@ export const MazeMapIconsLayer: React.FC = () => {
   const isDark = theme === 'dark';
 
   const isAllMode = activeFloorFilter === 'all';
-  const explodedElevation = isAllMode ? 7.5 : 0;
+  const explodedElevation = isAllMode ? 3.0 : 0;
+  const camera = useThree((state) => state.camera);
+  const cameraPos: [number, number, number] = [camera.position.x, camera.position.y, camera.position.z];
+  const slabY = 2.65 + explodedElevation;
 
-  // Filter POIs according to active floor
+  // Filter POIs according to active floor and First Floor slab occlusion
   const visiblePois = MAZEMAP_POIS.filter((poi) => {
     if (activeFloorFilter === 'ground') return poi.floor === 'ground';
     if (activeFloorFilter === 'first') return poi.floor === 'first';
-    return true; // 'all' mode shows both floors
+    // In ALL mode: hide ground POIs if line of sight from camera passes through First Floor slab
+    if (isAllMode && poi.floor === 'ground') {
+      if (isPointOccludedByFirstFloor(poi.coords, cameraPos, slabY)) {
+        return false;
+      }
+    }
+    return true; // 'all' mode shows both floors when unoccluded
   });
 
   return (
     <group name="mazemap-poi-icons-layer">
       {visiblePois.map((poi) => {
         const [x, y, z] = poi.coords;
-        // In all floors exploded mode, first floor POIs are elevated by +7.5m
+        // In all floors exploded mode, first floor POIs are elevated by explodedElevation
         const actualY = poi.floor === 'first' && isAllMode ? y + explodedElevation : y;
 
         return (
           <group key={poi.id} position={[x, actualY, z]}>
             <Html
               center
+              occlude
               distanceFactor={32}
               zIndexRange={[60, 10]}
               className="pointer-events-auto select-none cursor-pointer"

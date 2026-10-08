@@ -8,7 +8,6 @@ import { ArchitecturalStairs } from './ArchitecturalStairs';
 import { RoutePathMesh } from './RoutePathMesh';
 import { ActiveRoomBeacon } from './ActiveRoomBeacon';
 import { PeerAvatarsLayer } from './PeerAvatarsLayer';
-import { CosmicBackground } from './CosmicBackground';
 import { useThemeStore } from '../../stores/useThemeStore';
 
 import { UserLocationDot } from './UserLocationDot';
@@ -57,7 +56,6 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
         <hemisphereLight args={[hemiSkyColor, hemiGroundColor, 0.5]} />
 
         <Suspense fallback={null}>
-          <CosmicBackground />
           <CameraController />
           <CampusTerrain />
           <GroundFloor />
