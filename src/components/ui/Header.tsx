@@ -142,6 +142,20 @@ export const Header: React.FC = () => {
           )}
         </button>
 
+        {/* MazeMap Authentic Compass Rose */}
+        <button
+          onClick={resetView}
+          data-testid="compass-rose-btn"
+          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${btnSecondaryClass}`}
+          title="Align Camera to True North (113° Bearing)"
+        >
+          <div className="relative w-4 h-4 flex items-center justify-center">
+            <div className="w-0.5 h-3.5 bg-gradient-to-t from-slate-400 to-rose-500 rounded-full transform -rotate-45" />
+            <span className="absolute -top-1 text-[7px] font-black font-mono text-rose-500">N</span>
+          </div>
+          <span className="hidden md:inline font-mono text-[11px]">113°</span>
+        </button>
+
         {/* Reset Camera View Button */}
         <button
           onClick={resetView}

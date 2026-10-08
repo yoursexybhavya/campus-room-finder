@@ -12,6 +12,7 @@ import { CosmicBackground } from './CosmicBackground';
 import { useThemeStore } from '../../stores/useThemeStore';
 
 import { UserLocationDot } from './UserLocationDot';
+import { MazeMapIconsLayer } from './MazeMapIconsLayer';
 
 interface CampusSceneProps {
   className?: string;
@@ -66,6 +67,7 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
           <UserLocationDot />
           <ActiveRoomBeacon />
           <PeerAvatarsLayer />
+          <MazeMapIconsLayer />
         </Suspense>
       </Canvas>
     </div>

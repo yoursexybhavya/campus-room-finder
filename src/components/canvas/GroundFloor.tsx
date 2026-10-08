@@ -157,6 +157,30 @@ export const GroundFloor: React.FC = () => {
         <meshStandardMaterial color={floorSlabColor} roughness={0.4} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} depthWrite />
       </mesh>
 
+      {/* ======================================================== */}
+      {/* STRUCTURAL VERANDA COLUMNS (MazeMap Architectural Pillars) */}
+      {/* ======================================================== */}
+      <group name="veranda-pillars">
+        {[
+          // West Veranda Pillars
+          [-12.65, 0.9, -10], [-12.65, 0.9, -5], [-12.65, 0.9, 0], [-12.65, 0.9, 5], [-12.65, 0.9, 10],
+          // East Veranda Pillars
+          [12.65, 0.9, -10], [12.65, 0.9, -5], [12.65, 0.9, 0], [12.65, 0.9, 5], [12.65, 0.9, 10],
+          // North Veranda Pillars
+          [-10, 0.9, -12.65], [-5, 0.9, -12.65], [0, 0.9, -12.65], [5, 0.9, -12.65], [10, 0.9, -12.65],
+          // South Veranda Pillars
+          [-10, 0.9, 12.65], [-5, 0.9, 12.65], [0, 0.9, 12.65], [5, 0.9, 12.65], [10, 0.9, 12.65],
+        ].map(([px, py, pz], pIdx) => (
+          <mesh key={`col-${pIdx}`} position={[px, py, pz]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.18, 0.18, 1.6, 16]} />
+            <meshStandardMaterial
+              color={isDark ? '#475569' : '#e2e8f0'}
+              roughness={0.5}
+            />
+          </mesh>
+        ))}
+      </group>
+
 
       {/* ======================================================== */}
       {/* GROUND FLOOR ROOM NODES (Authentic JIET Inventory)        */}

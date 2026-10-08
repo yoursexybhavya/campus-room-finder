@@ -254,6 +254,40 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
     (!isPanelOpen || isSelected || isHovered) &&
     (!isAllMode || isMajorAnchor || isSelected || isHovered);
 
+  // Lecture Theater Seating Grid Rows (MazeMap style S1, S3)
+  const isLectureHall =
+    room.type === 'lecture_theater' ||
+    room.id.startsWith('LT-') ||
+    room.type === 'seminar_hall' ||
+    room.id.includes('AUDI');
+
+  const seatingRows = useMemo(() => {
+    if (!isLectureHall) return [];
+    const rows: { pos: [number, number, number]; args: [number, number, number] }[] = [];
+    const ySeat = -h / 2 + 0.082;
+    const numRows = Math.min(5, Math.max(2, Math.floor(d / 1.5)));
+    const rowSpan = d * 0.65;
+    const rowW = Math.max(1.8, w * 0.72);
+
+    for (let i = 0; i < numRows; i++) {
+      const zOffset = -rowSpan / 2 + (i * rowSpan) / (numRows - 1 || 1);
+      rows.push({
+        pos: [0, ySeat, zOffset],
+        args: [rowW, 0.015, 0.22],
+      });
+    }
+    return rows;
+  }, [isLectureHall, w, h, d]);
+
+  // Clean architectural floor color matching MazeMap: off-white base with high-contrast active states
+  const floorTileColor = isSelected
+    ? '#f97316'
+    : isHovered
+    ? '#38bdf8'
+    : isDark
+    ? '#1e293b'
+    : '#ffffff';
+
   return (
     <group
       ref={groupRef}
@@ -261,7 +295,7 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       scale={[scale, scale, scale]}
       userData={{ roomId: room.id, roomCode: room.code, roomName: room.name, floor: room.floor }}
     >
-      {/* 1. ROOM FLOOR TILE (Clickable interactive surface) */}
+      {/* 1. ROOM FLOOR TILE (Clean MazeMap off-white floorplate) */}
       <mesh
         ref={meshRef}
         name={`room-${room.id}`}
@@ -274,25 +308,40 @@ export const RoomNode: React.FC<RoomNodeProps> = ({
       >
         <boxGeometry args={[w - 0.06, 0.1, d - 0.06]} />
         <meshStandardMaterial
-          color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : room.color}
-          roughness={0.4}
-          metalness={0.08}
+          color={floorTileColor}
+          roughness={0.5}
+          metalness={0.04}
           polygonOffset={true}
           polygonOffsetFactor={-2}
           polygonOffsetUnits={-2}
           depthWrite={true}
           transparent={!isFloorActive}
           opacity={isFloorActive ? 0.98 : 0.15}
-          emissive={isSelected ? '#ea580c' : isHovered ? '#0284c7' : room.color}
-          emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.25 : (isDark ? 0.18 : 0.06)}
+          emissive={isSelected ? '#ea580c' : isHovered ? '#0284c7' : '#000000'}
+          emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.25 : 0}
         />
-        {/* Crisp perimeter outline in category color */}
+        {/* Crisp perimeter outline in subtle architectural gray */}
         <Edges
           scale={1.0}
           threshold={15}
-          color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? '#e2e8f0' : '#475569')}
+          color={isSelected ? '#f97316' : isHovered ? '#38bdf8' : (isDark ? '#475569' : '#cbd5e1')}
         />
       </mesh>
+
+      {/* 1.5. LECTURE THEATER ARCHITECTURAL SEATING GRID (MazeMap S1, S3) */}
+      {isFloorActive && isLectureHall && (
+        <group name="lecture-seating-grid">
+          {seatingRows.map((row, idx) => (
+            <mesh key={`seat-${idx}`} position={row.pos} receiveShadow>
+              <boxGeometry args={row.args} />
+              <meshStandardMaterial
+                color={isDark ? '#475569' : '#cbd5e1'}
+                roughness={0.6}
+              />
+            </mesh>
+          ))}
+        </group>
+      )}
 
       {/* 2. EXTRUDED ARCHITECTURAL CUTAWAY WALLS (1.2m with doorway openings) */}
       {wallSegments.map((seg, idx) => (
