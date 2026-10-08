@@ -12,6 +12,8 @@ export const UserLocationDot: React.FC = () => {
   const currentStepIndex = useCampusStore((state) => state.currentStepIndex);
   const navigationPath = useCampusStore((state) => state.navigationPath);
   const activeFloorFilter = useCampusStore((state) => state.activeFloorFilter);
+  const liveGpsCoords = useCampusStore((state) => state.liveGpsCoords);
+  const isGpsActive = useCampusStore((state) => state.isGpsActive);
 
   const groupRef = useRef<THREE.Group>(null);
   const pulseRingRef = useRef<THREE.Mesh>(null);
@@ -19,6 +21,11 @@ export const UserLocationDot: React.FC = () => {
 
   // Compute base coordinates of origin waypoint or room
   const basePosition = useMemo((): [number, number, number] => {
+    // If live GPS tracking is enabled, use real device coordinates
+    if (isGpsActive && liveGpsCoords) {
+      return liveGpsCoords;
+    }
+
     // If actively navigating and following path steps
     if (isNavigating && navigationPath && navigationPath.length > 0) {
       const idx = Math.min(currentStepIndex, navigationPath.length - 1);
@@ -30,7 +37,7 @@ export const UserLocationDot: React.FC = () => {
     const room = campusRooms.find((r) => r.id === userOriginId);
     if (room) return [room.position[0], room.position[1] + 0.15, room.position[2]];
     return [0, 0.25, 36]; // Default to Main Entrance Gate
-  }, [userOriginId, isNavigating, navigationPath, currentStepIndex]);
+  }, [userOriginId, isNavigating, navigationPath, currentStepIndex, isGpsActive, liveGpsCoords]);
 
   // Determine floor of current position
   const isGround = basePosition[1] < 2.2;

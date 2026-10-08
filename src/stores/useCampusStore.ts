@@ -24,6 +24,10 @@ export interface CampusStoreState {
   setCurrentStepIndex: (idx: number) => void;
   userPosition: [number, number, number];
   setUserPosition: (pos: [number, number, number]) => void;
+  liveGpsCoords: [number, number, number] | null;
+  setLiveGpsCoords: (coords: [number, number, number] | null) => void;
+  isGpsActive: boolean;
+  setIsGpsActive: (active: boolean) => void;
 
   selectRoom: (roomId: string | null) => void;
   setHoveredRoom: (roomId: string | null) => void;
@@ -49,11 +53,15 @@ export const useCampusStore = create<CampusStoreState>((set, get) => ({
   isNavigating: false,
   currentStepIndex: 0,
   userPosition: [0, 0.2, 36],
+  liveGpsCoords: null,
+  isGpsActive: false,
 
   setUserOriginId: (id) => set({ userOriginId: id }),
   setIsNavigating: (active) => set({ isNavigating: active }),
   setCurrentStepIndex: (idx) => set({ currentStepIndex: idx }),
   setUserPosition: (pos) => set({ userPosition: pos }),
+  setLiveGpsCoords: (coords) => set({ liveGpsCoords: coords }),
+  setIsGpsActive: (active) => set({ isGpsActive: active }),
 
   setIsPanelOpen: (open) => set({ isPanelOpen: open }),
 

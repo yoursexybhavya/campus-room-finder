@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, Clock, Building2, Sun, Moon, Map, Box } from 'lucide-react';
+import { RotateCcw, Clock, Building2, Sun, Moon, Map, Box, Navigation } from 'lucide-react';
 import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { useLiveGeolocation, CAMPUS_GPS_ORIGIN } from '../../services/navigation/gpsCoordinateService';
 
 export const Header: React.FC = () => {
   const resetView = useCampusStore((state) => state.resetView);
@@ -10,6 +11,18 @@ export const Header: React.FC = () => {
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const isDark = theme === 'dark';
+
+  const isGpsActive = useCampusStore((state) => state.isGpsActive);
+  const setIsGpsActive = useCampusStore((state) => state.setIsGpsActive);
+  const setLiveGpsCoords = useCampusStore((state) => state.setLiveGpsCoords);
+
+  const { gpsRaw, accuracy, coords, startTracking, stopTracking } = useLiveGeolocation();
+
+  useEffect(() => {
+    if (isGpsActive && coords) {
+      setLiveGpsCoords(coords);
+    }
+  }, [isGpsActive, coords, setLiveGpsCoords]);
 
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -79,6 +92,34 @@ export const Header: React.FC = () => {
               <span className="hidden sm:inline">2D Plan</span>
             </>
           )}
+        </button>
+
+        {/* Live GPS Telemetry Button */}
+        <button
+          onClick={() => {
+            if (isGpsActive) {
+              stopTracking();
+              setIsGpsActive(false);
+              setLiveGpsCoords(null);
+            } else {
+              startTracking();
+              setIsGpsActive(true);
+            }
+          }}
+          data-testid="gps-toggle-btn"
+          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${
+            isGpsActive
+              ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 shadow-emerald-500/20'
+              : btnSecondaryClass
+          }`}
+          title={
+            isGpsActive && gpsRaw
+              ? `GPS Active: ${gpsRaw.latitude.toFixed(5)}°N, ${gpsRaw.longitude.toFixed(5)}°E (Acc: ±${accuracy ? accuracy.toFixed(0) : '?'}m)`
+              : `Enable Real-World GPS (Campus Origin: ${CAMPUS_GPS_ORIGIN.latitude}°N, ${CAMPUS_GPS_ORIGIN.longitude}°E)`
+          }
+        >
+          <Navigation className={`w-3.5 h-3.5 ${isGpsActive ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
+          <span className="hidden sm:inline">{isGpsActive ? 'GPS On' : 'GPS'}</span>
         </button>
 
         {/* Dark / Light Mode Theme Toggle */}
