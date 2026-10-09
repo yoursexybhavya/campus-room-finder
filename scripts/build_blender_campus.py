@@ -1,23 +1,27 @@
 """
-JIET Campus Digital Twin - Complete Procedural 3D Architectural Twin (v3)
+JIET Campus Digital Twin - Complete Procedural 3D Architectural Twin (v4)
 ========================================================================
 Built for Blender 5.2.2 LTS / 4.x.
 Grounded strictly in official CAD blueprints (24.4.2014) & site photography:
-  1. ZERO Viewport Glitch / Z-Fighting: Staggered elevations and clip_start = 0.1m.
-  2. Unblocked Corridors & Authentic Staircases: 10-foot continuous curved hallway
-     around all 4 corners; 4 radiating outer Lecture Halls; inner rotunda helical
-     staircases with central white column, dark granite treads, black tubular railings,
-     completely recessed in dedicated bays with zero corridor obstruction.
-  3. JIET Stage Refinements: Front face of red-brick plinth is completely flat and
-     unbroken facing courtyard audience (NO front stairs); stairs placed strictly on
-     the sides (West and East flanks); centered 3D white "JIET" text on crimson backdrop.
-  4. Room-by-Room Blueprint Extraction: All individual rooms on Ground and First Floor
-     (Admin Director, Registrar, Board Room, Reception, Microprocessor Lab, High Voltage
-     Lab, ECE Lab, Conference Hall, Library, Drawing Halls, LTs) with real walls, door
-     openings into corridors, and MazeMap functional colors.
-  5. Courtyard: 4 manicured lawn quadrants with concrete curbs, cross-axial paved
-     walkways, and South stepped amphitheater seating tiers with alternating wavy pavers.
-  6. STRICTLY ZERO rooftop solar panels, zero unrequested trees, zero fountains.
+  1. Complete CAD Room-by-Room Reconstruction: Every single room on Ground Floor
+     and First Floor (Admin Director, Registrar, Board Room, Reception, Microprocessor Lab,
+     High Voltage Lab, ECE Lab, Conference Hall, Central Library, Drawing Halls 1 & 2,
+     Multipurpose Hall, Internet Lab, Antenna Lab, Communication Lab, Physics & Chemistry Labs,
+     radiating Lecture Halls LT-1 through LT-14, Tutorial Rooms, Faculty Cabins, Toilet blocks).
+  2. Authentic Perimeter & Interior Partition Walls: Real 14-inch exterior walls and
+     8-inch/10-inch interior partition walls separating all individual spaces.
+  3. Real Doorways & Lintels: Every room has authentic door cutouts (1.2m wide, 2.2m high)
+     with solid lintels spanning above door openings into the 10-foot wide corridors.
+  4. 10-Foot Continuous Corridors: Authentic 3.05m (10ft) hallway loop connecting all 4 wings
+     seamlessly through continuous curved corner arcs.
+  5. Authentic Recessed Corner Rotundas: Helical staircases with central white column,
+     dark granite treads, white risers, black tubular railings, and flanking toilet blocks.
+  6. JIET Stage Refinements: Solid flat brick-red plinth facing the courtyard audience
+     (NO front stairs), stairs placed strictly on West & East flanks, centered 3D white
+     "JIET" text on crimson backdrop.
+  7. Courtyard: 4 manicured lawn quadrants with concrete curbs, cross-axial paved walkways,
+     South amphitheater stepped bleachers.
+  8. ZERO Rooftop Solar Panels, zero unrequested trees, zero fountains.
 """
 
 import math
@@ -30,9 +34,9 @@ from mathutils import Vector, Matrix, Euler
 # =============================================================================
 # 1. CONSTANTS & PHYSICAL DIMENSIONS (METERS)
 # =============================================================================
-CAMPUS_SIZE = 72.0                # Total building footprint: 72m x 72m
-COURTYARD_SIZE = 36.0             # Courtyard opening: 36m x 36m ([-18, 18])
-WING_DEPTH = 18.0                 # Depth of each quadrangle wing: 18m
+CAMPUS_SIZE = 72.0                # Total building footprint: 72m x 72m ([-36, 36])
+COURTYARD_SIZE = 36.0             # Central Courtyard opening: 36m x 36m ([-18, 18])
+WING_DEPTH = 18.0                 # Depth of each wing: 18m
 CORRIDOR_WIDTH = 3.05             # Authentic 10-foot wide corridor (3.05m)
 PLINTH_HEIGHT = 0.20              # Ground floor plinth elevation above courtyard
 GF_HEIGHT = 3.65                  # Ground floor ceiling height
@@ -41,6 +45,7 @@ FF_HEIGHT = 3.55                  # First floor ceiling height
 ROOF_PARAPET_H = 0.60             # Clean architectural roof parapet height
 
 WALL_EXT_TH = 0.35                # 14-inch exterior wall thickness
+WALL_CORR_TH = 0.25               # 10-inch corridor dividing wall thickness
 WALL_INT_TH = 0.20                # 8-inch interior partition thickness
 DOOR_WIDTH = 1.20                 # Standard classroom/lab door opening
 DOOR_HEIGHT = 2.20                # Standard door height
@@ -135,6 +140,8 @@ def make_mesh_object(name, bm, collection, material=None):
 
 def add_box(bm, cx, cy, sx, sy, z0, z1):
     """Adds an axis-aligned box with center (cx, cy) and dimensions (sx, sy)."""
+    if sx <= 0.001 or sy <= 0.001 or z1 <= z0:
+        return
     hx, hy = sx * 0.5, sy * 0.5
     v1 = bm.verts.new((cx - hx, cy - hy, z0))
     v2 = bm.verts.new((cx + hx, cy - hy, z0))
@@ -154,8 +161,8 @@ def add_box(bm, cx, cy, sx, sy, z0, z1):
     bm.faces.new([v4, v1, v5, v8]) # Left
 
 def add_prism(bm, pts_2d, z0, z1):
-    """Extrudes a 2D polygon from z0 to z1 with guaranteed outward-pointing normals."""
-    if len(pts_2d) < 3:
+    """Extrudes a 2D polygon from z0 to z1 with outward-pointing normals."""
+    if len(pts_2d) < 3 or z1 <= z0:
         return
     # Ensure Counter-Clockwise winding (positive signed 2D area)
     signed_area = sum(pts_2d[i][0] * pts_2d[(i+1)%len(pts_2d)][1] - pts_2d[(i+1)%len(pts_2d)][0] * pts_2d[i][1] for i in range(len(pts_2d))) * 0.5
@@ -177,6 +184,62 @@ def add_cylinder(bm, cx, cy, r, z0, z1, segments=16):
         ang = 2.0 * math.pi * i / segments
         pts.append((cx + r * math.cos(ang), cy + r * math.sin(ang)))
     add_prism(bm, pts, z0, z1)
+
+def add_wall_x(bm, x0, x1, y, th, z0, z1, doors=None):
+    """
+    Builds a wall along the X axis from x0 to x1 centered at y with thickness th.
+    doors: list of (center_x, door_width, door_height)
+    Creates solid wall segments up to z1, and door lintels above door openings from (z0 + dh) to z1.
+    """
+    if doors is None:
+        doors = []
+    min_x = min(x0, x1)
+    max_x = max(x0, x1)
+    valid_doors = []
+    for cx, dw, dh in sorted(doors, key=lambda d: d[0]):
+        d_start = max(min_x, cx - dw * 0.5)
+        d_end = min(max_x, cx + dw * 0.5)
+        if d_end > d_start:
+            valid_doors.append((d_start, d_end, dh))
+
+    cur_x = min_x
+    for d_start, d_end, dh in valid_doors:
+        if d_start > cur_x + 0.01:
+            add_box(bm, (cur_x + d_start) * 0.5, y, d_start - cur_x, th, z0, z1)
+        lintel_z0 = z0 + dh
+        if lintel_z0 < z1 and d_end > d_start + 0.01:
+            add_box(bm, (d_start + d_end) * 0.5, y, d_end - d_start, th, lintel_z0, z1)
+        cur_x = d_end
+    if cur_x < max_x - 0.01:
+        add_box(bm, (cur_x + max_x) * 0.5, y, max_x - cur_x, th, z0, z1)
+
+def add_wall_y(bm, x, y0, y1, th, z0, z1, doors=None):
+    """
+    Builds a wall along the Y axis from y0 to y1 centered at x with thickness th.
+    doors: list of (center_y, door_width, door_height)
+    Creates solid wall segments up to z1, and door lintels above door openings from (z0 + dh) to z1.
+    """
+    if doors is None:
+        doors = []
+    min_y = min(y0, y1)
+    max_y = max(y0, y1)
+    valid_doors = []
+    for cy, dw, dh in sorted(doors, key=lambda d: d[0]):
+        d_start = max(min_y, cy - dw * 0.5)
+        d_end = min(max_y, cy + dw * 0.5)
+        if d_end > d_start:
+            valid_doors.append((d_start, d_end, dh))
+
+    cur_y = min_y
+    for d_start, d_end, dh in valid_doors:
+        if d_start > cur_y + 0.01:
+            add_box(bm, x, (cur_y + d_start) * 0.5, th, d_start - cur_y, z0, z1)
+        lintel_z0 = z0 + dh
+        if lintel_z0 < z1 and d_end > d_start + 0.01:
+            add_box(bm, x, (d_start + d_end) * 0.5, th, d_end - d_start, lintel_z0, z1)
+        cur_y = d_end
+    if cur_y < max_y - 0.01:
+        add_box(bm, x, (cur_y + max_y) * 0.5, th, max_y - cur_y, z0, z1)
 
 def get_font():
     font_paths = [
@@ -226,7 +289,7 @@ def build_courtyard(coll, mats):
         pts_lawn = [(gx0, gy0), (gx1, gy0), (gx1, gy1), (gx0, gy1)]
         add_prism(bm_lawn, pts_lawn, Z_COURTYARD_BASE, Z_LAWN_TOP)
 
-        # Non-overlapping concrete curbs (shorten horizontal curbs by 2*curb_w)
+        # Non-overlapping concrete curbs
         add_box(bm_curb, (x0 + x1)*0.5, y0 + curb_w*0.5, (x1 - x0) - 2*curb_w, curb_w, Z_COURTYARD_BASE, Z_CURB_TOP)
         add_box(bm_curb, (x0 + x1)*0.5, y1 - curb_w*0.5, (x1 - x0) - 2*curb_w, curb_w, Z_COURTYARD_BASE, Z_CURB_TOP)
         add_box(bm_curb, x0 + curb_w*0.5, (y0 + y1)*0.5, curb_w, (y1 - y0), Z_COURTYARD_BASE, Z_CURB_TOP)
@@ -235,14 +298,14 @@ def build_courtyard(coll, mats):
     make_mesh_object("Courtyard_4_Lawns", bm_lawn, coll, mats["grass"])
     make_mesh_object("Courtyard_Lawn_Curbs", bm_curb, coll, mats["curb"])
 
-    # 3. Cross-Axial Paved Walkways (Unified non-overlapping pieces: ZERO coplanar artifacts)
+    # 3. Cross-Axial Paved Walkways
     bm_walkway = bmesh.new()
     walk_w = 4.4
     half_w = walk_w * 0.5
     # Central intersection square
     add_box(bm_walkway, 0.0, 0.0, walk_w, walk_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
-    # North arm (center to Stage front plinth at Y=16.25)
-    add_box(bm_walkway, 0.0, (half_w + 16.25)*0.5, walk_w, 16.25 - half_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
+    # North arm (center to Stage front plinth at Y=13.20)
+    add_box(bm_walkway, 0.0, (half_w + 13.20)*0.5, walk_w, 13.20 - half_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
     # South arm (center to South veranda at Y=-18.0)
     add_box(bm_walkway, 0.0, (-half_w - 18.0)*0.5, walk_w, 18.0 - half_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
     # West arm (West veranda at X=-17.9 to center)
@@ -251,7 +314,7 @@ def build_courtyard(coll, mats):
     add_box(bm_walkway, (17.9 + half_w)*0.5, 0.0, 17.9 - half_w, walk_w, Z_COURTYARD_BASE, Z_WALKWAY_TOP)
     make_mesh_object("Courtyard_Paved_Cross_Walkways", bm_walkway, coll, mats["walkway_paved"])
 
-    # 4. South Amphitheater Stepped Seating (Split West & East to keep central walkway completely clear)
+    # 4. South Amphitheater Stepped Seating
     bm_bleachers_cream = bmesh.new()
     bm_bleachers_terracotta = bmesh.new()
     bm_bleacher_curbs = bmesh.new()
@@ -358,17 +421,27 @@ def build_outdoor_stage(coll, mats):
     text_obj.select_set(False)
 
 # =============================================================================
-# 5. UNBLOCKED CORRIDORS & AUTHENTIC ROTUNDA HELICAL STAIRCASES
+# 5. UNBLOCKED CORRIDORS, RADIATING LTs WITH DOORS & ROTUNDA HELICAL STAIRCASES
 # =============================================================================
-def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y):
+def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y, floor_lvl='GF'):
     """
     Builds the authentic CAD blueprint corner configuration (24.4.2014):
       - Corner origin is at (cx, cy) = (quad_sign_x * 18.0, quad_sign_y * 18.0).
-      - Inner Rotunda Staircase Bay: r in [0, 2.3m], recessed with central white pillar, green marble helical treads, tubular railings.
-      - Continuous 10-foot Curved Corridor: r in [2.4m, 5.45m] (width = 3.05m = 10 ft), sweeping 90 degrees, completely open and unobstructed!
-      - Radiating Wedge Lecture Halls (LTs): r in [5.60m, 17.60m] (depth = 12m), divided into radiating lecture halls with radial walls and doors.
-      - Outer Curved Perimeter Sandstone Facade: r in [17.60m, 18.00m], connecting exterior facades smoothly.
+      - Inner Rotunda Staircase Bay: r in [0, 2.4m], recessed with central white pillar, helical treads.
+      - Flanking toilet blocks as shown in CAD plans.
+      - Continuous 10-foot Curved Corridor: r in [2.4m, 5.45m] (width = 3.05m = 10 ft), sweeping 90 degrees.
+      - Radiating Wedge Lecture Halls (LTs): r in [5.45m, 17.60m] (depth = 12m = ~39.5 ft):
+        * SW & NW corners: 3 radiating LTs (29'-6" x 35'-0" each)
+        * SE & NE corners: 4 radiating LTs (21'-3" x 35'-0" each)
+        * Every LT has full radial partition walls and an inner curved corridor wall WITH A DOORWAY & LINTEL!
+      - Outer Curved Perimeter Sandstone Facade: r in [17.60m, 18.00m].
     """
+    is_ff = (floor_lvl == 'FF')
+    z_floor_base = Z_FF_SLAB_TOP if is_ff else Z_GF_PLINTH
+    z_floor_top = Z_FF_FLOOR if is_ff else Z_GF_FLOOR
+    z_wall_base = Z_FF_WALL_BASE if is_ff else Z_GF_WALL_BASE
+    z_wall_top = Z_FF_CEILING if is_ff else Z_GF_CEILING
+
     bm_lts = bmesh.new()
     bm_corridor = bmesh.new()
     bm_walls = bmesh.new()
@@ -376,6 +449,7 @@ def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y):
     bm_stair_risers = bmesh.new()
     bm_stair_rails = bmesh.new()
     bm_rotunda_wall = bmesh.new()
+    bm_toilets = bmesh.new()
 
     cx = quad_sign_x * 18.0
     cy = quad_sign_y * 18.0
@@ -388,7 +462,7 @@ def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y):
     r_corr_in = 2.40
     r_corr_out = 5.45
 
-    r_rooms_in = 5.60
+    r_rooms_in = 5.45
     r_rooms_out = 17.60
     r_facade_out = 18.00
 
@@ -407,26 +481,87 @@ def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y):
         p1_in = get_pt(r_corr_in, p1)
         p1_out = get_pt(r_corr_out, p1)
         p0_out = get_pt(r_corr_out, p0)
-        add_prism(bm_corridor, [p0_in, p1_in, p1_out, p0_out], Z_GF_PLINTH, Z_GF_FLOOR)
+        add_prism(bm_corridor, [p0_in, p1_in, p1_out, p0_out], z_floor_base, z_floor_top)
 
-    # 2. Four Radiating Lecture Halls (Outer Quadrant Arc)
-    num_rooms = 4
+    # 2. Radiating Lecture Halls (Outer Quadrant Arc)
+    # SW & NW have 3 rooms (29'-6" x 35'-0"); SE & NE have 4 rooms (21'-3" x 35'-0")
+    is_3_rooms = (quad_sign_x < 0)
+    num_rooms = 3 if is_3_rooms else 4
+    room_mat = mats["mazemap_lt_upper"] if is_ff else mats["mazemap_lt"]
+
     for r_idx in range(num_rooms):
         p0 = (r_idx / num_rooms) * (math.pi * 0.5)
         p1 = ((r_idx + 1) / num_rooms) * (math.pi * 0.5)
+
+        # Room floor prism
         pts_room = []
-        seg_sub = 6
+        seg_sub = 8
         for s in range(seg_sub + 1):
             sa = p0 + (s / seg_sub) * (p1 - p0)
             pts_room.append(get_pt(r_rooms_in, sa))
         for s in range(seg_sub, -1, -1):
             sa = p0 + (s / seg_sub) * (p1 - p0)
             pts_room.append(get_pt(r_rooms_out, sa))
-        add_prism(bm_lts, pts_room, Z_GF_PLINTH, Z_GF_FLOOR)
+        add_prism(bm_lts, pts_room, z_floor_base, z_floor_top)
 
-        # Radial partition wall
-        p_in = get_pt(r_rooms_in, p0)
-        p_out = get_pt(r_rooms_out, p0)
+        # Radial partition wall at p0 (for r_idx > 0)
+        if r_idx > 0:
+            p_in = get_pt(r_rooms_in, p0)
+            p_out = get_pt(r_rooms_out, p0)
+            dx, dy = p_out[0] - p_in[0], p_out[1] - p_in[1]
+            L = math.hypot(dx, dy)
+            if L > 0:
+                nx, ny = -dy / L * (WALL_INT_TH * 0.5), dx / L * (WALL_INT_TH * 0.5)
+                pts_wall = [
+                    (p_in[0] - nx, p_in[1] - ny),
+                    (p_in[0] + nx, p_in[1] + ny),
+                    (p_out[0] + nx, p_out[1] + ny),
+                    (p_out[0] - nx, p_out[1] - ny)
+                ]
+                add_prism(bm_walls, pts_wall, z_wall_base, z_wall_top)
+
+        # Inner corridor curved wall with authentic DOOR OPENING & LINTEL
+        p_mid = (p0 + p1) * 0.5
+        door_ang = DOOR_WIDTH / r_rooms_in
+        d0 = p_mid - door_ang * 0.5
+        d1 = p_mid + door_ang * 0.5
+
+        # Solid wall segment from p0 to d0
+        if d0 > p0 + 0.02:
+            pts_w1 = []
+            for s in range(4):
+                ca = p0 + (s / 3.0) * (d0 - p0)
+                pts_w1.append(get_pt(r_rooms_in, ca))
+            for s in range(3, -1, -1):
+                ca = p0 + (s / 3.0) * (d0 - p0)
+                pts_w1.append(get_pt(r_rooms_in + WALL_CORR_TH, ca))
+            add_prism(bm_walls, pts_w1, z_wall_base, z_wall_top)
+
+        # Solid wall segment from d1 to p1
+        if p1 > d1 + 0.02:
+            pts_w2 = []
+            for s in range(4):
+                ca = d1 + (s / 3.0) * (p1 - d1)
+                pts_w2.append(get_pt(r_rooms_in, ca))
+            for s in range(3, -1, -1):
+                ca = d1 + (s / 3.0) * (p1 - d1)
+                pts_w2.append(get_pt(r_rooms_in + WALL_CORR_TH, ca))
+            add_prism(bm_walls, pts_w2, z_wall_base, z_wall_top)
+
+        # Door lintel from d0 to d1 (above DOOR_HEIGHT = 2.20m)
+        pts_lintel = []
+        for s in range(4):
+            ca = d0 + (s / 3.0) * (d1 - d0)
+            pts_lintel.append(get_pt(r_rooms_in, ca))
+        for s in range(3, -1, -1):
+            ca = d0 + (s / 3.0) * (d1 - d0)
+            pts_lintel.append(get_pt(r_rooms_in + WALL_CORR_TH, ca))
+        add_prism(bm_walls, pts_lintel, z_wall_base + DOOR_HEIGHT, z_wall_top)
+
+    # Flanking radial end walls at p = 0 and p = pi/2
+    for p_end in [0.0, math.pi * 0.5]:
+        p_in = get_pt(r_rooms_in, p_end)
+        p_out = get_pt(r_rooms_out, p_end)
         dx, dy = p_out[0] - p_in[0], p_out[1] - p_in[1]
         L = math.hypot(dx, dy)
         if L > 0:
@@ -437,33 +572,7 @@ def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y):
                 (p_out[0] + nx, p_out[1] + ny),
                 (p_out[0] - nx, p_out[1] - ny)
             ]
-            add_prism(bm_walls, pts_wall, Z_GF_WALL_BASE, Z_GF_CEILING)
-
-        # Inner corridor wall with door gap
-        door_ang_width = math.radians(4.0)
-        p_mid = (p0 + p1) * 0.5
-        d0 = p_mid - door_ang_width * 0.5
-        d1 = p_mid + door_ang_width * 0.5
-
-        for a_start, a_end in [(p0, d0), (d1, p1)]:
-            pts_cw = []
-            for s in range(4):
-                ca = a_start + (s / 3.0) * (a_end - a_start)
-                pts_cw.append(get_pt(r_rooms_in - WALL_INT_TH, ca))
-            for s in range(3, -1, -1):
-                ca = a_start + (s / 3.0) * (a_end - a_start)
-                pts_cw.append(get_pt(r_rooms_in, ca))
-            add_prism(bm_walls, pts_cw, Z_GF_WALL_BASE, Z_GF_CEILING)
-
-        # Door lintel
-        pts_lintel = []
-        for s in range(4):
-            ca = d0 + (s / 3.0) * (d1 - d0)
-            pts_lintel.append(get_pt(r_rooms_in - WALL_INT_TH, ca))
-        for s in range(3, -1, -1):
-            ca = d0 + (s / 3.0) * (d1 - d0)
-            pts_lintel.append(get_pt(r_rooms_in, ca))
-        add_prism(bm_walls, pts_lintel, Z_GF_WALL_BASE + DOOR_HEIGHT, Z_GF_CEILING)
+            add_prism(bm_walls, pts_wall, z_wall_base, z_wall_top)
 
     # 3. Outer Curved Perimeter Sandstone Facade Wall
     pts_ext = []
@@ -474,88 +583,95 @@ def build_authentic_corner(coll, mats, corner_name, quad_sign_x, quad_sign_y):
     for s in range(ext_segs, -1, -1):
         ca = (s / ext_segs) * (math.pi * 0.5)
         pts_ext.append(get_pt(r_facade_out, ca))
-    add_prism(bm_walls, pts_ext, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_prism(bm_walls, pts_ext, z_wall_base, z_wall_top)
 
-    # 4. Central Column & Helical Staircase (IMG_3068 - IMG_3070)
-    add_cylinder(bm_walls, cx, cy, r_stair_col, Z_GF_WALL_BASE, Z_FF_CEILING, segments=16)
+    # 4. Central Column & Helical Staircase (Only constructed once on GF/Structural core)
+    if not is_ff:
+        add_cylinder(bm_walls, cx, cy, r_stair_col, Z_GF_WALL_BASE, Z_FF_CEILING, segments=16)
 
-    num_helical_steps = 22
-    stair_dz = (Z_FF_FLOOR - Z_GF_FLOOR) / num_helical_steps
-    step_ang_span = 270.0
+        num_helical_steps = 22
+        stair_dz = (Z_FF_FLOOR - Z_GF_FLOOR) / num_helical_steps
+        step_ang_span = 270.0
+        dir_to_courtyard = math.degrees(math.atan2(-quad_sign_y, -quad_sign_x))
+        dir_to_outer = math.degrees(math.atan2(quad_sign_y, quad_sign_x))
+        stair_base_rot = dir_to_courtyard - 35.0
 
-    # Direction from rotunda center towards courtyard / corridor
-    dir_to_courtyard = math.degrees(math.atan2(-quad_sign_y, -quad_sign_x))
-    # Direction towards outer building corner
-    dir_to_outer = math.degrees(math.atan2(quad_sign_y, quad_sign_x))
+        for s in range(num_helical_steps):
+            sa0 = math.radians(stair_base_rot + (s / num_helical_steps) * step_ang_span)
+            sa1 = math.radians(stair_base_rot + ((s + 1) / num_helical_steps) * step_ang_span)
+            sz0 = Z_GF_FLOOR + s * stair_dz
+            sz1 = sz0 + stair_dz
 
-    # Bottom stair step starts at the corridor entrance archway
-    stair_base_rot = dir_to_courtyard - 35.0
+            p0_in = (cx + r_stair_in * math.cos(sa0), cy + r_stair_in * math.sin(sa0))
+            p1_in = (cx + r_stair_in * math.cos(sa1), cy + r_stair_in * math.sin(sa1))
+            p1_out = (cx + r_stair_out * math.cos(sa1), cy + r_stair_out * math.sin(sa1))
+            p0_out = (cx + r_stair_out * math.cos(sa0), cy + r_stair_out * math.sin(sa0))
 
-    for s in range(num_helical_steps):
-        sa0 = math.radians(stair_base_rot + (s / num_helical_steps) * step_ang_span)
-        sa1 = math.radians(stair_base_rot + ((s + 1) / num_helical_steps) * step_ang_span)
-        sz0 = Z_GF_FLOOR + s * stair_dz
-        sz1 = sz0 + stair_dz
+            add_prism(bm_stair_treads, [p0_in, p1_in, p1_out, p0_out], sz1 - 0.05, sz1)
+            add_prism(bm_stair_risers, [p0_in, p1_in, p1_out, p0_out], sz0, sz1 - 0.05)
 
-        p0_in = (cx + r_stair_in * math.cos(sa0), cy + r_stair_in * math.sin(sa0))
-        p1_in = (cx + r_stair_in * math.cos(sa1), cy + r_stair_in * math.sin(sa1))
-        p1_out = (cx + r_stair_out * math.cos(sa1), cy + r_stair_out * math.sin(sa1))
-        p0_out = (cx + r_stair_out * math.cos(sa0), cy + r_stair_out * math.sin(sa0))
+            r_rail = r_stair_out - 0.10
+            rx = cx + r_rail * math.cos(sa0)
+            ry = cy + r_rail * math.sin(sa0)
+            if s % 2 == 0:
+                add_cylinder(bm_stair_rails, rx, ry, 0.03, sz1, sz1 + 0.95, segments=8)
 
-        add_prism(bm_stair_treads, [p0_in, p1_in, p1_out, p0_out], sz1 - 0.05, sz1)
-        add_prism(bm_stair_risers, [p0_in, p1_in, p1_out, p0_out], sz0, sz1 - 0.05)
+        # Rotunda Enclosure Wall
+        rot_segs = 14
+        wall_span = 200.0
+        wall_start = dir_to_outer - wall_span * 0.5
+        for w in range(rot_segs):
+            wa0 = math.radians(wall_start + (w / rot_segs) * wall_span)
+            wa1 = math.radians(wall_start + ((w + 1) / rot_segs) * wall_span)
+            p0_in = (cx + r_rot_wall * math.cos(wa0), cy + r_rot_wall * math.sin(wa0))
+            p1_in = (cx + r_rot_wall * math.cos(wa1), cy + r_rot_wall * math.sin(wa1))
+            p1_out = (cx + (r_rot_wall + WALL_INT_TH) * math.cos(wa1), cy + (r_rot_wall + WALL_INT_TH) * math.sin(wa1))
+            p0_out = (cx + (r_rot_wall + WALL_INT_TH) * math.cos(wa0), cy + (r_rot_wall + WALL_INT_TH) * math.sin(wa0))
+            add_prism(bm_rotunda_wall, [p0_in, p1_in, p1_out, p0_out], Z_GF_WALL_BASE, Z_GF_CEILING)
 
-        r_rail = r_stair_out - 0.10
-        rx = cx + r_rail * math.cos(sa0)
-        ry = cy + r_rail * math.sin(sa0)
-        if s % 2 == 0:
-            add_cylinder(bm_stair_rails, rx, ry, 0.03, sz1, sz1 + 0.95, segments=8)
+        # Flanking Toilet Partitions in Inner Bay (FR. Toilet & Restroom blocks)
+        add_box(bm_toilets, cx + quad_sign_x * 1.5, cy - quad_sign_y * 1.8, 1.6, 1.8, Z_GF_PLINTH, Z_GF_FLOOR)
+        add_box(bm_walls, cx + quad_sign_x * 1.5, cy - quad_sign_y * 1.8, 0.15, 1.8, Z_GF_WALL_BASE, Z_GF_CEILING)
 
-    # Rotunda Enclosure Wall: encloses the outer 200 degrees, leaving a wide 160-degree archway open directly to the corridor
-    rot_segs = 14
-    wall_span = 200.0
-    wall_start = dir_to_outer - wall_span * 0.5
-    for w in range(rot_segs):
-        wa0 = math.radians(wall_start + (w / rot_segs) * wall_span)
-        wa1 = math.radians(wall_start + ((w + 1) / rot_segs) * wall_span)
-        p0_in = (cx + r_rot_wall * math.cos(wa0), cy + r_rot_wall * math.sin(wa0))
-        p1_in = (cx + r_rot_wall * math.cos(wa1), cy + r_rot_wall * math.sin(wa1))
-        p1_out = (cx + (r_rot_wall + WALL_INT_TH) * math.cos(wa1), cy + (r_rot_wall + WALL_INT_TH) * math.sin(wa1))
-        p0_out = (cx + (r_rot_wall + WALL_INT_TH) * math.cos(wa0), cy + (r_rot_wall + WALL_INT_TH) * math.sin(wa0))
-        add_prism(bm_rotunda_wall, [p0_in, p1_in, p1_out, p0_out], Z_GF_WALL_BASE, Z_GF_CEILING)
+        make_mesh_object(f"{corner_name}_Stair_Treads_Granite", bm_stair_treads, coll, mats["stair_green_marble"])
+        make_mesh_object(f"{corner_name}_Stair_Risers_White", bm_stair_risers, coll, mats["stair_riser"])
+        make_mesh_object(f"{corner_name}_Stair_Tubular_Railings", bm_stair_rails, coll, mats["stair_railing"])
+        make_mesh_object(f"{corner_name}_Rotunda_Bay_Wall", bm_rotunda_wall, coll, mats["wall_sandstone"])
+        make_mesh_object(f"{corner_name}_Corner_Toilets_Floor", bm_toilets, coll, mats["mazemap_admin"])
 
-    make_mesh_object(f"{corner_name}_Radiating_LTs_Floor", bm_lts, coll, mats["mazemap_lt"])
-    make_mesh_object(f"{corner_name}_Unblocked_Curved_Corridor", bm_corridor, coll, mats["corridor_floor"])
-    make_mesh_object(f"{corner_name}_Corridor_Partition_Walls", bm_walls, coll, mats["wall_sandstone"])
-    make_mesh_object(f"{corner_name}_Stair_Treads_Granite", bm_stair_treads, coll, mats["stair_green_marble"])
-    make_mesh_object(f"{corner_name}_Stair_Risers_White", bm_stair_risers, coll, mats["stair_riser"])
-    make_mesh_object(f"{corner_name}_Stair_Tubular_Railings", bm_stair_rails, coll, mats["stair_railing"])
-    make_mesh_object(f"{corner_name}_Rotunda_Bay_Wall", bm_rotunda_wall, coll, mats["wall_sandstone"])
+    prefix = f"{corner_name}_{floor_lvl}"
+    make_mesh_object(f"{prefix}_Radiating_LTs_Floor", bm_lts, coll, room_mat)
+    make_mesh_object(f"{prefix}_Curved_Corridor", bm_corridor, coll, mats["corridor_floor"])
+    make_mesh_object(f"{prefix}_Partition_And_Door_Walls", bm_walls, coll, mats["wall_sandstone"])
 
-def build_all_corners(coll, mats):
-    """Builds all 4 corners matching authentic blueprint geometry."""
-    build_authentic_corner(coll, mats, "Corner_NW", -1.0,  1.0)
-    build_authentic_corner(coll, mats, "Corner_NE",  1.0,  1.0)
-    build_authentic_corner(coll, mats, "Corner_SW", -1.0, -1.0)
-    build_authentic_corner(coll, mats, "Corner_SE",  1.0, -1.0)
+def build_all_corners(coll, mats, floor_lvl='GF'):
+    """Builds all 4 corners matching authentic blueprint geometry for the given floor."""
+    build_authentic_corner(coll, mats, "Corner_NW", -1.0,  1.0, floor_lvl=floor_lvl)
+    build_authentic_corner(coll, mats, "Corner_NE",  1.0,  1.0, floor_lvl=floor_lvl)
+    build_authentic_corner(coll, mats, "Corner_SW", -1.0, -1.0, floor_lvl=floor_lvl)
+    build_authentic_corner(coll, mats, "Corner_SE",  1.0, -1.0, floor_lvl=floor_lvl)
 
 # =============================================================================
-# 6. GROUND FLOOR ARCHITECTURE (BLUEPRINT ROOM EXTRACTION)
+# 6. GROUND FLOOR ARCHITECTURE (COMPLETE BLUEPRINT ROOM EXTRACTION)
 # =============================================================================
 def build_ground_floor(coll, mats):
     """
     Builds the authentic Ground Floor from blueprint CO-ED UP TO DATE 24.4.2014-Model.pdf 2.pdf:
-      - Continuous 10-foot inner veranda corridor with square sandstone pillars every 4m.
+      - Continuous 10-foot covered veranda corridor around courtyard with square sandstone pillars.
       - South Wing: Entrance Porch, Portico, Lobby, Board Room, Admin Director,
-        Registrar, ECE Lab, Microprocessor Lab.
-      - West Wing: Electronic Lab, Computer Labs 1 & 2, Tutorial Rooms, Faculty Rooms, Toilets.
-      - North Wing: High Voltage Lab, 47' Lecture Hall, Computer Lab, Bridge to Workshop.
-      - East Wing: Conference Hall, Language Lab, Machine Lab, EMI Lab.
+        Registrar, ECE Lab, Microprocessor Lab, Medical Room, Penal Room, Admission Cell.
+      - West Wing: Electronic Lab, Computer Labs 1 & 2, DHD Lab, Tutorial Rooms, Faculty Rooms.
+      - North Wing: High Voltage Lab, 47' Lecture Hall, Computer Lab North, Tutorial Rooms,
+        Workshop Bridge & Culvert.
+      - East Wing: Conference Hall, Language Lab, Machine Lab, EMI Lab, Faculty Cabins, Stores.
+      - ALL interior partition walls with real thickness.
+      - ALL doorways entering from corridors with real framed lintels.
     """
     bm_corridor = bmesh.new()
     bm_pillars = bmesh.new()
     bm_ext_walls = bmesh.new()
-    bm_int_walls = bmesh.new()
+    bm_corr_walls = bmesh.new()
+    bm_int_partitions = bmesh.new()
 
     # 1. Continuous 10-foot covered veranda corridor around courtyard
     add_box(bm_corridor, 0.0, -19.5, 36.0, CORRIDOR_WIDTH, Z_GF_PLINTH, Z_GF_FLOOR) # South
@@ -575,106 +691,164 @@ def build_ground_floor(coll, mats):
     make_mesh_object("GF_Sandstone_Veranda_Pillars", bm_pillars, coll, mats["pillar_sandstone"])
 
     # 3. Outer Perimeter Facade Walls (Straight wings, 36m length)
-    add_box(bm_ext_walls, 0.0, -36.0 + WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING) # South
-    add_box(bm_ext_walls, 0.0,  36.0 - WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING) # North
-    add_box(bm_ext_walls, -36.0 + WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_GF_WALL_BASE, Z_GF_CEILING) # West
-    add_box(bm_ext_walls,  36.0 - WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_GF_WALL_BASE, Z_GF_CEILING) # East
-
-    # Corridor inner dividing walls with door cutouts
-    # South Corridor Wall (Y = -21.0)
-    add_box(bm_int_walls, -14.0, -21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls,  14.0, -21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls,   0.0, -21.0,  8.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    # North Corridor Wall (Y = 21.0)
-    add_box(bm_int_walls, -14.0, 21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls,  14.0, 21.0, 10.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls,   0.0, 21.0,  8.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    # West Corridor Wall (X = -21.0)
-    add_box(bm_int_walls, -21.0, -14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls, -21.0,  14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls, -21.0,   0.0, WALL_INT_TH,  8.0, Z_GF_WALL_BASE, Z_GF_CEILING)
-    # East Corridor Wall (X = 21.0)
-    add_box(bm_int_walls,  21.0, -14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls,  21.0,  14.0, WALL_INT_TH, 10.0, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_int_walls,  21.0,   0.0, WALL_INT_TH,  8.0, Z_GF_WALL_BASE, Z_GF_CEILING)
-
+    # South Exterior Wall (with Entrance Porch opening)
+    add_wall_x(bm_ext_walls, -18.0, 18.0, -35.7, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(0.0, 4.0, 3.0)])
+    # North Exterior Wall (with Workshop Bridge opening)
+    add_wall_x(bm_ext_walls, -18.0, 18.0,  35.7, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(0.0, 3.2, 3.0)])
+    # West Exterior Wall
+    add_wall_y(bm_ext_walls, -35.7, -18.0, 18.0, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    # East Exterior Wall
+    add_wall_y(bm_ext_walls,  35.7, -18.0, 18.0, WALL_EXT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
     make_mesh_object("GF_Exterior_Facade_Walls", bm_ext_walls, coll, mats["wall_sandstone"])
-    make_mesh_object("GF_Corridor_Dividing_Walls", bm_int_walls, coll, mats["wall_interior"])
 
-    # 4. INDIVIDUAL ROOM FLOORS & PARTITIONS (GROUND FLOOR BLUEPRINT)
-    gf_rooms_spec = [
-        # South Wing (Admin & Entrance) - strictly within X in [-17.5, 17.5], Y in [-35.7, -21.2]
+    # 4. Corridor Dividing Walls with AUTHENTIC DOOR CUTOUTS & LINTELS
+    # South Corridor Wall (Y = -21.05)
+    gf_south_doors = [
+        (-15.5, DOOR_WIDTH, DOOR_HEIGHT), # ECE Lab
+        (-11.0, DOOR_WIDTH, DOOR_HEIGHT), # Campus Director
+        (-9.0,  DOOR_WIDTH, DOOR_HEIGHT), # Board Room
+        (-6.5,  DOOR_WIDTH, DOOR_HEIGHT), # Academic Director
+        (0.0,   2.40,       DOOR_HEIGHT), # Main Reception / Lobby double door
+        (6.5,   DOOR_WIDTH, DOOR_HEIGHT), # Training Office
+        (11.0,  DOOR_WIDTH, DOOR_HEIGHT), # Admission Cell
+        (15.5,  DOOR_WIDTH, DOOR_HEIGHT), # Microprocessor Lab
+    ]
+    add_wall_x(bm_corr_walls, -18.0, 18.0, -21.05, WALL_CORR_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=gf_south_doors)
+
+    # North Corridor Wall (Y = 21.05)
+    gf_north_doors = [
+        (-12.0, DOOR_WIDTH, DOOR_HEIGHT), # Computer Lab North
+        (-8.0,  DOOR_WIDTH, DOOR_HEIGHT), # Tutorial / Director Room
+        (-3.5,  DOOR_WIDTH, DOOR_HEIGHT), # Lecture Hall 47' West
+        (0.0,   3.00,       DOOR_HEIGHT), # Workshop Passage open archway
+        (3.5,   DOOR_WIDTH, DOOR_HEIGHT), # Lecture Hall 47' East
+        (8.0,   DOOR_WIDTH, DOOR_HEIGHT), # Tutorial Room
+        (12.0,  DOOR_WIDTH, DOOR_HEIGHT), # High Voltage Lab
+    ]
+    add_wall_x(bm_corr_walls, -18.0, 18.0, 21.05, WALL_CORR_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=gf_north_doors)
+
+    # West Corridor Wall (X = -21.05)
+    gf_west_doors = [
+        (-12.0, DOOR_WIDTH, DOOR_HEIGHT), # Electronic Lab
+        (-8.0,  DOOR_WIDTH, DOOR_HEIGHT), # Electronic Lab Door 2
+        (-1.5,  DOOR_WIDTH, DOOR_HEIGHT), # Computer Lab 1 (FOC)
+        (7.5,   DOOR_WIDTH, DOOR_HEIGHT), # Computer Lab 2 (Software)
+        (14.5,  DOOR_WIDTH, DOOR_HEIGHT), # DHD Lab & Tutorial Block
+    ]
+    add_wall_y(bm_corr_walls, -21.05, -18.0, 18.0, WALL_CORR_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=gf_west_doors)
+
+    # East Corridor Wall (X = 21.05)
+    gf_east_doors = [
+        (-12.0, DOOR_WIDTH, DOOR_HEIGHT), # EMI Lab
+        (-2.0,  DOOR_WIDTH, DOOR_HEIGHT), # Electronic Machine Lab Door 1
+        (3.0,   DOOR_WIDTH, DOOR_HEIGHT), # Electronic Machine Lab Door 2
+        (9.0,   DOOR_WIDTH, DOOR_HEIGHT), # Conference Hall Door 1
+        (14.0,  DOOR_WIDTH, DOOR_HEIGHT), # Conference Hall Door 2
+    ]
+    add_wall_y(bm_corr_walls, 21.05, -18.0, 18.0, WALL_CORR_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=gf_east_doors)
+    make_mesh_object("GF_Corridor_Dividing_Walls_With_Doors", bm_corr_walls, coll, mats["wall_interior"])
+
+    # 5. INDIVIDUAL GROUND FLOOR ROOM FLOORS (Exact Blueprint Extraction)
+    gf_rooms = [
+        # South Wing (Admin, Labs & Suites)
         ("Room_GF_Main_Entrance_Porch", 0.0, -38.5, 9.0, 5.0, mats["mazemap_admin"], "ENTRANCE PORCH"),
-        ("Room_GF_Lobby_Reception", 0.0, -28.5, 10.1, 14.4, mats["mazemap_admin"], "RECEPTION & LOBBY"),
-        ("Room_GF_Board_Room", -9.35, -31.9, 8.1, 7.6, mats["mazemap_admin"], "BOARD ROOM"),
-        ("Room_GF_Admin_Director", -9.35, -24.5, 8.1, 6.4, mats["mazemap_admin"], "ACAD. DIRECTOR"),
-        ("Room_GF_Registrar_Office", 9.35, -31.9, 8.1, 7.6, mats["mazemap_admin"], "REGISTRAR CELL"),
-        ("Room_GF_Campus_Director", 9.35, -24.5, 8.1, 6.4, mats["mazemap_admin"], "CAMPUS DIRECTOR"),
-        ("Room_GF_ECE_Lab", -15.65, -28.5, 4.1, 14.4, mats["mazemap_lab"], "ECE LAB"),
-        ("Room_GF_Microprocessor_Lab", 15.65, -28.5, 4.1, 14.4, mats["mazemap_lab"], "MICROPROCESSOR LAB"),
+        ("Room_GF_Lobby_Reception", 0.0, -25.5, 9.0, 8.8, mats["mazemap_admin"], "RECEPTION & LOBBY"),
+        ("Room_GF_Registrar_Office", 0.0, -32.6, 9.0, 5.8, mats["mazemap_admin"], "REGISTRAR OFFICE"),
+        ("Room_GF_Board_Room", -9.0, -32.6, 9.0, 5.8, mats["mazemap_admin"], "BOARD ROOM"),
+        ("Room_GF_Admin_Director", -6.5, -27.5, 4.0, 4.4, mats["mazemap_admin"], "ACAD. DIRECTOR"),
+        ("Room_GF_Campus_Director", -11.0, -23.5, 5.0, 4.6, mats["mazemap_admin"], "CAMPUS DIRECTOR"),
+        ("Room_GF_Secrecy_Toilets", -6.5, -23.5, 4.0, 4.6, mats["mazemap_admin"], "SECRECY & TOILETS"),
+        ("Room_GF_Pantry_PA", -11.0, -27.5, 5.0, 4.4, mats["mazemap_admin"], "PANTRY & P.A."),
+        ("Room_GF_Training_Office", 6.5, -32.6, 4.0, 5.8, mats["mazemap_admin"], "TRAINING OFFICE"),
+        ("Room_GF_Admission_Cell", 11.0, -31.1, 5.0, 8.8, mats["mazemap_admin"], "ADMISSION CELL"),
+        ("Room_GF_Student_Cell", 11.0, -24.1, 5.0, 5.2, mats["mazemap_admin"], "STUDENT CELL"),
+        ("Room_GF_Staff_Cabins_Toilets", 6.5, -25.5, 4.0, 8.0, mats["mazemap_admin"], "STAFF CABINS"),
+        ("Room_GF_ECE_Lab", -15.75, -28.4, 4.5, 14.2, mats["mazemap_lab"], "ECE LAB"),
+        ("Room_GF_Microprocessor_Lab", 15.75, -28.4, 4.5, 14.2, mats["mazemap_lab"], "MICROPROCESSOR LAB"),
 
-        # West Wing (Academic & Labs) - strictly within X in [-35.7, -21.2], Y in [-17.5, 17.5]
-        ("Room_GF_Electronic_Lab", -28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "ELECTRONIC LAB"),
-        ("Room_GF_Computer_Lab_1", -28.5, 0.0, 14.4, 11.1, mats["mazemap_cs_lab"], "COMPUTER LAB 1"),
-        ("Room_GF_Computer_Lab_2", -28.5, 11.75, 14.4, 11.5, mats["mazemap_cs_lab"], "COMPUTER LAB 2"),
+        # West Wing (Academic, Computer Labs & Electronic)
+        ("Room_GF_Electronic_Lab", -28.4, -11.75, 14.2, 11.5, mats["mazemap_lab"], "ELECTRONIC LAB"),
+        ("Room_GF_Computer_Lab_1", -28.4, -1.5, 14.2, 8.8, mats["mazemap_cs_lab"], "COMPUTER LAB 1"),
+        ("Room_GF_Computer_Lab_2", -28.4, 7.25, 14.2, 8.5, mats["mazemap_cs_lab"], "COMPUTER LAB 2"),
+        ("Room_GF_DHD_Lab_Store", -32.0, 14.75, 7.0, 6.2, mats["mazemap_lab"], "DHD LAB & STORE"),
+        ("Room_GF_Tutorial_West", -24.8, 14.75, 7.0, 6.2, mats["mazemap_lt"], "TUTORIAL WEST"),
 
-        # North Wing (Engineering Labs & Passage) - strictly within X in [-17.5, 17.5], Y in [21.2, 35.7]
-        ("Room_GF_Computer_Lab_North", -11.75, 28.5, 11.5, 14.4, mats["mazemap_cs_lab"], "COMPUTER LAB N"),
-        ("Room_GF_Lecture_Hall_47", 0.0, 28.5, 11.1, 14.4, mats["mazemap_lt"], "LECTURE HALL 47'"),
-        ("Room_GF_High_Voltage_Lab", 11.75, 28.5, 11.5, 14.4, mats["mazemap_lab"], "HIGH VOLTAGE LAB"),
+        # North Wing (Engineering Labs & Workshops)
+        ("Room_GF_Computer_Lab_North", -12.0, 28.4, 11.5, 14.2, mats["mazemap_cs_lab"], "COMPUTER LAB N"),
+        ("Room_GF_Lecture_Hall_47", 0.0, 28.4, 12.0, 14.2, mats["mazemap_lt"], "LECTURE HALL 47'"),
+        ("Room_GF_High_Voltage_Lab", 12.0, 28.4, 11.5, 14.2, mats["mazemap_lab"], "HIGH VOLTAGE LAB"),
         ("Room_GF_Workshop_Bridge", 0.0, 39.0, 4.5, 6.5, mats["walkway_paved"], "WORKSHOP BRIDGE"),
+        ("Room_GF_Warden_Staff_Office", -4.0, 39.0, 3.5, 6.5, mats["mazemap_admin"], "WARDEN OFFICE"),
 
-        # East Wing (Conference & Machine Labs) - strictly within X in [21.2, 35.7], Y in [-17.5, 17.5]
-        ("Room_GF_EMI_Lab", 28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "EMI LAB"),
-        ("Room_GF_Electronic_Machine_Lab", 28.5, 0.0, 14.4, 11.1, mats["mazemap_lab"], "MACHINE LAB"),
-        ("Room_GF_Conference_Hall", 28.5, 11.75, 14.4, 11.5, mats["mazemap_seminar"], "CONFERENCE HALL"),
+        # East Wing (Conference & Machine Labs)
+        ("Room_GF_EMI_Lab", 28.4, -11.75, 14.2, 11.5, mats["mazemap_lab"], "EMI LAB"),
+        ("Room_GF_Electronic_Machine_Lab", 28.4, 0.0, 14.2, 11.8, mats["mazemap_lab"], "MACHINE LAB"),
+        ("Room_GF_Conference_Hall", 28.4, 11.75, 14.2, 11.5, mats["mazemap_seminar"], "CONFERENCE HALL"),
     ]
 
-    for obj_name, cx, cy, sx, sy, room_mat, label in gf_rooms_spec:
+    for obj_name, cx, cy, sx, sy, room_mat, label in gf_rooms:
         bm_room = bmesh.new()
         add_box(bm_room, cx, cy, sx, sy, Z_GF_PLINTH, Z_GF_FLOOR)
         make_mesh_object(obj_name, bm_room, coll, room_mat)
 
-    # Clean Ground Floor Interior Partition Walls (Non-overlapping)
-    bm_partitions = bmesh.new()
-    # West Wing partition walls (along X)
-    add_box(bm_partitions, -28.5, -5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions, -28.5,  5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    # 6. AUTHENTIC INTERIOR PARTITION WALLS (Ground Floor)
+    # South Wing Partitions
+    add_wall_y(bm_int_partitions, -13.5, -35.7, -21.05, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions,  -4.5, -35.7, -21.05, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions,   4.5, -35.7, -21.05, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions,  13.5, -35.7, -21.05, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions,  -8.5, -35.7, -21.05, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions,   8.5, -35.7, -21.05, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
 
-    # East Wing partition walls (along X)
-    add_box(bm_partitions,  28.5, -5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions,  28.5,  5.85, 14.4, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_x(bm_int_partitions, -13.5, -4.5, -29.7, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(-9.0, 1.0, DOOR_HEIGHT)])
+    add_wall_x(bm_int_partitions, -13.5, -4.5, -25.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(-6.5, 1.0, DOOR_HEIGHT)])
+    add_wall_x(bm_int_partitions,  -4.5,  4.5, -29.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(0.0, 1.2, DOOR_HEIGHT)])
+    add_wall_x(bm_int_partitions,   4.5, 13.5, -29.7, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(6.5, 1.0, DOOR_HEIGHT)])
+    add_wall_x(bm_int_partitions,   4.5, 13.5, -26.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(11.0, 1.0, DOOR_HEIGHT)])
 
-    # North Wing partition walls (along Y)
-    add_box(bm_partitions, -5.85, 28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions,  5.85, 28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
+    # West Wing Partitions
+    add_wall_x(bm_int_partitions, -35.7, -21.05, -6.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_x(bm_int_partitions, -35.7, -21.05,  3.0, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_x(bm_int_partitions, -35.7, -21.05, 11.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions, -28.5, 11.5, 17.8, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(14.5, 1.0, DOOR_HEIGHT)])
 
-    # South Wing partition walls
-    add_box(bm_partitions,  -5.20, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions,   5.20, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions, -13.55, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions,  13.55, -28.5, WALL_INT_TH, 14.4, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions,  -9.35, -27.8, 8.1, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
-    add_box(bm_partitions,   9.35, -27.8, 8.1, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    # North Wing Partitions
+    add_wall_y(bm_int_partitions, -6.5, 21.05, 35.7, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions,  6.5, 21.05, 35.7, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_x(bm_int_partitions, -17.8, -6.5, 28.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(-12.0, 1.0, DOOR_HEIGHT)])
+    add_wall_x(bm_int_partitions,   6.5, 17.8, 28.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(12.0, 1.0, DOOR_HEIGHT)])
 
-    make_mesh_object("GF_Room_Partition_Walls", bm_partitions, coll, mats["wall_interior"])
+    # East Wing Partitions
+    add_wall_x(bm_int_partitions, 21.05, 35.7, -6.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_x(bm_int_partitions, 21.05, 35.7,  6.5, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING)
+    add_wall_y(bm_int_partitions, 28.5, 6.5, 17.8, WALL_INT_TH, Z_GF_WALL_BASE, Z_GF_CEILING, doors=[(11.5, 1.0, DOOR_HEIGHT)])
+
+    make_mesh_object("GF_Interior_Room_Partition_Walls", bm_int_partitions, coll, mats["wall_interior"])
 
 # =============================================================================
-# 7. FIRST FLOOR ARCHITECTURE (BLUEPRINT ROOM EXTRACTION)
+# 7. FIRST FLOOR ARCHITECTURE (COMPLETE BLUEPRINT ROOM EXTRACTION)
 # =============================================================================
 def build_first_floor(coll, mats):
     """
-    Builds the First Floor from blueprint CO-ED UP TO DATE 24.4.2014-Model.pdf:
+    Builds the authentic First Floor from blueprint CO-ED UP TO DATE 24.4.2014-Model.pdf:
       - Structural floor slab at Z = 3.86m to 4.11m with central courtyard opening.
-      - Veranda balustrade (1.05m high white railing) overlooking courtyard.
-      - South Wing: Central Library & Digital Reading Room, Faculty Rooms.
-      - West Wing: Antenna Lab, Communication Lab, Computer Labs.
-      - North Wing: Multipurpose Hall, Upper Lecture Theatres, Back Canteen Annex.
-      - East Wing: Drawing Halls 1 & 2, Physics Lab, Chemistry Lab.
-      - Clean architectural roof parapet (STRICTLY ZERO SOLAR PANELS).
+      - 10-foot wide veranda corridor with continuous safety balustrade railing overlooking courtyard.
+      - South Wing: Central Library (52' x 64'6"), Internet Lab, Digital Reference Annex, Faculty Rooms.
+      - West Wing: Antenna Lab, Communication Systems Lab, Upper CS Lab, Language Lab, Tutorial.
+      - North Wing: Multipurpose Hall (38' x 50'), Chemistry Lab, Mechanical Lab, Canteen Annex.
+      - East Wing: Drawing Halls 1 & 2, Physics Lab, Dark Room, Faculty Rooms.
+      - COMPLETE Corridor Dividing Walls with framed doorways and lintels.
+      - COMPLETE Interior Partition Walls dividing all individual spaces.
+      - Clean architectural roof parapet cap.
     """
-    # 1. Structural Floor Slab with Open Courtyard and Rounded Corners
     bm_slab = bmesh.new()
+    bm_ff_corr = bmesh.new()
+    bm_balustrade = bmesh.new()
+    bm_ff_ext = bmesh.new()
+    bm_ff_corr_walls = bmesh.new()
+    bm_ff_int_partitions = bmesh.new()
+
+    # 1. Structural Floor Slab with Open Courtyard and Rounded Corners
     add_box(bm_slab, -27.0, 0.0, 18.0, 36.0, Z_GF_CEILING, Z_FF_SLAB_TOP) # West
     add_box(bm_slab,  27.0, 0.0, 18.0, 36.0, Z_GF_CEILING, Z_FF_SLAB_TOP) # East
     add_box(bm_slab, 0.0,  27.0, 36.0, 18.0, Z_GF_CEILING, Z_FF_SLAB_TOP) # North
@@ -691,30 +865,14 @@ def build_first_floor(coll, mats):
 
     make_mesh_object("FF_Structural_Floor_Slab", bm_slab, coll, mats["slab_concrete"])
 
-    # 2. First Floor 10-foot Veranda Corridors (Straight wings + 4 curved corner arcs)
-    bm_ff_corr = bmesh.new()
+    # 2. First Floor 10-foot Veranda Corridors
     add_box(bm_ff_corr, 0.0, -19.5, 36.0, CORRIDOR_WIDTH, Z_FF_SLAB_TOP, Z_FF_FLOOR)
     add_box(bm_ff_corr, 0.0,  19.5, 36.0, CORRIDOR_WIDTH, Z_FF_SLAB_TOP, Z_FF_FLOOR)
     add_box(bm_ff_corr, -19.5, 0.0, CORRIDOR_WIDTH, 36.0, Z_FF_SLAB_TOP, Z_FF_FLOOR)
     add_box(bm_ff_corr,  19.5, 0.0, CORRIDOR_WIDTH, 36.0, Z_FF_SLAB_TOP, Z_FF_FLOOR)
-
-    # 4 curved corner corridor arcs on First Floor
-    for qx, qy in [(-1.0, 1.0), (1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]:
-        ccx, ccy = qx * 18.0, qy * 18.0
-        corr_segs = 12
-        for i in range(corr_segs):
-            p0 = (i / corr_segs) * (math.pi * 0.5)
-            p1 = ((i + 1) / corr_segs) * (math.pi * 0.5)
-            p0_in = (ccx + qx * 2.40 * math.sin(p0), ccy + qy * 2.40 * math.cos(p0))
-            p1_in = (ccx + qx * 2.40 * math.sin(p1), ccy + qy * 2.40 * math.cos(p1))
-            p1_out = (ccx + qx * 5.45 * math.sin(p1), ccy + qy * 5.45 * math.cos(p1))
-            p0_out = (ccx + qx * 5.45 * math.sin(p0), ccy + qy * 5.45 * math.cos(p0))
-            add_prism(bm_ff_corr, [p0_in, p1_in, p1_out, p0_out], Z_FF_SLAB_TOP, Z_FF_FLOOR)
-
     make_mesh_object("FF_Veranda_10ft_Corridors", bm_ff_corr, coll, mats["corridor_floor"])
 
-    # 3. Veranda Safety Balustrade (1.05m high overlooking courtyard)
-    bm_balustrade = bmesh.new()
+    # 3. Veranda Safety Balustrade (1.05m high railing overlooking courtyard)
     bal_h = 1.05
     bal_th = 0.20
     add_box(bm_balustrade, 0.0, -18.1, 36.0, bal_th, Z_FF_SLAB_TOP, Z_FF_SLAB_TOP + bal_h)
@@ -723,92 +881,114 @@ def build_first_floor(coll, mats):
     add_box(bm_balustrade,  18.1, 0.0, bal_th, 36.0, Z_FF_SLAB_TOP, Z_FF_SLAB_TOP + bal_h)
     make_mesh_object("FF_Veranda_Safety_Balustrade", bm_balustrade, coll, mats["balustrade_white"])
 
-    # 4. First Floor Rooms (Floor Finishes & Partition Layouts)
-    ff_rooms_spec = [
-        # South Wing: Central Library & Reading Hall - strictly within X in [-17.5, 17.5], Y in [-35.7, -21.2]
-        ("Room_FF_Faculty_South", -13.85, -28.5, 7.3, 14.4, mats["mazemap_admin"], "FACULTY CABINS"),
-        ("Room_FF_Central_Library", 0.0, -28.5, 19.6, 14.4, mats["mazemap_library"], "CENTRAL LIBRARY"),
-        ("Room_FF_Tutorial_South", 13.85, -28.5, 7.3, 14.4, mats["mazemap_lt"], "TUTORIAL HALL"),
+    # 4. First Floor Exterior Perimeter Sandstone Facade Walls
+    add_wall_x(bm_ff_ext, -18.0, 18.0, -35.7, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_x(bm_ff_ext, -18.0, 18.0,  35.7, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=[(0.0, 3.2, 3.0)])
+    add_wall_y(bm_ff_ext, -35.7, -18.0, 18.0, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_y(bm_ff_ext,  35.7, -18.0, 18.0, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    make_mesh_object("FF_Exterior_Facade_Walls", bm_ff_ext, coll, mats["wall_sandstone"])
 
-        # West Wing: Communication & Advanced Labs - strictly within X in [-35.7, -21.2], Y in [-17.5, 17.5]
-        ("Room_FF_Antenna_Lab", -28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "ANTENNA LAB"),
-        ("Room_FF_Communication_Lab", -28.5, 0.0, 14.4, 11.1, mats["mazemap_lab"], "COMMUNICATION LAB"),
-        ("Room_FF_CS_Lab_Upper", -28.5, 11.75, 14.4, 11.5, mats["mazemap_cs_lab"], "CS LAB UPPER"),
+    # 5. First Floor Corridor Dividing Walls with AUTHENTIC DOORWAYS & LINTELS
+    # South Corridor Wall (Y = -21.05)
+    ff_south_doors = [
+        (-13.5, DOOR_WIDTH, DOOR_HEIGHT), # Internet Lab
+        (-8.0,  DOOR_WIDTH, DOOR_HEIGHT), # Faculty Cabins South
+        (0.0,   2.40,       DOOR_HEIGHT), # Central Library Grand Double Door
+        (8.0,   DOOR_WIDTH, DOOR_HEIGHT), # M.Tech Lab
+        (13.5,  DOOR_WIDTH, DOOR_HEIGHT), # Digital Library Reference Annex
+    ]
+    add_wall_x(bm_ff_corr_walls, -18.0, 18.0, -21.05, WALL_CORR_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=ff_south_doors)
 
-        # North Wing: Multipurpose Hall & Canteen Annex - strictly within X in [-17.5, 17.5], Y in [21.2, 35.7]
-        ("Room_FF_Lecture_Hall_North_Upper", -13.85, 28.5, 7.3, 14.4, mats["mazemap_lt_upper"], "LECTURE HALL 11"),
-        ("Room_FF_Multipurpose_Hall", 0.0, 28.5, 19.6, 14.4, mats["mazemap_seminar"], "MULTIPURPOSE HALL"),
-        ("Room_FF_Seminar_North_Upper", 13.85, 28.5, 7.3, 14.4, mats["mazemap_lt"], "SEMINAR HALL"),
-        ("Room_FF_Canteen_Annex", 0.0, 42.0, 16.0, 11.0, mats["mazemap_admin"], "CANTEEN & KITCHEN"),
+    # North Corridor Wall (Y = 21.05)
+    ff_north_doors = [
+        (-13.5, DOOR_WIDTH, DOOR_HEIGHT), # Upper Mechanical Lab
+        (-7.5,  DOOR_WIDTH, DOOR_HEIGHT), # Tutorial Room North
+        (-3.0,  1.50,       DOOR_HEIGHT), # Multipurpose Hall West
+        (0.0,   3.00,       DOOR_HEIGHT), # Passage to Canteen Annex
+        (3.0,   1.50,       DOOR_HEIGHT), # Multipurpose Hall East
+        (7.5,   DOOR_WIDTH, DOOR_HEIGHT), # Faculty Cabins
+        (13.5,  DOOR_WIDTH, DOOR_HEIGHT), # Upper Chemistry Lab
+    ]
+    add_wall_x(bm_ff_corr_walls, -18.0, 18.0, 21.05, WALL_CORR_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=ff_north_doors)
 
-        # East Wing: Drawing Halls & Science Labs - strictly within X in [21.2, 35.7], Y in [-17.5, 17.5]
-        ("Room_FF_Chemistry_Lab", 28.5, -11.75, 14.4, 11.5, mats["mazemap_lab"], "CHEMISTRY LAB"),
-        ("Room_FF_Physics_Lab", 28.5, 0.0, 14.4, 11.1, mats["mazemap_lab"], "PHYSICS LAB"),
-        ("Room_FF_Drawing_Hall_1", 28.5, 11.75, 14.4, 11.5, mats["mazemap_drawing"], "DRAWING HALL 1"),
+    # West Corridor Wall (X = -21.05)
+    ff_west_doors = [
+        (-12.0, DOOR_WIDTH, DOOR_HEIGHT), # Antenna Lab
+        (-1.0,  DOOR_WIDTH, DOOR_HEIGHT), # Communication Systems Lab
+        (8.0,   DOOR_WIDTH, DOOR_HEIGHT), # Upper CS Lab
+        (14.0,  DOOR_WIDTH, DOOR_HEIGHT), # Language Lab & Tutorial
+    ]
+    add_wall_y(bm_ff_corr_walls, -21.05, -18.0, 18.0, WALL_CORR_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=ff_west_doors)
+
+    # East Corridor Wall (X = 21.05)
+    ff_east_doors = [
+        (-12.0, DOOR_WIDTH, DOOR_HEIGHT), # Physics Lab
+        (-0.5,  1.50,       DOOR_HEIGHT), # Drawing Hall 2
+        (11.5,  1.50,       DOOR_HEIGHT), # Drawing Hall 1
+        (-6.0,  DOOR_WIDTH, DOOR_HEIGHT), # Dark Room
+        (6.0,   DOOR_WIDTH, DOOR_HEIGHT), # Faculty Cabins
+    ]
+    add_wall_y(bm_ff_corr_walls, 21.05, -18.0, 18.0, WALL_CORR_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=ff_east_doors)
+    make_mesh_object("FF_Corridor_Dividing_Walls_With_Doors", bm_ff_corr_walls, coll, mats["wall_interior"])
+
+    # 6. INDIVIDUAL FIRST FLOOR ROOM FLOORS (Blueprint Extraction)
+    ff_rooms = [
+        # South Wing: Central Library & Advanced Computing
+        ("Room_FF_Central_Library", 0.0, -28.4, 19.6, 14.2, mats["mazemap_library"], "CENTRAL LIBRARY"),
+        ("Room_FF_Internet_Lab", -13.75, -31.1, 7.5, 8.8, mats["mazemap_cs_lab"], "INTERNET LAB"),
+        ("Room_FF_Faculty_South", -13.75, -24.1, 7.5, 5.2, mats["mazemap_admin"], "FACULTY CABINS"),
+        ("Room_FF_Digital_Library_Annex", 13.75, -31.1, 7.5, 8.8, mats["mazemap_library"], "DIGITAL ANNEX"),
+        ("Room_FF_MTech_Lab", 13.75, -24.1, 7.5, 5.2, mats["mazemap_lab"], "M.TECH LAB"),
+
+        # West Wing: Communication, Antenna & Upper Labs
+        ("Room_FF_Antenna_Lab", -28.4, -12.0, 14.2, 11.5, mats["mazemap_lab"], "ANTENNA LAB"),
+        ("Room_FF_Communication_Lab", -28.4, -1.0, 14.2, 10.5, mats["mazemap_lab"], "COMMUNICATION LAB"),
+        ("Room_FF_CS_Lab_Upper", -28.4, 8.0, 14.2, 7.5, mats["mazemap_cs_lab"], "CS LAB UPPER"),
+        ("Room_FF_Language_Lab_Tutorial", -28.4, 14.75, 14.2, 6.0, mats["mazemap_lt"], "LANGUAGE & TUTORIAL"),
+
+        # North Wing: Multipurpose Hall, Science Labs & Canteen
+        ("Room_FF_Multipurpose_Hall", 0.0, 28.4, 18.8, 14.2, mats["mazemap_seminar"], "MULTIPURPOSE HALL"),
+        ("Room_FF_Mechanical_Lab", -13.5, 28.4, 8.2, 14.2, mats["mazemap_lab"], "MECH. LAB"),
+        ("Room_FF_Chemistry_Lab", 13.5, 28.4, 8.2, 14.2, mats["mazemap_lab"], "CHEMISTRY LAB"),
+        ("Room_FF_Canteen_Annex", 0.0, 41.0, 16.0, 10.0, mats["mazemap_admin"], "CANTEEN & KITCHEN"),
+
+        # East Wing: Drawing Halls & Physics Lab
+        ("Room_FF_Physics_Lab", 28.4, -12.0, 14.2, 11.5, mats["mazemap_lab"], "PHYSICS LAB"),
+        ("Room_FF_Drawing_Hall_2", 28.4, -0.5, 14.2, 11.5, mats["mazemap_drawing"], "DRAWING HALL 2"),
+        ("Room_FF_Drawing_Hall_1", 28.4, 11.75, 14.2, 11.5, mats["mazemap_drawing"], "DRAWING HALL 1"),
     ]
 
-    for obj_name, cx, cy, sx, sy, room_mat, label in ff_rooms_spec:
+    for obj_name, cx, cy, sx, sy, room_mat, label in ff_rooms:
         bm_room = bmesh.new()
         add_box(bm_room, cx, cy, sx, sy, Z_FF_SLAB_TOP, Z_FF_FLOOR)
         make_mesh_object(obj_name, bm_room, coll, room_mat)
 
-    # Clean First Floor Interior Partition Walls (Non-overlapping)
-    bm_ff_partitions = bmesh.new()
-    # West Wing partition walls (along X)
-    add_box(bm_ff_partitions, -28.5, -5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
-    add_box(bm_ff_partitions, -28.5,  5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    # 7. AUTHENTIC INTERIOR PARTITION WALLS (First Floor)
+    # South Wing Partitions
+    add_wall_y(bm_ff_int_partitions, -10.0, -35.7, -21.05, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_y(bm_ff_int_partitions,  10.0, -35.7, -21.05, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_x(bm_ff_int_partitions, -17.8, -10.0, -26.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=[(-13.5, 1.0, DOOR_HEIGHT)])
+    add_wall_x(bm_ff_int_partitions,  10.0,  17.8, -26.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=[(13.5, 1.0, DOOR_HEIGHT)])
 
-    # East Wing partition walls (along X)
-    add_box(bm_ff_partitions,  28.5, -5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
-    add_box(bm_ff_partitions,  28.5,  5.85, 14.4, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    # West Wing Partitions
+    add_wall_x(bm_ff_int_partitions, -35.7, -21.05, -6.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_x(bm_ff_int_partitions, -35.7, -21.05,  4.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_x(bm_ff_int_partitions, -35.7, -21.05, 11.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
 
-    # North Wing partition walls (along Y)
-    add_box(bm_ff_partitions, -10.0, 28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
-    add_box(bm_ff_partitions,  10.0, 28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
+    # North Wing Partitions
+    add_wall_y(bm_ff_int_partitions, -9.5, 21.05, 35.7, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_y(bm_ff_int_partitions,  9.5, 21.05, 35.7, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_x(bm_ff_int_partitions, -17.8, -9.5, 28.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=[(-13.5, 1.0, DOOR_HEIGHT)])
+    add_wall_x(bm_ff_int_partitions,   9.5, 17.8, 28.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=[(13.5, 1.0, DOOR_HEIGHT)])
 
-    # South Wing partition walls (along Y)
-    add_box(bm_ff_partitions, -10.0, -28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
-    add_box(bm_ff_partitions,  10.0, -28.5, WALL_INT_TH, 14.4, Z_FF_WALL_BASE, Z_FF_CEILING)
+    # East Wing Partitions
+    add_wall_x(bm_ff_int_partitions, 21.05, 35.7, -6.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_x(bm_ff_int_partitions, 21.05, 35.7,  5.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
+    add_wall_y(bm_ff_int_partitions, 28.5, -17.8, -6.5, WALL_INT_TH, Z_FF_WALL_BASE, Z_FF_CEILING, doors=[(-12.0, 1.0, DOOR_HEIGHT)])
 
-    make_mesh_object("FF_Room_Partition_Walls", bm_ff_partitions, coll, mats["wall_interior"])
+    make_mesh_object("FF_Interior_Room_Partition_Walls", bm_ff_int_partitions, coll, mats["wall_interior"])
 
-    # First Floor Corner Radiating Rooms
-    bm_ff_corner_rooms = bmesh.new()
-    for qx, qy, cname in [(-1.0, 1.0, "NW"), (1.0, 1.0, "NE"), (-1.0, -1.0, "SW"), (1.0, -1.0, "SE")]:
-        ccx, ccy = qx * 18.0, qy * 18.0
-        for r_idx in range(4):
-            p0 = (r_idx / 4.0) * (math.pi * 0.5)
-            p1 = ((r_idx + 1) / 4.0) * (math.pi * 0.5)
-            pts_r = []
-            for s in range(5):
-                sa = p0 + (s / 4.0) * (p1 - p0)
-                pts_r.append((ccx + qx * 5.60 * math.sin(sa), ccy + qy * 5.60 * math.cos(sa)))
-            for s in range(4, -1, -1):
-                sa = p0 + (s / 4.0) * (p1 - p0)
-                pts_r.append((ccx + qx * 17.60 * math.sin(sa), ccy + qy * 17.60 * math.cos(sa)))
-            add_prism(bm_ff_corner_rooms, pts_r, Z_FF_SLAB_TOP, Z_FF_FLOOR)
-    make_mesh_object("FF_Corner_Radiating_LTs_Floor", bm_ff_corner_rooms, coll, mats["mazemap_lt_upper"])
-
-    # 5. First Floor Exterior Walls (Straight wings, 36m length)
-    bm_ff_ext = bmesh.new()
-    add_box(bm_ff_ext, 0.0, -36.0 + WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
-    add_box(bm_ff_ext, 0.0,  36.0 - WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_FF_WALL_BASE, Z_FF_CEILING)
-    add_box(bm_ff_ext, -36.0 + WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_FF_WALL_BASE, Z_FF_CEILING)
-    add_box(bm_ff_ext,  36.0 - WALL_EXT_TH*0.5, 0.0, WALL_EXT_TH, 36.0, Z_FF_WALL_BASE, Z_FF_CEILING)
-    # 4 curved corner exterior walls
-    for qx, qy in [(-1.0, 1.0), (1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)]:
-        ccx, ccy = qx * 18.0, qy * 18.0
-        pts_ext_ff = []
-        for s in range(9):
-            sa = (s / 8.0) * (math.pi * 0.5)
-            pts_ext_ff.append((ccx + qx * 17.60 * math.sin(sa), ccy + qy * 17.60 * math.cos(sa)))
-        for s in range(8, -1, -1):
-            sa = (s / 8.0) * (math.pi * 0.5)
-            pts_ext_ff.append((ccx + qx * 18.00 * math.sin(sa), ccy + qy * 18.00 * math.cos(sa)))
-        add_prism(bm_ff_ext, pts_ext_ff, Z_FF_WALL_BASE, Z_FF_CEILING)
-    make_mesh_object("FF_Exterior_Facade_Walls", bm_ff_ext, coll, mats["wall_sandstone"])
-
-    # 6. Roof Parapet Cap (Clean Architecture, Rounded Corners, ZERO Solar Panels)
+    # 8. Roof Parapet Cap (Clean Architecture, Rounded Corners, ZERO Solar Panels)
     bm_roof_parapet = bmesh.new()
     add_box(bm_roof_parapet, 0.0, -36.0 + WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_ROOF_TOP, Z_ROOF_TOP + ROOF_PARAPET_H)
     add_box(bm_roof_parapet, 0.0,  36.0 - WALL_EXT_TH*0.5, 36.0, WALL_EXT_TH, Z_ROOF_TOP, Z_ROOF_TOP + ROOF_PARAPET_H)
@@ -829,7 +1009,7 @@ def build_first_floor(coll, mats):
 # =============================================================================
 # 8. ARCHITECTURAL LABELS & LIGHTING
 # =============================================================================
-def add_floor_label(coll, mats, text, x, y, z, size=0.85):
+def add_floor_label(coll, mats, text, x, y, z, size=0.65):
     font = get_font()
     curve = bpy.data.curves.new(name=f"Label_{text[:8]}", type='FONT')
     curve.body = text
@@ -856,42 +1036,54 @@ def add_floor_label(coll, mats, text, x, y, z, size=0.85):
 def build_floor_typography(coll, mats):
     labels = [
         # Ground Floor South Wing
-        ("BOARD ROOM", -9.35, -31.9, Z_GF_FLOOR + 0.01),
-        ("RECEPTION", 0.0, -28.5, Z_GF_FLOOR + 0.01),
-        ("REGISTRAR", 9.35, -31.9, Z_GF_FLOOR + 0.01),
-        ("ACAD. DIRECTOR", -9.35, -24.5, Z_GF_FLOOR + 0.01),
-        ("CAMPUS DIRECTOR", 9.35, -24.5, Z_GF_FLOOR + 0.01),
-        ("ECE LAB", -15.65, -28.5, Z_GF_FLOOR + 0.01),
-        ("MICROPROCESSOR", 15.65, -28.5, Z_GF_FLOOR + 0.01),
+        ("BOARD ROOM", -9.0, -32.6, Z_GF_FLOOR + 0.01),
+        ("RECEPTION", 0.0, -25.5, Z_GF_FLOOR + 0.01),
+        ("REGISTRAR", 0.0, -32.6, Z_GF_FLOOR + 0.01),
+        ("ACAD. DIRECTOR", -6.5, -27.5, Z_GF_FLOOR + 0.01),
+        ("CAMPUS DIRECTOR", -11.0, -23.5, Z_GF_FLOOR + 0.01),
+        ("ECE LAB", -15.75, -28.4, Z_GF_FLOOR + 0.01),
+        ("MICROPROCESSOR", 15.75, -28.4, Z_GF_FLOOR + 0.01),
+        ("ADMISSION CELL", 11.0, -31.1, Z_GF_FLOOR + 0.01),
+        ("TRAINING OFFICE", 6.5, -32.6, Z_GF_FLOOR + 0.01),
 
         # Ground Floor West Wing
-        ("ELECTRONIC LAB", -28.5, -11.75, Z_GF_FLOOR + 0.01),
-        ("COMPUTER LAB 1", -28.5, 0.0, Z_GF_FLOOR + 0.01),
-        ("COMPUTER LAB 2", -28.5, 11.75, Z_GF_FLOOR + 0.01),
+        ("ELECTRONIC LAB", -28.4, -11.75, Z_GF_FLOOR + 0.01),
+        ("COMPUTER LAB 1", -28.4, -1.5, Z_GF_FLOOR + 0.01),
+        ("COMPUTER LAB 2", -28.4, 7.25, Z_GF_FLOOR + 0.01),
+        ("DHD LAB & STORE", -32.0, 14.75, Z_GF_FLOOR + 0.01),
+        ("TUTORIAL WEST", -24.8, 14.75, Z_GF_FLOOR + 0.01),
 
         # Ground Floor North Wing
-        ("COMPUTER LAB N", -11.75, 28.5, Z_GF_FLOOR + 0.01),
-        ("LECTURE HALL 47'", 0.0, 28.5, Z_GF_FLOOR + 0.01),
-        ("HIGH VOLTAGE LAB", 11.75, 28.5, Z_GF_FLOOR + 0.01),
+        ("COMPUTER LAB N", -12.0, 28.4, Z_GF_FLOOR + 0.01),
+        ("LECTURE HALL 47'", 0.0, 28.4, Z_GF_FLOOR + 0.01),
+        ("HIGH VOLTAGE LAB", 12.0, 28.4, Z_GF_FLOOR + 0.01),
 
         # Ground Floor East Wing
-        ("EMI LAB", 28.5, -11.75, Z_GF_FLOOR + 0.01),
-        ("MACHINE LAB", 28.5, 0.0, Z_GF_FLOOR + 0.01),
-        ("CONFERENCE HALL", 28.5, 11.75, Z_GF_FLOOR + 0.01),
+        ("EMI LAB", 28.4, -11.75, Z_GF_FLOOR + 0.01),
+        ("MACHINE LAB", 28.4, 0.0, Z_GF_FLOOR + 0.01),
+        ("CONFERENCE HALL", 28.4, 11.75, Z_GF_FLOOR + 0.01),
 
-        # First Floor
-        ("CENTRAL LIBRARY", 0.0, -28.5, Z_FF_FLOOR + 0.01),
-        ("FACULTY CABINS", -13.85, -28.5, Z_FF_FLOOR + 0.01),
-        ("TUTORIAL HALL", 13.85, -28.5, Z_FF_FLOOR + 0.01),
-        ("ANTENNA LAB", -28.5, -11.75, Z_FF_FLOOR + 0.01),
-        ("COMMUNICATION LAB", -28.5, 0.0, Z_FF_FLOOR + 0.01),
-        ("CS LAB UPPER", -28.5, 11.75, Z_FF_FLOOR + 0.01),
-        ("LECTURE HALL 11", -13.85, 28.5, Z_FF_FLOOR + 0.01),
-        ("MULTIPURPOSE HALL", 0.0, 28.5, Z_FF_FLOOR + 0.01),
-        ("SEMINAR HALL", 13.85, 28.5, Z_FF_FLOOR + 0.01),
-        ("CHEMISTRY LAB", 28.5, -11.75, Z_FF_FLOOR + 0.01),
-        ("PHYSICS LAB", 28.5, 0.0, Z_FF_FLOOR + 0.01),
-        ("DRAWING HALL 1", 28.5, 11.75, Z_FF_FLOOR + 0.01),
+        # First Floor South Wing
+        ("CENTRAL LIBRARY", 0.0, -28.4, Z_FF_FLOOR + 0.01),
+        ("INTERNET LAB", -13.75, -31.1, Z_FF_FLOOR + 0.01),
+        ("DIGITAL ANNEX", 13.75, -31.1, Z_FF_FLOOR + 0.01),
+        ("M.TECH LAB", 13.75, -24.1, Z_FF_FLOOR + 0.01),
+
+        # First Floor West Wing
+        ("ANTENNA LAB", -28.4, -12.0, Z_FF_FLOOR + 0.01),
+        ("COMMUNICATION LAB", -28.4, -1.0, Z_FF_FLOOR + 0.01),
+        ("CS LAB UPPER", -28.4, 8.0, Z_FF_FLOOR + 0.01),
+        ("LANGUAGE LAB", -28.4, 14.75, Z_FF_FLOOR + 0.01),
+
+        # First Floor North Wing
+        ("MULTIPURPOSE HALL", 0.0, 28.4, Z_FF_FLOOR + 0.01),
+        ("MECH. LAB", -13.5, 28.4, Z_FF_FLOOR + 0.01),
+        ("CHEMISTRY LAB", 13.5, 28.4, Z_FF_FLOOR + 0.01),
+
+        # First Floor East Wing
+        ("PHYSICS LAB", 28.4, -12.0, Z_FF_FLOOR + 0.01),
+        ("DRAWING HALL 2", 28.4, -0.5, Z_FF_FLOOR + 0.01),
+        ("DRAWING HALL 1", 28.4, 11.75, Z_FF_FLOOR + 0.01),
     ]
     for text, x, y, z in labels:
         add_floor_label(coll, mats, text, x, y, z, size=0.65)
@@ -936,7 +1128,7 @@ def create_targeted_camera(coll, name, location, target, lens=28.0):
 def setup_cameras(coll):
     cameras = {}
 
-    # 1. Courtyard View (standing elevated on amphitheater bleachers, looking down across courtyard to stage)
+    # 1. Courtyard View
     cam_courtyard = create_targeted_camera(
         coll, "courtyard_view_admin_to_stage",
         location=(0.0, -16.5, 2.8),
@@ -945,7 +1137,7 @@ def setup_cameras(coll):
     )
     cameras["courtyard_view_admin_to_stage"] = cam_courtyard
 
-    # 2. Stage Close-Up (eye level, centered facing flat front brick plinth and 3D JIET lettering)
+    # 2. Stage Close-Up
     cam_stage = create_targeted_camera(
         coll, "stage_close_up",
         location=(0.0, 5.0, 2.0),
@@ -954,7 +1146,7 @@ def setup_cameras(coll):
     )
     cameras["stage_close_up"] = cam_stage
 
-    # 3. Corner Staircase Close-Up (standing in corridor looking directly into NW helical rotunda bay)
+    # 3. Corner Staircase Close-Up
     cam_stairs = create_targeted_camera(
         coll, "corner_staircase_close_up",
         location=(-14.5, 14.5, 1.8),
@@ -963,7 +1155,7 @@ def setup_cameras(coll):
     )
     cameras["corner_staircase_close_up"] = cam_stairs
 
-    # 4. Unblocked Corridor View (looking straight North down the 10ft wide sandstone colonnade)
+    # 4. Unblocked Corridor View (looking straight North down 10ft colonnade showing doors & lintels)
     cam_corridor = create_targeted_camera(
         coll, "corridor_unblocked_view",
         location=(-19.5, -8.0, 1.7),
@@ -972,7 +1164,7 @@ def setup_cameras(coll):
     )
     cameras["corridor_unblocked_view"] = cam_corridor
 
-    # 5. Top-Down Overview (wide architectural lens, entire 72m squircle framed within 1920x1080)
+    # 5. Top-Down Overview (wide architectural lens, entire 72m squircle)
     cam_topdown = create_targeted_camera(
         coll, "topdown_overview",
         location=(0.0, 0.0, 115.0),
@@ -982,7 +1174,7 @@ def setup_cameras(coll):
     cam_topdown.rotation_euler = Euler((0.0, 0.0, 0.0), 'XYZ')
     cameras["topdown_overview"] = cam_topdown
 
-    # 6. Isometric Campus View (2.5D architectural isometric matching MazeMap)
+    # 6. Isometric Campus View (2.5D architectural isometric)
     cam_iso = create_targeted_camera(
         coll, "isometric_campus_view",
         location=(62.0, -62.0, 52.0),
@@ -990,6 +1182,15 @@ def setup_cameras(coll):
         lens=45.0
     )
     cameras["isometric_campus_view"] = cam_iso
+
+    # 7. First Floor Rooms Detail View (Elevated perspective showing Library, Drawing Halls & doors)
+    cam_ff_detail = create_targeted_camera(
+        coll, "first_floor_rooms_detail",
+        location=(-35.0, -42.0, 28.0),
+        target=(-10.0, -20.0, 5.0),
+        lens=35.0
+    )
+    cameras["first_floor_rooms_detail"] = cam_ff_detail
 
     return cameras
 
@@ -1008,7 +1209,7 @@ def configure_viewport_clipping():
 # =============================================================================
 def main():
     print("=" * 70)
-    print("JIET JODHPUR CAMPUS DIGITAL TWIN - ARCHITECTURAL TWIN GENERATOR (v3)")
+    print("JIET JODHPUR CAMPUS DIGITAL TWIN - ARCHITECTURAL TWIN GENERATOR (v4)")
     print("=" * 70)
 
     # 1. Clean Scene & Initialize Collections
@@ -1017,11 +1218,12 @@ def main():
 
     coll_ground = get_collection("01_Courtyard_Ground", root_coll)
     coll_stage = get_collection("02_Outdoor_Stage", root_coll)
-    coll_stairs = get_collection("03_Corner_Staircases", root_coll)
+    coll_stairs_gf = get_collection("03_Corner_Staircases_GF", root_coll)
     coll_gf = get_collection("04_Ground_Floor_Architecture", root_coll)
     coll_ff = get_collection("05_First_Floor_Architecture", root_coll)
-    coll_labels = get_collection("06_Floor_Typography", root_coll)
-    coll_env = get_collection("07_Lighting_and_Cameras", root_coll)
+    coll_stairs_ff = get_collection("06_Corner_Architecture_FF", root_coll)
+    coll_labels = get_collection("07_Floor_Typography", root_coll)
+    coll_env = get_collection("08_Lighting_and_Cameras", root_coll)
 
     # 2. Materials Palette (PBR, Authentic & MazeMap Inspired)
     mats = {
@@ -1065,14 +1267,17 @@ def main():
     print("-> Building Outdoor Stage (Solid Front, Side Access Stairs)...")
     build_outdoor_stage(coll_stage, mats)
 
-    print("-> Building Unblocked Corridors, Radiating LTs & Rotunda Staircases...")
-    build_all_corners(coll_stairs, mats)
+    print("-> Building GF Unblocked Corridors, Radiating LTs & Rotunda Staircases...")
+    build_all_corners(coll_stairs_gf, mats, floor_lvl='GF')
 
-    print("-> Building Ground Floor Blueprint Rooms & Veranda Colonnades...")
+    print("-> Building Ground Floor Blueprint Rooms, Partition Walls & Doorways...")
     build_ground_floor(coll_gf, mats)
 
-    print("-> Building First Floor Blueprint Architecture & Balustrades...")
+    print("-> Building First Floor Blueprint Architecture, Library, Balustrades & Doors...")
     build_first_floor(coll_ff, mats)
+
+    print("-> Building First Floor Corner Radiating LTs & Curved Partition Walls...")
+    build_all_corners(coll_stairs_ff, mats, floor_lvl='FF')
 
     print("-> Adding Architectural Floor Typography Labels...")
     build_floor_typography(coll_labels, mats)
