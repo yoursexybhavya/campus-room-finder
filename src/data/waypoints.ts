@@ -50,13 +50,6 @@ export function buildWaypointGraph(): Map<string, NavNode> {
   addNode('center_fountain', [0, 0.1, 0]);
   addNode('north_walkway', [0, 0.1, -10]);
 
-  link('gate', 'south_walkway');
-  link('south_walkway', 'wp_admin');
-  link('wp_admin', 'corr_south_g');
-  link('courtyard', 'courtyard_center');
-  link('courtyard_center', 'north_walkway');
-  link('center_fountain', 'courtyard_center');
-
   // =========================================================================
   // 2. CORNER HELICAL ROTUNDA STAIRCASES (GROUND & 1ST FLOOR)
   // =========================================================================
@@ -78,6 +71,27 @@ export function buildWaypointGraph(): Map<string, NavNode> {
   link('stairs_nw_g', 'stairs_nw_1f');
   link('stairs_ne_g', 'stairs_ne_1f');
 
+  // Twin Library Stairs (South courtyard grade to First Floor Central Library)
+  addNode('stairs_lib_w_g', [-3.8, 0.1, 18.0]);
+  addNode('stairs_lib_w_mid', [-3.8, 1.85, 12.8]);
+  addNode('stairs_lib_w_bridge', [-1.6, 3.1, 13.7]);
+  addNode('stairs_lib_bridge', [0.0, 3.1, 14.4]);
+  addNode('stairs_lib_1f', [0.0, 3.6, 18.2]);
+
+  addNode('stairs_lib_e_g', [3.8, 0.1, 18.0]);
+  addNode('stairs_lib_e_mid', [3.8, 1.85, 12.8]);
+  addNode('stairs_lib_e_bridge', [1.6, 3.1, 13.7]);
+
+  link('stairs_lib_w_g', 'stairs_lib_w_mid');
+  link('stairs_lib_w_mid', 'stairs_lib_w_bridge');
+  link('stairs_lib_w_bridge', 'stairs_lib_bridge');
+
+  link('stairs_lib_e_g', 'stairs_lib_e_mid');
+  link('stairs_lib_e_mid', 'stairs_lib_e_bridge');
+  link('stairs_lib_e_bridge', 'stairs_lib_bridge');
+
+  link('stairs_lib_bridge', 'stairs_lib_1f');
+
   // =========================================================================
   // 3. CENTRAL QUADRANGLE CORRIDOR ANCHORS
   // =========================================================================
@@ -91,8 +105,14 @@ export function buildWaypointGraph(): Map<string, NavNode> {
   addNode('corr_west_1f', [-16, 3.6, 0]);
   addNode('corr_east_1f', [16, 3.6, 0]);
 
+  link('gate', 'south_walkway');
+  link('south_walkway', 'wp_admin');
+  link('wp_admin', 'corr_south_g');
   link('south_walkway', 'corr_south_g');
   link('courtyard', 'corr_south_g');
+  link('courtyard', 'courtyard_center');
+  link('courtyard_center', 'north_walkway');
+  link('center_fountain', 'courtyard_center');
   link('north_walkway', 'corr_north_g');
 
   // =========================================================================
@@ -106,7 +126,7 @@ export function buildWaypointGraph(): Map<string, NavNode> {
     const sfx = fl === 'ground' ? '_g' : '_1f';
     const flRooms = campusRooms.filter((r) => r.floor === fl);
 
-    // Group rooms by their physical architectural corridor wing based on coordinates
+    // Group rooms by physical architectural corridor wing
     const sRooms: typeof flRooms = [];
     const nRooms: typeof flRooms = [];
     const wRooms: typeof flRooms = [];
@@ -243,8 +263,6 @@ export function buildWaypointGraph(): Map<string, NavNode> {
 
   // =========================================================================
   // 5. CANONICAL LEGACY WAYPOINTS COMPATIBILITY MAPPINGS
-  // Map each legacy waypoint ONLY to its single authentic canonical room doorway
-  // to prevent cross-room shortcut wormholes across partition walls
   // =========================================================================
   const legacyToRoom: Record<string, string> = {
     wp_lt1: 'LT-1',

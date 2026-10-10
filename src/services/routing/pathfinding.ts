@@ -154,6 +154,34 @@ export function findPathToRoom(
   return findDijkstraPath(startId, roomId, nodes);
 }
 
+export function getLandmarkInfo(nodeId: string, targetRoom?: any): { label: string; floor: 'ground' | 'first' } {
+  if (WAYPOINT_LABELS[nodeId]) {
+    return WAYPOINT_LABELS[nodeId];
+  }
+  if (targetRoom && (nodeId === targetRoom.id || nodeId === targetRoom.code)) {
+    return { label: `${targetRoom.code}: ${targetRoom.name}`, floor: targetRoom.floor };
+  }
+  if (nodeId.startsWith('door_')) {
+    const rId = nodeId.replace('door_', '');
+    const rm = campusRooms.find((r) => r.id === rId);
+    return { label: rm ? `Doorway of ${rm.code}` : 'Doorway', floor: rm?.floor || 'ground' };
+  }
+  if (nodeId.includes('stairs_sw')) return { label: 'South-West Rotunda Stairs', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('stairs_se')) return { label: 'South-East Rotunda Stairs', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('stairs_nw')) return { label: 'North-West Rotunda Stairs', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('stairs_ne')) return { label: 'North-East Rotunda Stairs', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('stairs_lib')) return { label: 'Central Library Grand Stairs', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corner_sw')) return { label: 'South-West Rotunda Walkway', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corner_se')) return { label: 'South-East Rotunda Walkway', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corner_nw')) return { label: 'North-West Rotunda Walkway', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corner_ne')) return { label: 'North-East Rotunda Walkway', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corr_s')) return { label: nodeId.includes('1f') ? 'South 1st Floor Corridor' : 'South Ground Corridor', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corr_n')) return { label: nodeId.includes('1f') ? 'North 1st Floor Corridor' : 'North Ground Corridor', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corr_w')) return { label: nodeId.includes('1f') ? 'West 1st Floor Corridor' : 'West Ground Corridor', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  if (nodeId.includes('corr_e')) return { label: nodeId.includes('1f') ? 'East 1st Floor Corridor' : 'East Ground Corridor', floor: nodeId.includes('1f') ? 'first' : 'ground' };
+  return { label: nodeId, floor: 'ground' };
+}
+
 /**
  * Turn-by-Turn Wayfinding generator that outputs step instructions, distances, and walking times.
  */
@@ -181,14 +209,9 @@ export function findDetailedPathToRoom(
     const segDist = Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz) * 1.4);
     totalDistanceMeters += segDist;
 
-    const info = WAYPOINT_LABELS[nodeId];
-    const landmark = info
-      ? info.label
-      : targetRoom && (nodeId === targetRoom.id || nodeId === targetRoom.code)
-      ? `${targetRoom.code}: ${targetRoom.name}`
-      : nodeId;
-
-    const floor = info ? info.floor : targetRoom ? targetRoom.floor : currCoords[1] > 2.0 ? 'first' : 'ground';
+    const info = getLandmarkInfo(nodeId, targetRoom);
+    const landmark = info.label;
+    const floor = info.floor || (currCoords[1] > 2.0 ? 'first' : 'ground');
 
     let instruction = '';
     if (i === 0) {
@@ -203,10 +226,32 @@ export function findDetailedPathToRoom(
       instruction = currCoords[1] > prevCoords[1]
         ? `Take ${landmark} up to 1st Floor`
         : `Take ${landmark} down to Ground Level`;
-    } else if (nodeId.includes('corr')) {
-      instruction = `Follow corridor walkway`;
     } else {
-      instruction = `Head along ${landmark}`;
+      // Check turn angle relative to previous segment
+      if (i > 0 && i < result.nodeIds.length - 1) {
+        const nextCoords = result.path[i + 1];
+        const v1x = currCoords[0] - prevCoords[0];
+        const v1z = currCoords[2] - prevCoords[2];
+        const v2x = nextCoords[0] - currCoords[0];
+        const v2z = nextCoords[2] - currCoords[2];
+        const cross = v1x * v2z - v1z * v2x;
+        const dot = v1x * v2x + v1z * v2z;
+        const angle = Math.atan2(cross, dot) * (180 / Math.PI);
+
+        if (angle > 35) {
+          instruction = `Turn right into ${landmark}`;
+        } else if (angle < -35) {
+          instruction = `Turn left into ${landmark}`;
+        } else if (nodeId.includes('corr') || nodeId.includes('corner')) {
+          instruction = `Follow ${landmark}`;
+        } else {
+          instruction = `Head along ${landmark}`;
+        }
+      } else if (nodeId.includes('corr')) {
+        instruction = `Follow ${landmark}`;
+      } else {
+        instruction = `Head along ${landmark}`;
+      }
     }
 
     steps.push({

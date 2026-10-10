@@ -70,11 +70,25 @@ export const NavigationHUD: React.FC = () => {
       if (currentStep.floor) {
         setFloorFilter(currentStep.floor);
       }
-      // Center camera on user position
-      setCameraTarget(
-        [coords[0] + 8, coords[1] + 7, coords[2] + 8],
-        coords
-      );
+      // Smooth direction-aware third-person camera auto-follow
+      const nextCoords = navigationPath[currentStepIndex + 1] || navigationPath[currentStepIndex - 1];
+      if (nextCoords) {
+        const dx = nextCoords[0] - coords[0];
+        const dz = nextCoords[2] - coords[2];
+        const len = Math.hypot(dx, dz);
+        const nx = len > 0.001 ? dx / len : 0;
+        const nz = len > 0.001 ? dz / len : 1;
+
+        setCameraTarget(
+          [coords[0] - nx * 9, coords[1] + 7, coords[2] - nz * 9],
+          [coords[0] + nx * 3, coords[1] + 1.2, coords[2] + nz * 3]
+        );
+      } else {
+        setCameraTarget(
+          [coords[0] + 8, coords[1] + 7, coords[2] + 8],
+          coords
+        );
+      }
     }
   }, [isNavigating, currentStepIndex, currentStep, navigationPath, setFloorFilter, setCameraTarget]);
 
