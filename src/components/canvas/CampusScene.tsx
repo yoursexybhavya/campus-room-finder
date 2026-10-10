@@ -12,6 +12,7 @@ import { useThemeStore } from '../../stores/useThemeStore';
 
 import { UserLocationDot } from './UserLocationDot';
 import { MazeMapIconsLayer } from './MazeMapIconsLayer';
+import { BlenderCampusModel } from './BlenderCampusModel';
 
 interface CampusSceneProps {
   className?: string;
@@ -58,6 +59,7 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
         <Suspense fallback={null}>
           <CameraController />
           <CampusTerrain />
+          <BlenderCampusModel />
           <GroundFloor />
           <FirstFloor />
           <ArchitecturalStairs />

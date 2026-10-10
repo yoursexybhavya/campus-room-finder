@@ -13,186 +13,280 @@ function dist3D(a: [number, number, number], b: [number, number, number]): numbe
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-// Master Waypoint Graph definition for the JIET Jodhpur digital twin
-const rawWaypoints: { id: string; coords: [number, number, number]; links: string[] }[] = [
-  // ==========================================
-  // CAMPUS ENTRANCE & MAIN ARTERIALS (SOUTH)
-  // ==========================================
-  { id: 'gate', coords: [0, 0.1, 36], links: ['south_walkway'] },
-  { id: 'south_walkway', coords: [0, 0.1, 24], links: ['gate', 'wp_admin', 'courtyard', 'corr_south_g'] },
-  { id: 'wp_admin', coords: [0, 1.0, 20], links: ['south_walkway', 'corr_south_g'] },
-
-  // ==========================================
-  // CENTRAL COURTYARD RING & ARTERIALS
-  // ==========================================
-  { id: 'courtyard', coords: [0, 0.1, 10], links: ['south_walkway', 'courtyard_center', 'corr_west_g', 'corr_east_g'] },
-  { id: 'courtyard_center', coords: [0, 0.1, 0], links: ['courtyard', 'north_walkway', 'corr_west_g', 'corr_east_g'] },
-  { id: 'north_walkway', coords: [0, 0.1, -12], links: ['courtyard_center', 'corr_north_g'] },
-
-  // ==========================================
-  // GROUND FLOOR QUADRANGLE CORRIDOR LOOP
-  // ==========================================
-  // South Corridor
-  { id: 'corr_south_g', coords: [0, 0.1, 18], links: ['south_walkway', 'stairs_sw_g', 'stairs_se_g', 'wp_admin'] },
-
-  // South-West Corner & Stairs
-  { id: 'stairs_sw_g', coords: [-16, 0.1, 16], links: ['corr_south_g', 'corr_west_g', 'stairs_sw_1f'] },
-  { id: 'stairs_sw_1f', coords: [-16, 3.6, 16], links: ['stairs_sw_g', 'corr_south_1f', 'corr_west_1f'] },
-
-  // West Corridor (Computing Labs & Applied Physics)
-  { id: 'corr_west_g', coords: [-16, 0.1, 0], links: ['stairs_sw_g', 'stairs_nw_g', 'courtyard', 'courtyard_center', 'wp_lab1', 'wp_lab2', 'wp_lab_phy'] },
-  { id: 'wp_lab1', coords: [-20, 1.0, 7], links: ['corr_west_g'] },
-  { id: 'wp_lab2', coords: [-20, 1.0, -7], links: ['corr_west_g'] },
-  { id: 'wp_lab_phy', coords: [-20, 1.0, 18], links: ['corr_west_g', 'stairs_sw_g'] },
-
-  // North-West Corner & Stairs
-  { id: 'stairs_nw_g', coords: [-16, 0.1, -16], links: ['corr_west_g', 'corr_north_g', 'stairs_nw_1f'] },
-  { id: 'stairs_nw_1f', coords: [-16, 3.6, -16], links: ['stairs_nw_g', 'corr_west_1f', 'corr_north_1f'] },
-
-  // North Corridor (Seminar Halls & Central Library)
-  { id: 'corr_north_g', coords: [0, 0.1, -16], links: ['stairs_nw_g', 'stairs_ne_g', 'north_walkway', 'wp_sem1', 'wp_lib_main'] },
-  { id: 'wp_sem1', coords: [12, 1.0, -20], links: ['corr_north_g'] },
-  { id: 'wp_lib_main', coords: [0, 1.0, -22], links: ['corr_north_g'] },
-
-  // North-East Corner & Stairs
-  { id: 'stairs_ne_g', coords: [16, 0.1, -16], links: ['corr_north_g', 'corr_east_g', 'stairs_ne_1f'] },
-  { id: 'stairs_ne_1f', coords: [16, 3.6, -16], links: ['stairs_ne_g', 'corr_north_1f', 'corr_east_1f'] },
-
-  // East Corridor (Lecture Theaters LT-9, LT-10, LT-11, LT-12)
-  { id: 'corr_east_g', coords: [16, 0.1, 0], links: ['stairs_ne_g', 'stairs_se_g', 'courtyard', 'courtyard_center', 'wp_lt1', 'wp_lt2'] },
-  { id: 'wp_lt1', coords: [20, 1.0, 7], links: ['corr_east_g'] },
-  { id: 'wp_lt2', coords: [20, 1.0, -7], links: ['corr_east_g'] },
-
-  // South-East Corner & Stairs
-  { id: 'stairs_se_g', coords: [16, 0.1, 16], links: ['corr_east_g', 'corr_south_g', 'stairs_se_1f'] },
-  { id: 'stairs_se_1f', coords: [16, 3.6, 16], links: ['stairs_se_g', 'corr_east_1f', 'corr_south_1f'] },
-
-  // ==========================================
-  // FIRST FLOOR QUADRANGLE CORRIDOR LOOP
-  // ==========================================
-  // South Corridor
-  { id: 'corr_south_1f', coords: [0, 3.6, 16], links: ['stairs_sw_1f', 'stairs_se_1f', 'wp_south_1f'] },
-  { id: 'wp_south_1f', coords: [0, 3.6, 18], links: ['corr_south_1f'] },
-
-  // West Corridor (AI/ML & Robotics Labs)
-  { id: 'corr_west_1f', coords: [-16, 3.6, 0], links: ['stairs_sw_1f', 'stairs_nw_1f', 'wp_lab3', 'wp_lab4'] },
-  { id: 'wp_lab3', coords: [-20, 3.6, 7], links: ['corr_west_1f'] },
-  { id: 'wp_lab4', coords: [-20, 3.6, -7], links: ['corr_west_1f'] },
-
-  // North Corridor (Upper Halls & Faculty Suites)
-  { id: 'corr_north_1f', coords: [0, 3.6, -16], links: ['stairs_nw_1f', 'stairs_ne_1f', 'wp_sem2', 'wp_fac_cse'] },
-  { id: 'wp_sem2', coords: [12, 3.6, -20], links: ['corr_north_1f'] },
-  { id: 'wp_fac_cse', coords: [0, 3.6, -22], links: ['corr_north_1f'] },
-
-  // East Corridor (Upper Lecture Theaters LT-24, LT-29)
-  { id: 'corr_east_1f', coords: [16, 3.6, 0], links: ['stairs_ne_1f', 'stairs_se_1f', 'wp_lt3', 'wp_lt4'] },
-  { id: 'wp_lt3', coords: [20, 3.6, 7], links: ['corr_east_1f'] },
-  { id: 'wp_lt4', coords: [20, 3.6, -7], links: ['corr_east_1f'] },
-];
-
+/**
+ * Builds the comprehensive topological navigation graph for the JIET campus digital twin.
+ * Guarantees collision-free routing through:
+ *  1. Covered veranda corridor centerlines (no diagonal shortcuts across walls or rooms)
+ *  2. Real architectural door cutouts and thresholds for every single classroom, lab, and office
+ *  3. Dedicated helical corner rotunda staircases for vertical transitions between floors
+ *  4. Paved courtyard cross-axial walkways connecting to arterial entrance routes
+ */
 export function buildWaypointGraph(): Map<string, NavNode> {
   const map = new Map<string, NavNode>();
 
-  // Pass 1: Initialize all nodes
-  for (const item of rawWaypoints) {
-    map.set(item.id, {
-      id: item.id,
-      coords: item.coords,
-      neighbors: [],
-    });
-  }
+  const addNode = (id: string, coords: [number, number, number]) => {
+    if (!map.has(id)) {
+      map.set(id, { id, coords, neighbors: [] });
+    }
+  };
 
-  // Pass 2: Calculate neighbor edge weights bidirectionally
-  for (const item of rawWaypoints) {
-    const node = map.get(item.id)!;
-    for (const linkedId of item.links) {
-      const neighborNode = map.get(linkedId);
-      if (neighborNode) {
-        const weight = dist3D(node.coords, neighborNode.coords);
-        if (!node.neighbors.some((n) => n.id === linkedId)) {
-          node.neighbors.push({ id: linkedId, weight });
-        }
-        if (!neighborNode.neighbors.some((n) => n.id === item.id)) {
-          neighborNode.neighbors.push({ id: item.id, weight });
-        }
+  const link = (idA: string, idB: string) => {
+    const a = map.get(idA);
+    const b = map.get(idB);
+    if (!a || !b) return;
+    const w = dist3D(a.coords, b.coords);
+    if (!a.neighbors.some((n) => n.id === idB)) a.neighbors.push({ id: idB, weight: w });
+    if (!b.neighbors.some((n) => n.id === idA)) b.neighbors.push({ id: idA, weight: w });
+  };
+
+  // =========================================================================
+  // 1. CAMPUS MAIN ENTRANCE & CENTRAL ARTERIAL WALKWAYS
+  // =========================================================================
+  addNode('gate', [0, 0.1, 36]);
+  addNode('south_walkway', [0, 0.1, 24]);
+  addNode('wp_admin', [0, 1.0, 20]);
+  addNode('courtyard', [0, 0.1, 10]);
+  addNode('courtyard_center', [0, 0.1, 0]);
+  addNode('center_fountain', [0, 0.1, 0]);
+  addNode('north_walkway', [0, 0.1, -10]);
+
+  link('gate', 'south_walkway');
+  link('south_walkway', 'wp_admin');
+  link('courtyard', 'courtyard_center');
+  link('courtyard_center', 'north_walkway');
+
+  // =========================================================================
+  // 2. CORNER HELICAL ROTUNDA STAIRCASES (GROUND & 1ST FLOOR)
+  // =========================================================================
+  // Ground Floor Rotunda Stairwells
+  addNode('stairs_sw_g', [-16, 0.1, 16]);
+  addNode('stairs_se_g', [16, 0.1, 16]);
+  addNode('stairs_nw_g', [-16, 0.1, -16]);
+  addNode('stairs_ne_g', [16, 0.1, -16]);
+
+  // First Floor Rotunda Landings
+  addNode('stairs_sw_1f', [-16, 3.6, 16]);
+  addNode('stairs_se_1f', [16, 3.6, 16]);
+  addNode('stairs_nw_1f', [-16, 3.6, -16]);
+  addNode('stairs_ne_1f', [16, 3.6, -16]);
+
+  // Direct vertical climbing connections via authentic corner stairwells
+  link('stairs_sw_g', 'stairs_sw_1f');
+  link('stairs_se_g', 'stairs_se_1f');
+  link('stairs_nw_g', 'stairs_nw_1f');
+  link('stairs_ne_g', 'stairs_ne_1f');
+
+  // =========================================================================
+  // 3. CENTRAL QUADRANGLE CORRIDOR ANCHORS
+  // =========================================================================
+  addNode('corr_south_g', [0, 0.1, 16]);
+  addNode('corr_north_g', [0, 0.1, -16]);
+  addNode('corr_west_g', [-16, 0.1, 0]);
+  addNode('corr_east_g', [16, 0.1, 0]);
+
+  addNode('corr_south_1f', [0, 3.6, 16]);
+  addNode('corr_north_1f', [0, 3.6, -16]);
+  addNode('corr_west_1f', [-16, 3.6, 0]);
+  addNode('corr_east_1f', [16, 3.6, 0]);
+
+  link('south_walkway', 'corr_south_g');
+  link('wp_admin', 'corr_south_g');
+  link('courtyard', 'corr_south_g');
+  link('north_walkway', 'corr_north_g');
+
+  // =========================================================================
+  // 4. FLOOR-BY-FLOOR CORRIDOR BACKBONES & ROOM DOORWAYS
+  // =========================================================================
+  const floors: ('ground' | 'first')[] = ['ground', 'first'];
+
+  for (const fl of floors) {
+    const yFloor = fl === 'ground' ? 0.1 : 3.6;
+    const yDoor = fl === 'ground' ? 0.5 : 3.6;
+    const sfx = fl === 'ground' ? '_g' : '_1f';
+    const flRooms = campusRooms.filter((r) => r.floor === fl);
+
+    // -----------------------------------------------------------------------
+    // A. South Wing Corridor Chain (along Z = 16)
+    // -----------------------------------------------------------------------
+    const sRooms = flRooms.filter((r) => r.wing === 'South' || (r.wing === 'West' && r.position[2] > 19));
+    const sCoords = [-16, ...sRooms.map((r) => r.position[0]), 0, 16]
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort((a, b) => a - b);
+
+    for (let i = 0; i < sCoords.length; i++) {
+      const x = sCoords[i];
+      const cid =
+        x === -16 ? `stairs_sw${sfx}` : x === 16 ? `stairs_se${sfx}` : x === 0 ? `corr_south${sfx}` : `corr_s${sfx}_${x}`;
+      addNode(cid, [x, yFloor, 16]);
+      if (i > 0) {
+        const prevX = sCoords[i - 1];
+        const prevId =
+          prevX === -16 ? `stairs_sw${sfx}` : prevX === 16 ? `stairs_se${sfx}` : prevX === 0 ? `corr_south${sfx}` : `corr_s${sfx}_${prevX}`;
+        link(prevId, cid);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // B. North Wing Corridor Chain (along Z = -16)
+    // -----------------------------------------------------------------------
+    const nRooms = flRooms.filter((r) => r.wing === 'North');
+    const nCoords = [-16, ...nRooms.map((r) => r.position[0]), 0, 16]
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort((a, b) => a - b);
+
+    for (let i = 0; i < nCoords.length; i++) {
+      const x = nCoords[i];
+      const cid =
+        x === -16 ? `stairs_nw${sfx}` : x === 16 ? `stairs_ne${sfx}` : x === 0 ? `corr_north${sfx}` : `corr_n${sfx}_${x}`;
+      addNode(cid, [x, yFloor, -16]);
+      if (i > 0) {
+        const prevX = nCoords[i - 1];
+        const prevId =
+          prevX === -16 ? `stairs_nw${sfx}` : prevX === 16 ? `stairs_ne${sfx}` : prevX === 0 ? `corr_north${sfx}` : `corr_n${sfx}_${prevX}`;
+        link(prevId, cid);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // C. West Wing Corridor Chain (along X = -16)
+    // -----------------------------------------------------------------------
+    const wRooms = flRooms.filter((r) => r.wing === 'West' && r.position[2] <= 19);
+    const wCoords = [-25.5, ...wRooms.map((r) => r.position[2]), -16, 0, 16, 18]
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort((a, b) => a - b);
+
+    for (let i = 0; i < wCoords.length; i++) {
+      const z = wCoords[i];
+      const cid =
+        z === 16 ? `stairs_sw${sfx}` : z === -16 ? `stairs_nw${sfx}` : z === 0 ? `corr_west${sfx}` : `corr_w${sfx}_${z}`;
+      addNode(cid, [-16, yFloor, z]);
+      if (i > 0) {
+        const prevZ = wCoords[i - 1];
+        const prevId =
+          prevZ === 16 ? `stairs_sw${sfx}` : prevZ === -16 ? `stairs_nw${sfx}` : prevZ === 0 ? `corr_west${sfx}` : `corr_w${sfx}_${prevZ}`;
+        link(prevId, cid);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // D. East Wing Corridor Chain (along X = 16)
+    // -----------------------------------------------------------------------
+    const eRooms = flRooms.filter((r) => r.wing === 'East');
+    const eCoords = [-25.5, ...eRooms.map((r) => r.position[2]), -16, 0, 16, 25.5]
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort((a, b) => a - b);
+
+    for (let i = 0; i < eCoords.length; i++) {
+      const z = eCoords[i];
+      const cid =
+        z === 16 ? `stairs_se${sfx}` : z === -16 ? `stairs_ne${sfx}` : z === 0 ? `corr_east${sfx}` : `corr_e${sfx}_${z}`;
+      addNode(cid, [16, yFloor, z]);
+      if (i > 0) {
+        const prevZ = eCoords[i - 1];
+        const prevId =
+          prevZ === 16 ? `stairs_se${sfx}` : prevZ === -16 ? `stairs_ne${sfx}` : prevZ === 0 ? `corr_east${sfx}` : `corr_e${sfx}_${prevZ}`;
+        link(prevId, cid);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // E. Link Each Room to Corridor via Authentic Doorway Waypoint
+    // -----------------------------------------------------------------------
+    for (const r of flRooms) {
+      addNode(r.id, r.position);
+      const doorId = `door_${r.id}`;
+      let doorCoords: [number, number, number];
+      let corrId: string;
+
+      if (r.wing === 'South' || (r.wing === 'West' && r.position[2] > 19)) {
+        doorCoords = [r.position[0], yDoor, 18.5];
+        corrId =
+          r.position[0] === -16 ? `stairs_sw${sfx}` : r.position[0] === 16 ? `stairs_se${sfx}` : r.position[0] === 0 ? `corr_south${sfx}` : `corr_s${sfx}_${r.position[0]}`;
+      } else if (r.wing === 'North') {
+        doorCoords = [r.position[0], yDoor, -17.5];
+        corrId =
+          r.position[0] === -16 ? `stairs_nw${sfx}` : r.position[0] === 16 ? `stairs_ne${sfx}` : r.position[0] === 0 ? `corr_north${sfx}` : `corr_n${sfx}_${r.position[0]}`;
+      } else if (r.wing === 'West') {
+        doorCoords = [-18, yDoor, r.position[2]];
+        corrId =
+          r.position[2] === 16 ? `stairs_sw${sfx}` : r.position[2] === -16 ? `stairs_nw${sfx}` : r.position[2] === 0 ? `corr_west${sfx}` : `corr_w${sfx}_${r.position[2]}`;
+      } else {
+        doorCoords = [18, yDoor, r.position[2]];
+        corrId =
+          r.position[2] === 16 ? `stairs_se${sfx}` : r.position[2] === -16 ? `stairs_ne${sfx}` : r.position[2] === 0 ? `corr_east${sfx}` : `corr_e${sfx}_${r.position[2]}`;
+      }
+
+      addNode(doorId, doorCoords);
+      link(corrId, doorId);
+      link(doorId, r.id);
+
+      // Connect legacy doorWaypointId to doorway
+      if (r.doorWaypointId) {
+        addNode(r.doorWaypointId, doorCoords);
+        link(r.doorWaypointId, doorId);
       }
     }
   }
 
-  // Direct room aliases
-  const roomAliases: Record<string, string> = {
-    'LT-1': 'wp_lt1',
-    'lt1': 'wp_lt1',
-    'LT-9': 'wp_lt1',
-    'LT-2': 'wp_lt2',
-    'lt2': 'wp_lt2',
-    'LT-10': 'wp_lt2',
-    'LT-3': 'wp_lt3',
-    'lt3': 'wp_lt3',
-    'LT-24': 'wp_lt3',
-    'LT-4': 'wp_lt4',
-    'lt4': 'wp_lt4',
-    'LT-29': 'wp_lt4',
-    'LT-11': 'wp_lt1',
-    'LT-12': 'wp_lt2',
-    'LT-14': 'wp_sem1',
-    'LT-33': 'wp_lt3',
-    'LT-36': 'wp_lt4',
-    'LAB-1': 'wp_lab1',
-    'lab1': 'wp_lab1',
-    'PC-LAB': 'wp_lab1',
-    'LAB-2': 'wp_lab2',
-    'lab2': 'wp_lab2',
-    'IDEA-LAB': 'wp_lab2',
-    'LAB-3': 'wp_lab3',
-    'lab3': 'wp_lab3',
-    'EF-3': 'wp_lab3',
-    'LAB-4': 'wp_lab4',
-    'lab4': 'wp_lab4',
-    'CF-7': 'wp_lab4',
-    'CF-8': 'wp_lab3',
-    'GF-16': 'wp_lab2',
-    'DH-1': 'wp_sem1',
-    'DH-3': 'wp_sem2',
-    'TUT-7': 'wp_lib_main',
-    'LIB-MAIN': 'wp_lib_main',
-    'LIB-01': 'wp_lib_main',
-    'CENTRAL-LIB': 'wp_lib_main',
-    'ADMIN-01': 'wp_admin',
-    'ADM-01': 'wp_admin',
-    'TECH-CONF': 'wp_admin',
-    'SEM-1': 'wp_sem1',
-    'SEM-2': 'wp_sem2',
-    'FAC-CSE': 'wp_fac_cse',
-    'LAB-PHY': 'wp_lab_phy',
-    'CHEM-LAB': 'wp_lab_phy',
+  // =========================================================================
+  // 5. LEGACY WAYPOINTS COMPATIBILITY MAPPINGS
+  // =========================================================================
+  const legacyWaypoints: Record<string, [number, number, number]> = {
+    wp_lt1: [20, 1.0, 7],
+    wp_lt2: [20, 1.0, -7],
+    wp_lab1: [-20, 1.0, 7],
+    wp_lab2: [-20, 1.0, -7],
+    wp_lab_phy: [-20, 1.0, 18],
+    wp_sem1: [12, 1.0, -20],
+    wp_lib_main: [0, 1.0, -22],
+    wp_south_1f: [0, 3.6, 18],
+    wp_lab3: [-20, 3.6, 7],
+    wp_lab4: [-20, 3.6, -7],
+    wp_sem2: [12, 3.6, -20],
+    wp_fac_cse: [0, 3.6, -22],
+    wp_lt3: [20, 3.6, 7],
+    wp_lt4: [20, 3.6, -7],
+  };
+
+  for (const [wpId, coords] of Object.entries(legacyWaypoints)) {
+    addNode(wpId, coords);
+  }
+
+  // Legacy room aliases mapped to their canonical IDs
+  const legacyAliases: Record<string, string> = {
+    lt1: 'LT-1',
+    'LT-9': 'LT-1',
+    lt2: 'LT-2',
+    'LT-10': 'LT-2',
+    lt3: 'LT-3',
+    'LT-24': 'LT-3',
+    lt4: 'LT-4',
+    'LT-29': 'LT-4',
+    lab1: 'LAB-1',
+    'PC-LAB': 'LAB-1',
+    lab2: 'LAB-2',
+    'IDEA-LAB': 'LAB-2',
+    lab3: 'LAB-3',
+    'EF-3': 'LAB-3',
+    lab4: 'LAB-4',
+    'CF-7': 'LAB-4',
+    'CF-8': 'LAB-3',
+    'GF-16': 'LAB-2',
+    'CHEM-LAB': 'LAB-PHY',
+    'DH-1': 'SEM-1',
+    'DH-3': 'SEM-2',
+    'LIB-01': 'LIB-MAIN',
+    'CENTRAL-LIB': 'LIB-MAIN',
+    'ADM-01': 'ADMIN-01',
+    'TECH-CONF': 'ADMIN-01',
     'center_fountain': 'courtyard_center',
   };
 
-  for (const [alias, targetId] of Object.entries(roomAliases)) {
+  for (const [alias, targetId] of Object.entries(legacyAliases)) {
     const target = map.get(targetId);
     if (target && !map.has(alias)) {
-      map.set(alias, {
-        id: alias,
-        coords: target.coords,
-        neighbors: [{ id: targetId, weight: 0.01 }],
-      });
-      target.neighbors.push({ id: alias, weight: 0.01 });
-    }
-  }
-
-  // Ensure every room in campusRooms has a direct navigable waypoint node
-  for (const room of campusRooms) {
-    if (!map.has(room.id)) {
-      const target = map.get(room.doorWaypointId);
-      if (target) {
-        map.set(room.id, {
-          id: room.id,
-          coords: room.position,
-          neighbors: [{ id: room.doorWaypointId, weight: 0.01 }],
-        });
-        target.neighbors.push({ id: room.id, weight: 0.01 });
-      }
+      addNode(alias, target.coords);
+      link(alias, targetId);
     }
   }
 

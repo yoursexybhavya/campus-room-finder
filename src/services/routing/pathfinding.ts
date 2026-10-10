@@ -195,12 +195,16 @@ export function findDetailedPathToRoom(
       instruction = `Start at ${landmark}`;
     } else if (i === result.nodeIds.length - 1) {
       instruction = `Arrive at destination: ${targetRoom ? targetRoom.code : landmark}`;
+    } else if (nodeId.startsWith('door_')) {
+      const roomKey = nodeId.replace('door_', '');
+      const rm = campusRooms.find((r) => r.id === roomKey);
+      instruction = rm ? `Step through doorway of ${rm.code}` : `Enter through doorway`;
     } else if (nodeId.includes('stairs')) {
       instruction = currCoords[1] > prevCoords[1]
         ? `Take ${landmark} up to 1st Floor`
-        : `Take ${landmark} down to Ground Floor`;
+        : `Take ${landmark} down to Ground Level`;
     } else if (nodeId.includes('corr')) {
-      instruction = `Follow ${landmark}`;
+      instruction = `Follow corridor walkway`;
     } else {
       instruction = `Head along ${landmark}`;
     }

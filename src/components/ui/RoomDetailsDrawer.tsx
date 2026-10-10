@@ -223,6 +223,25 @@ export const RoomDetailsDrawer: React.FC = () => {
               </select>
             </div>
 
+            {/* Reverse Origin/Destination Direction */}
+            <div className="flex justify-end -my-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetRoomObj = campusRooms.find((r) => r.id === userOriginId);
+                  if (targetRoomObj) {
+                    setUserOriginId(room.id);
+                    selectRoom(targetRoomObj.id);
+                  }
+                }}
+                className="flex items-center gap-1 text-[10px] text-cyan-500 hover:text-cyan-400 font-semibold px-2 py-0.5 rounded-lg border border-cyan-500/30 hover:bg-cyan-500/10 transition-colors"
+                title="Swap From and To locations"
+              >
+                <ArrowRightLeft className="w-3 h-3" />
+                <span>Swap Origin & Destination</span>
+              </button>
+            </div>
+
             {/* Destination (Where you are going) */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">

@@ -1950,6 +1950,207 @@ def setup_cameras(coll):
     )
     cameras["corner_nw_lts_detail"] = cam_nw_lts
 
+    # =========================================================================
+    # 17. COMPREHENSIVE MULTI-ANGLE INSPECTION CAMERAS (100+ CAMERAS)
+    # Covering every room, wing corridor, doorway, staircase, and corner.
+    # Stored in Blender scene so any camera can be activated in viewport (Numpad 0).
+    # =========================================================================
+    inspect_coll = get_collection("10_MultiAngle_Inspection_Cameras", coll)
+
+    # A. Corridor Walkthrough & Doorway Inspection Cameras (GF & FF)
+    corr_views = [
+        # Ground Floor Corridors
+        ("cam_inspect_corr_gf_south_facing_east", (-15.0, -19.5, 1.7), (15.0, -19.5, 1.7)),
+        ("cam_inspect_corr_gf_south_facing_west", (15.0, -19.5, 1.7), (-15.0, -19.5, 1.7)),
+        ("cam_inspect_corr_gf_west_facing_north", (-19.5, -15.0, 1.7), (-19.5, 15.0, 1.7)),
+        ("cam_inspect_corr_gf_west_facing_south", (-19.5, 15.0, 1.7), (-19.5, -15.0, 1.7)),
+        ("cam_inspect_corr_gf_north_facing_east", (-15.0, 19.5, 1.7), (15.0, 19.5, 1.7)),
+        ("cam_inspect_corr_gf_north_facing_west", (15.0, 19.5, 1.7), (-15.0, 19.5, 1.7)),
+        ("cam_inspect_corr_gf_east_facing_north", (19.5, -15.0, 1.7), (19.5, 15.0, 1.7)),
+        ("cam_inspect_corr_gf_east_facing_south", (19.5, 15.0, 1.7), (19.5, -15.0, 1.7)),
+        # First Floor Corridors
+        ("cam_inspect_corr_ff_south_facing_east", (-15.0, -19.5, 5.4), (15.0, -19.5, 5.4)),
+        ("cam_inspect_corr_ff_south_facing_west", (15.0, -19.5, 5.4), (-15.0, -19.5, 5.4)),
+        ("cam_inspect_corr_ff_west_facing_north", (-19.5, -15.0, 5.4), (-19.5, 15.0, 5.4)),
+        ("cam_inspect_corr_ff_west_facing_south", (-19.5, 15.0, 5.4), (-19.5, -15.0, 5.4)),
+        ("cam_inspect_corr_ff_north_facing_east", (-15.0, 19.5, 5.4), (15.0, 19.5, 5.4)),
+        ("cam_inspect_corr_ff_north_facing_west", (15.0, 19.5, 5.4), (-15.0, 19.5, 5.4)),
+        ("cam_inspect_corr_ff_east_facing_north", (19.5, -15.0, 5.4), (19.5, 15.0, 5.4)),
+        ("cam_inspect_corr_ff_east_facing_south", (19.5, 15.0, 5.4), (19.5, -15.0, 5.4)),
+    ]
+    for c_name, c_loc, c_tgt in corr_views:
+        create_targeted_camera(inspect_coll, c_name, c_loc, c_tgt, lens=24.0)
+
+    # Key Corridor Detail Renders
+    cameras["corridor_south_gf_detail"] = create_targeted_camera(
+        coll, "corridor_south_gf_detail",
+        location=(-16.0, -19.5, 1.75),
+        target=(12.0, -19.5, 1.75),
+        lens=24.0
+    )
+    cameras["corridor_west_gf_detail"] = create_targeted_camera(
+        coll, "corridor_west_gf_detail",
+        location=(-19.5, -16.0, 1.75),
+        target=(-19.5, 12.0, 1.75),
+        lens=24.0
+    )
+
+    # B. 4 Corner Helical Rotunda Staircase Inspection Cameras
+    stair_views = [
+        # SW Rotunda
+        ("cam_inspect_stair_sw_gf_base", (-18.0, -15.0, 1.5), (-19.8, -19.8, 2.2)),
+        ("cam_inspect_stair_sw_ff_landing", (-17.5, -15.0, 5.5), (-19.8, -19.8, 4.2)),
+        # SE Rotunda
+        ("cam_inspect_stair_se_gf_base", (18.0, -15.0, 1.5), (19.8, -19.8, 2.2)),
+        ("cam_inspect_stair_se_ff_landing", (17.5, -15.0, 5.5), (19.8, -19.8, 4.2)),
+        # NW Rotunda
+        ("cam_inspect_stair_nw_gf_base", (-18.0, 15.0, 1.5), (-19.8, 19.8, 2.2)),
+        ("cam_inspect_stair_nw_ff_landing", (-17.5, 15.0, 5.5), (-19.8, 19.8, 4.2)),
+        # NE Rotunda
+        ("cam_inspect_stair_ne_gf_base", (18.0, 15.0, 1.5), (19.8, 19.8, 2.2)),
+        ("cam_inspect_stair_ne_ff_landing", (17.5, 15.0, 5.5), (19.8, 19.8, 4.2)),
+    ]
+    for s_name, s_loc, s_tgt in stair_views:
+        create_targeted_camera(inspect_coll, s_name, s_loc, s_tgt, lens=28.0)
+
+    cameras["corner_sw_stairwell_detail"] = create_targeted_camera(
+        coll, "corner_sw_stairwell_detail",
+        location=(-17.5, -14.5, 1.8),
+        target=(-19.8, -19.8, 2.4),
+        lens=26.0
+    )
+
+    # C. Ground Floor Blueprint Room Inspection Cameras (Door & Interior Views)
+    gf_room_specs = [
+        # South Wing (Admin Core)
+        ("gf_reception_lobby", (0.0, -21.0, 2.0), (0.0, -25.5, 1.2)),
+        ("gf_registrar_office", (0.0, -28.0, 2.0), (0.0, -32.5, 1.2)),
+        ("gf_board_room", (-4.0, -29.0, 2.0), (-8.5, -32.5, 1.2)),
+        ("gf_campus_director", (-11.0, -21.5, 2.0), (-11.0, -25.5, 1.2)),
+        ("gf_academic_director", (-6.0, -21.5, 2.0), (-6.0, -25.5, 1.2)),
+        ("gf_penal_room", (-17.5, -21.5, 2.0), (-17.3, -24.0, 1.2)),
+        ("gf_medical_room", (-17.5, -25.0, 2.0), (-17.3, -27.5, 1.2)),
+        ("gf_ece_lab", (-17.5, -29.5, 2.0), (-17.3, -32.6, 1.2)),
+        ("gf_training_office", (6.0, -28.5, 2.0), (6.0, -32.1, 1.2)),
+        ("gf_admission_cell", (11.0, -28.5, 2.0), (11.0, -32.1, 1.2)),
+        ("gf_staff_cabins", (6.0, -21.5, 2.0), (6.0, -25.0, 1.2)),
+        ("gf_student_cell", (11.0, -21.5, 2.0), (11.0, -25.0, 1.2)),
+        ("gf_microprocessor_lab", (17.5, -29.5, 2.0), (17.3, -32.6, 1.2)),
+        ("gf_faculty_south_se", (17.5, -21.5, 2.0), (17.3, -25.0, 1.2)),
+
+        # West Wing (Computing Labs & Hardware)
+        ("gf_complab_w1_foc", (-21.5, -16.0, 2.0), (-25.0, -17.5, 1.2)),
+        ("gf_complab_w2", (-21.5, -9.5, 2.0), (-25.0, -10.5, 1.2)),
+        ("gf_complab_w3", (-21.5, -3.0, 2.0), (-25.0, -3.5, 1.2)),
+        ("gf_complab_w4", (-21.5, 3.5, 2.0), (-25.0, 3.5, 1.2)),
+        ("gf_complab_w5", (-21.5, 9.5, 2.0), (-25.0, 10.5, 1.2)),
+        ("gf_hardware_store", (-21.5, 16.0, 2.0), (-25.0, 17.5, 1.2)),
+        ("gf_electronic_lab", (-28.0, -16.0, 2.0), (-32.0, -17.0, 1.2)),
+        ("gf_tutorial_w1", (-28.0, -9.5, 2.0), (-32.0, -9.75, 1.2)),
+        ("gf_tutorial_w2", (-28.0, -3.0, 2.0), (-32.0, -3.25, 1.2)),
+        ("gf_dhd_lab", (-28.0, 3.5, 2.0), (-32.0, 3.25, 1.2)),
+        ("gf_store_west", (-28.0, 9.5, 2.0), (-32.0, 9.75, 1.2)),
+        ("gf_faculty_hod_west", (-28.0, 16.0, 2.0), (-32.0, 17.0, 1.2)),
+
+        # North Wing (Engineering & Workshops)
+        ("gf_computer_lab_north", (-16.0, 21.5, 2.0), (-16.0, 25.0, 1.2)),
+        ("gf_girls_common_room", (-7.5, 21.5, 2.0), (-7.5, 25.0, 1.2)),
+        ("gf_tutorial_north", (0.0, 21.5, 2.0), (0.0, 25.0, 1.2)),
+        ("gf_director_north", (7.5, 21.5, 2.0), (7.5, 25.0, 1.2)),
+        ("gf_high_voltage_lab", (16.0, 21.5, 2.0), (16.0, 25.0, 1.2)),
+        ("gf_workshop_lab_1", (-14.0, 28.5, 2.0), (-14.0, 32.5, 1.2)),
+        ("gf_workshop_lab_2", (0.0, 28.5, 2.0), (0.0, 32.5, 1.2)),
+        ("gf_workshop_lab_3", (14.0, 28.5, 2.0), (14.0, 32.5, 1.2)),
+
+        # East Wing (Sciences & Electrical)
+        ("gf_emi_lab", (21.5, -15.0, 2.0), (28.0, -16.8, 1.2)),
+        ("gf_electronic_machine_lab", (21.5, -7.0, 2.0), (28.0, -7.3, 1.2)),
+        ("gf_electrical_science_lab", (21.5, 2.0, 2.0), (28.0, 1.95, 1.2)),
+        ("gf_language_lab_gf", (21.5, 9.5, 2.0), (28.0, 9.75, 1.2)),
+        ("gf_conference_hall", (21.5, 16.5, 2.0), (28.0, 17.3, 1.2)),
+    ]
+    for r_id, r_cam, r_tgt in gf_room_specs:
+        create_targeted_camera(inspect_coll, f"cam_inspect_{r_id}", r_cam, r_tgt, lens=26.0)
+
+    # D. First Floor Blueprint Room Inspection Cameras
+    ff_room_specs = [
+        # South Wing (Knowledge Hub)
+        ("ff_faculty_south", (-18.8, -21.5, 5.5), (-18.8, -28.0, 4.5)),
+        ("ff_internet_lab", (-13.5, -21.5, 5.5), (-13.5, -28.0, 4.5)),
+        ("ff_central_library_interior", (0.0, -22.5, 5.5), (0.0, -29.0, 4.5)),
+        ("ff_library_annex", (13.5, -21.5, 5.5), (13.5, -28.0, 4.5)),
+        ("ff_mtech_hobby_lab", (18.8, -21.5, 5.5), (18.8, -28.0, 4.5)),
+
+        # West Wing
+        ("ff_lab_5", (-21.5, 6.5, 5.5), (-25.0, 6.5, 4.5)),
+        ("ff_drawing_hall_4", (-28.0, 17.5, 5.5), (-32.0, 17.5, 4.5)),
+        ("ff_faculty_west", (-28.0, 11.5, 5.5), (-32.0, 11.5, 4.5)),
+        ("ff_drawing_hall_2", (-28.0, 4.0, 5.5), (-32.0, 4.0, 4.5)),
+        ("ff_lab_6", (-28.0, -6.5, 5.5), (-32.0, -6.5, 4.5)),
+
+        # North Wing
+        ("ff_lab_1", (-18.5, 21.5, 5.5), (-18.5, 25.0, 4.5)),
+        ("ff_lab_2", (-13.75, 21.5, 5.5), (-13.75, 25.0, 4.5)),
+        ("ff_lab_8", (-9.25, 21.5, 5.5), (-9.25, 25.0, 4.5)),
+        ("ff_faculty_n1", (-6.0, 21.5, 5.5), (-6.0, 25.0, 4.5)),
+        ("ff_lab_7", (-3.0, 21.5, 5.5), (-3.0, 25.0, 4.5)),
+        ("ff_lab_3_4", (3.0, 21.5, 5.5), (3.0, 25.0, 4.5)),
+        ("ff_faculty_n2", (6.0, 21.5, 5.5), (6.0, 25.0, 4.5)),
+        ("ff_lab_12", (9.25, 21.5, 5.5), (9.25, 25.0, 4.5)),
+        ("ff_tech_conf_hall", (14.75, 21.5, 5.5), (14.75, 25.0, 4.5)),
+        ("ff_drawing_hall_8", (-18.25, 28.5, 5.5), (-18.25, 32.0, 4.5)),
+        ("ff_tutorial_4", (-13.25, 28.5, 5.5), (-13.25, 32.0, 4.5)),
+        ("ff_canteen_dining_hall", (0.0, 28.5, 5.5), (0.0, 33.0, 4.5)),
+
+        # East Wing
+        ("ff_physics_lab", (21.5, -14.0, 5.5), (28.0, -14.0, 4.5)),
+        ("ff_drawing_hall_24", (21.5, -5.0, 5.5), (28.0, -5.0, 4.5)),
+        ("ff_drawing_hall_23", (21.5, 4.0, 5.5), (28.0, 4.0, 4.5)),
+        ("ff_egmd_lab", (21.5, 13.0, 5.5), (28.0, 13.0, 4.5)),
+    ]
+    for r_id, r_cam, r_tgt in ff_room_specs:
+        create_targeted_camera(inspect_coll, f"cam_inspect_{r_id}", r_cam, r_tgt, lens=26.0)
+
+    cameras["central_library_interior_detail"] = create_targeted_camera(
+        coll, "central_library_interior_detail",
+        location=(0.0, -22.5, 5.5),
+        target=(0.0, -29.0, 4.5),
+        lens=24.0
+    )
+
+    # E. 4 Corner Radiating Lecture Theaters (LT-1 to LT-16) Inspection Cameras
+    corner_lt_specs = [
+        # NW Corner
+        ("nw_lt1", (-22.0, 22.0, 2.0), (-28.0, 24.0, 1.2)),
+        ("nw_lt2", (-22.0, 22.0, 2.0), (-26.0, 26.0, 1.2)),
+        ("nw_lt3", (-22.0, 22.0, 2.0), (-24.0, 28.0, 1.2)),
+        # NE Corner
+        ("ne_lt4", (22.0, 22.0, 2.0), (28.0, 24.0, 1.2)),
+        ("ne_lt5", (22.0, 22.0, 2.0), (26.0, 26.0, 1.2)),
+        ("ne_lt6", (22.0, 22.0, 2.0), (24.0, 28.0, 1.2)),
+        # SE Corner
+        ("se_lt7", (22.0, -22.0, 2.0), (28.0, -24.0, 1.2)),
+        ("se_lt8", (22.0, -22.0, 2.0), (26.0, -26.0, 1.2)),
+        ("se_lt9", (22.0, -22.0, 2.0), (24.0, -28.0, 1.2)),
+        # SW Corner
+        ("sw_lt10", (-22.0, -22.0, 2.0), (-28.0, -24.0, 1.2)),
+        ("sw_lt11", (-22.0, -22.0, 2.0), (-26.0, -26.0, 1.2)),
+        ("sw_lt12", (-22.0, -22.0, 2.0), (-24.0, -28.0, 1.2)),
+    ]
+    for lt_id, lt_cam, lt_tgt in corner_lt_specs:
+        create_targeted_camera(inspect_coll, f"cam_inspect_{lt_id}_gf", lt_cam, lt_tgt, lens=28.0)
+        # First floor upper LT view
+        create_targeted_camera(inspect_coll, f"cam_inspect_{lt_id}_ff", (lt_cam[0], lt_cam[1], 5.5), (lt_tgt[0], lt_tgt[1], 4.5), lens=28.0)
+
+    # Cutaway Perspective View
+    cameras["ground_floor_rooms_cutaway"] = create_targeted_camera(
+        coll, "ground_floor_rooms_cutaway",
+        location=(0.0, -48.0, 32.0),
+        target=(0.0, -20.0, 2.0),
+        lens=35.0
+    )
+
+    print(f"-> Total Inspection Cameras Initialized: {len(bpy.data.cameras)} cameras across all rooms, wings, corridors & stairs.")
     return cameras
 
 def configure_viewport_clipping():
@@ -2084,7 +2285,7 @@ def main():
     # 9. Multi-Angle Verification Renders with Cycles
     print("-> Rendering Multi-Angle Verification Images with Cycles...")
     scene.render.engine = 'CYCLES'
-    scene.cycles.samples = 32
+    scene.cycles.samples = 24
     scene.cycles.device = 'CPU'
     scene.render.resolution_x = 1920
     scene.render.resolution_y = 1080

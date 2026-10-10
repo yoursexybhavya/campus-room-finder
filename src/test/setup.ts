@@ -135,3 +135,25 @@ if (typeof HTMLCanvasElement !== 'undefined') {
     return null;
   } as any;
 }
+
+// 4. Mock @react-three/drei useGLTF for headless test environments
+vi.mock('@react-three/drei', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@react-three/drei');
+  const THREE = await vi.importActual<typeof import('three')>('three');
+  const dummyScene = new THREE.Group();
+  const dummyMesh = new THREE.Mesh();
+  dummyMesh.name = 'GF_Exterior_Facade_Walls';
+  dummyScene.add(dummyMesh);
+
+  const mockUseGLTF = vi.fn(() => ({
+    scene: dummyScene,
+  }));
+  (mockUseGLTF as any).preload = vi.fn();
+  (mockUseGLTF as any).clear = vi.fn();
+
+  return {
+    ...actual,
+    useGLTF: mockUseGLTF,
+  };
+});
+
