@@ -102,12 +102,18 @@ export const useCampusStore = create<CampusStoreState>((set, get) => ({
     if (roomId) {
       const room = campusRooms.find((r) => r.id === roomId);
       if (room) {
-        set({
+        const currentFilter = get().activeFloorFilter;
+        const updates: Partial<CampusStoreState> = {
           cameraTarget: {
             position: [room.position[0] + 10, room.position[1] + 8, room.position[2] + 10],
             lookAt: room.position,
           },
-        });
+        };
+        // Auto-switch floor filter if the selected room would be hidden by the current floor filter
+        if (currentFilter !== 'all' && currentFilter !== room.floor) {
+          updates.activeFloorFilter = room.floor;
+        }
+        set(updates);
       }
     }
   },
@@ -144,16 +150,22 @@ export const useCampusStore = create<CampusStoreState>((set, get) => ({
   navigateToRoom: (roomId: string, originId?: string) => {
     const origin = originId || get().userOriginId || 'gate';
     const path = findPathToRoom(roomId, origin);
-    set({ navigationPath: path, selectedRoomId: roomId });
     const room = campusRooms.find((r) => r.id === roomId);
+    const currentFilter = get().activeFloorFilter;
+    const updates: Partial<CampusStoreState> = {
+      navigationPath: path,
+      selectedRoomId: roomId,
+    };
     if (room) {
-      set({
-        cameraTarget: {
-          position: [room.position[0] + 10, room.position[1] + 8, room.position[2] + 10],
-          lookAt: room.position,
-        },
-      });
+      updates.cameraTarget = {
+        position: [room.position[0] + 10, room.position[1] + 8, room.position[2] + 10],
+        lookAt: room.position,
+      };
+      if (currentFilter !== 'all' && currentFilter !== room.floor) {
+        updates.activeFloorFilter = room.floor;
+      }
     }
+    set(updates);
   },
 
   clearNavigationPath: () => set({ navigationPath: null }),

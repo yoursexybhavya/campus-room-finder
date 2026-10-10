@@ -17,10 +17,10 @@ export const ActiveRoomBeacon: React.FC = () => {
   const ringRef = useRef<THREE.Mesh>(null);
   const crystalRef = useRef<THREE.Mesh>(null);
 
-  // Target either active class room or currently inspected room
+  // Target currently inspected room first; fallback to active class room when none inspected
   const targetRoom =
-    activeSchedule.activeRoom ||
-    (selectedRoomId ? campusRooms.find((r) => r.id === selectedRoomId) || null : null);
+    (selectedRoomId ? campusRooms.find((r) => r.id === selectedRoomId) || null : null) ||
+    activeSchedule.activeRoom;
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();

@@ -36,7 +36,9 @@ export const BlenderCampusModelContent: React.FC = () => {
           name.includes('GF_') ||
           name.includes('_GF_') ||
           name.includes('Ground_Floor') ||
-          name.startsWith('Room_GF_');
+          name.startsWith('Room_GF_') ||
+          name.includes('Rotunda_Bay_Wall') ||
+          name.includes('Corner_Toilets_Floor');
         const isRoof = name.includes('Roof');
 
         // Floor visibility filter
@@ -56,7 +58,11 @@ export const BlenderCampusModelContent: React.FC = () => {
             name.includes('GF_Partition_And_Door_Walls') ||
             name.includes('GF_Veranda_10ft_Corridors') ||
             name.includes('GF_Radiating_LTs_Floor') ||
-            name.includes('GF_Curved_Corridor')
+            name.includes('GF_Curved_Corridor') ||
+            name.includes('Rotunda_Bay_Wall') ||
+            name.includes('Corner_Toilets_Floor') ||
+            name.includes('GF_Admin_Block_Sign') ||
+            name.includes('GF_Entrance_Porch')
           ) {
             child.visible = false;
           } else {
@@ -94,7 +100,8 @@ export const BlenderCampusModelContent: React.FC = () => {
   const handleModelClick = (e: any) => {
     const pt = e.point;
     if (!pt) return;
-    const clickedFloor = pt.y < 2.5 ? 'ground' : 'first';
+    // Ground floor finishes below 3.86m, First floor begins at 4.11m
+    const clickedFloor = pt.y < 4.0 ? 'ground' : 'first';
     if (activeFloorFilter !== 'all' && activeFloorFilter !== clickedFloor) return;
 
     const hitRoom = campusRooms.find((r) => {

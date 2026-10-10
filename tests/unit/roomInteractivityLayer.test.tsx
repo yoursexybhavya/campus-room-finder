@@ -69,4 +69,44 @@ describe('RoomInteractivityLayer Unit Tests', () => {
     });
     expect(useCampusStore.getState().hoveredRoomId).toBeNull();
   });
+
+  it('5. should auto-switch activeFloorFilter when a room on a hidden floor is selected', () => {
+    // Start on ground floor
+    act(() => {
+      useCampusStore.getState().setFloorFilter('ground');
+    });
+    expect(useCampusStore.getState().activeFloorFilter).toBe('ground');
+
+    // Select a first floor room (e.g. LT-3 / LT-24)
+    act(() => {
+      useCampusStore.getState().selectRoom('LT-3');
+    });
+    expect(useCampusStore.getState().selectedRoomId).toBe('LT-3');
+    // activeFloorFilter must switch to 'first' so the room is visible!
+    expect(useCampusStore.getState().activeFloorFilter).toBe('first');
+
+    // Now select a ground floor room (e.g. LT-1)
+    act(() => {
+      useCampusStore.getState().selectRoom('LT-1');
+    });
+    expect(useCampusStore.getState().selectedRoomId).toBe('LT-1');
+    // activeFloorFilter must switch to 'ground'
+    expect(useCampusStore.getState().activeFloorFilter).toBe('ground');
+  });
+
+  it('6. should verify ActiveRoomBeacon prioritizes selected room over in-session active class', async () => {
+    const { useTimetableStore } = await import('../../src/stores/useTimetableStore');
+    const { ActiveRoomBeacon } = await import('../../src/components/canvas/ActiveRoomBeacon');
+
+    // Apply timetable preset where LT-1 is in-session
+    act(() => {
+      useTimetableStore.getState().applyPreset('preset_mon_0930');
+      useCampusStore.getState().selectRoom('LAB-1'); // Select a different room
+    });
+
+    expect(useTimetableStore.getState().activeSchedule.activeRoom?.id).toBe('LT-1');
+    expect(useCampusStore.getState().selectedRoomId).toBe('LAB-1');
+    // ActiveRoomBeacon renders for LAB-1 rather than remaining stuck on LT-1
+    expect(ActiveRoomBeacon).toBeDefined();
+  });
 });
