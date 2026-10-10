@@ -10,6 +10,7 @@ import { useThemeStore } from '../../stores/useThemeStore';
 
 import { UserLocationDot } from './UserLocationDot';
 import { MazeMapIconsLayer } from './MazeMapIconsLayer';
+import { RoomHoverLabelsLayer } from './RoomHoverLabelsLayer';
 
 interface CampusSceneProps {
   className?: string;
@@ -62,6 +63,7 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
           <ActiveRoomBeacon />
           <PeerAvatarsLayer />
           <MazeMapIconsLayer />
+          <RoomHoverLabelsLayer />
         </Suspense>
       </Canvas>
     </div>

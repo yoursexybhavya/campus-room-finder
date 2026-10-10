@@ -18,6 +18,9 @@ export interface CampusStoreState {
 
   userOriginId: string;
   setUserOriginId: (id: string) => void;
+  isWayfindingOpen: boolean;
+  setIsWayfindingOpen: (open: boolean) => void;
+  swapOriginAndDestination: () => void;
   isNavigating: boolean;
   setIsNavigating: (active: boolean) => void;
   currentStepIndex: number;
@@ -56,7 +59,25 @@ export const useCampusStore = create<CampusStoreState>((set, get) => ({
   liveGpsCoords: null,
   isGpsActive: false,
 
+  isWayfindingOpen: false,
+  setIsWayfindingOpen: (open) => set({ isWayfindingOpen: open }),
   setUserOriginId: (id) => set({ userOriginId: id }),
+  swapOriginAndDestination: () => {
+    const state = get();
+    const currentOrigin = state.userOriginId;
+    const currentDest = state.selectedRoomId;
+    if (currentDest) {
+      set({ userOriginId: currentDest });
+      const targetRoom = campusRooms.find((r) => r.id === currentOrigin);
+      if (targetRoom) {
+        state.navigateToRoom(targetRoom.id, currentDest);
+      } else {
+        // If origin was a waypoint like 'gate', keep origin as dest and clear navigation path
+        state.clearNavigationPath();
+        set({ selectedRoomId: null });
+      }
+    }
+  },
   setIsNavigating: (active) => set({ isNavigating: active }),
   setCurrentStepIndex: (idx) => set({ currentStepIndex: idx }),
   setUserPosition: (pos) => set({ userPosition: pos }),

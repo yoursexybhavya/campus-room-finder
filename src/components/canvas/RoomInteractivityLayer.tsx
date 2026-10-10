@@ -76,18 +76,6 @@ const RoomHitboxItem: React.FC<RoomHitboxItemProps> = ({
               <lineBasicMaterial color="#00f0ff" linewidth={2} />
             </lineSegments>
           )}
-
-          {/* Sleek billboard room code badge for hovered / selected room */}
-          <Html
-            position={[0, room.floor === 'ground' ? 1.2 : 1.4, 0]}
-            center
-            distanceFactor={18}
-            className="pointer-events-none select-none"
-          >
-            <div className="bg-slate-950/90 text-cyan-300 border border-cyan-400/50 px-2 py-0.5 rounded shadow-lg text-[11px] font-mono whitespace-nowrap backdrop-blur-sm">
-              {room.code || room.id}: {room.name}
-            </div>
-          </Html>
         </group>
       )}
     </group>

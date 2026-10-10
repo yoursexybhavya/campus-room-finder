@@ -3,6 +3,7 @@ import { CampusScene } from './components/canvas/CampusScene';
 import { Header } from './components/ui/Header';
 import { FloorSelector } from './components/ui/FloorSelector';
 import { SearchBar } from './components/ui/SearchBar';
+import { CampusWayfindingBar } from './components/ui/CampusWayfindingBar';
 import { RoomDetailsDrawer } from './components/ui/RoomDetailsDrawer';
 import { NavigationHUD } from './components/ui/NavigationHUD';
 import { TimeMachineBar } from './components/ui/TimeMachineBar';
@@ -39,6 +40,7 @@ export const App: React.FC = () => {
         {/* 2D Interactive UI Overlays */}
         <Header />
         <SearchBar />
+        <CampusWayfindingBar />
         <FloorSelector />
         <ActiveClassBanner />
         <NavigationHUD />

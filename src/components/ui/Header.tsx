@@ -48,21 +48,23 @@ export const Header: React.FC = () => {
 
   return (
     <header className="absolute top-0 left-0 right-0 z-40 pointer-events-none p-2 sm:p-4 flex items-center justify-between gap-2">
-      {/* Brand & Campus Identity */}
-      <div className={`pointer-events-auto flex items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-2xl ${cardBgClass} transition-colors duration-300 shrink-0`}>
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/25 shrink-0">
-          <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <h1 className="text-xs sm:text-base font-bold tracking-wide">JIET Jodhpur</h1>
-            <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
-              {viewMode === '2D' ? '2D' : '3D'}
-            </span>
+      {/* Brand & Campus Identity (Clean MazeMap / UNIPATH style: sleek desktop pill, hidden from mobile view) */}
+      <div className="pointer-events-auto flex items-center">
+        <div className={`hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-2xl ${cardBgClass} transition-colors duration-300 shrink-0 shadow-lg`}>
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/25 shrink-0">
+            <Building2 className="w-4 h-4" />
           </div>
-          <p className={`hidden sm:block text-[11px] sm:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Campus Room Finder & Navigation
-          </p>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-xs font-bold tracking-wide">JIET Jodhpur</h1>
+              <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
+                {viewMode === '2D' ? '2D' : '3D'}
+              </span>
+            </div>
+            <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Campus Room Finder & Navigation
+            </p>
+          </div>
         </div>
       </div>
 
@@ -107,7 +109,7 @@ export const Header: React.FC = () => {
             }
           }}
           data-testid="gps-toggle-btn"
-          className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${
+          className={`hidden sm:flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${
             isGpsActive
               ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 shadow-emerald-500/20'
               : btnSecondaryClass

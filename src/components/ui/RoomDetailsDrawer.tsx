@@ -175,6 +175,37 @@ export const RoomDetailsDrawer: React.FC = () => {
 
       {/* Drawer Body */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        {/* Instant 1-Tap Wayfinding Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={handleStartNavigation}
+            data-testid="instant-navigate-here-btn"
+            className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold py-2 px-3 rounded-2xl text-xs shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+            title="Instant 1-tap navigation to this room"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>Navigate Here</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setUserOriginId(room.id);
+            }}
+            data-testid="set-as-start-btn"
+            className={`flex items-center justify-center gap-1.5 font-bold py-2 px-3 rounded-2xl text-xs border active:scale-95 transition-all ${
+              userOriginId === room.id
+                ? 'bg-sky-500/20 text-sky-400 border-sky-500/40'
+                : isDark
+                ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200'
+            }`}
+            title="Set this room as your starting location"
+          >
+            <MapPin className="w-3.5 h-3.5 text-sky-500" />
+            <span>{userOriginId === room.id ? 'Starting Point ✓' : 'Set as Start'}</span>
+          </button>
+        </div>
+
         {/* ======================================================== */}
         {/* GOOGLE MAPS STYLE "WHERE YOU ARE AT -> WHERE YOU ARE GOING" */}
         {/* ======================================================== */}
@@ -182,7 +213,7 @@ export const RoomDetailsDrawer: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400">
               <Navigation className="w-3.5 h-3.5" />
-              <span>Google Maps Campus Directions</span>
+              <span>Campus Directions</span>
             </span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30">
               WALKING
@@ -197,14 +228,41 @@ export const RoomDetailsDrawer: React.FC = () => {
                 <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" />
                 <span>From (Where You Are)</span>
               </label>
+
+              {/* 1-Tap Quick Origin Preset Pills */}
+              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                {[
+                  { id: 'gate', label: '🚪 Gate' },
+                  { id: 'courtyard_center', label: '🌳 Courtyard' },
+                  { id: 'wp_admin', label: '🏛 Admin' },
+                  { id: 'wp_lib_main', label: '📚 Library' },
+                ].map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => {
+                      setUserOriginId(preset.id);
+                      navigateToRoom(room.id, preset.id);
+                    }}
+                    className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold transition-all active:scale-95 ${
+                      userOriginId === preset.id
+                        ? 'bg-cyan-500/20 text-cyan-500 border-cyan-500/40 shadow-sm'
+                        : isDark
+                        ? 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+
               <select
                 value={userOriginId}
                 onChange={(e) => {
                   const newOrigin = e.target.value;
                   setUserOriginId(newOrigin);
-                  if (navigationPath) {
-                    navigateToRoom(room.id, newOrigin);
-                  }
+                  navigateToRoom(room.id, newOrigin);
                 }}
                 className={`w-full border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-500 ${
                   isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
