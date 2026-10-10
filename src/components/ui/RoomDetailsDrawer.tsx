@@ -26,6 +26,7 @@ import { useThemeStore } from '../../stores/useThemeStore';
 import { useTimetableStore } from '../../stores/useTimetableStore';
 import { getRoomDailySchedule } from '../../services/time/datetimeEngine';
 import { findDetailedPathToRoom } from '../../services/routing/pathfinding';
+import { SearchableLocationCombobox } from './SearchableLocationCombobox';
 
 export const RoomDetailsDrawer: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -184,7 +185,7 @@ export const RoomDetailsDrawer: React.FC = () => {
             title="Instant 1-tap navigation to this room"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            <span>Navigate Here</span>
+            <span>🎯 Navigate Here</span>
           </button>
 
           <button
@@ -202,7 +203,7 @@ export const RoomDetailsDrawer: React.FC = () => {
             title="Set this room as your starting location"
           >
             <MapPin className="w-3.5 h-3.5 text-sky-500" />
-            <span>{userOriginId === room.id ? 'Starting Point ✓' : 'Set as Start'}</span>
+            <span>{userOriginId === room.id ? '📍 Starting Point ✓' : '📍 Set as Start'}</span>
           </button>
         </div>
 
@@ -257,6 +258,21 @@ export const RoomDetailsDrawer: React.FC = () => {
                 ))}
               </div>
 
+              {/* Searchable Combobox for Drawer Origin */}
+              <SearchableLocationCombobox
+                id="drawer-origin-combobox"
+                value={userOriginId}
+                onChange={(newOrigin) => {
+                  setUserOriginId(newOrigin);
+                  navigateToRoom(room.id, newOrigin);
+                }}
+                excludeId={room.id}
+                accentColor="sky"
+                isDark={isDark}
+                placeholder="Search origin: room, lab, gate..."
+                testIdPrefix="drawer-origin-combobox"
+              />
+
               <select
                 value={userOriginId}
                 onChange={(e) => {
@@ -264,7 +280,7 @@ export const RoomDetailsDrawer: React.FC = () => {
                   setUserOriginId(newOrigin);
                   navigateToRoom(room.id, newOrigin);
                 }}
-                className={`w-full border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-500 ${
+                className={`w-full mt-1.5 border rounded-xl px-2.5 py-1 text-[11px] focus:outline-none focus:border-cyan-500 opacity-80 hover:opacity-100 ${
                   isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
                 }`}
               >

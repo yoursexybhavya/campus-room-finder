@@ -95,7 +95,7 @@ export const PeerLocatorPanel: React.FC = () => {
       <button
         onClick={handleOpen}
         data-testid="open-peer-panel-btn"
-        className={`absolute top-16 sm:top-20 ${
+        className={`absolute top-2 left-3 sm:top-20 sm:left-auto ${
           isRoomDrawerOpen ? 'right-3 sm:right-4 md:right-[410px]' : 'right-3 sm:right-4'
         } z-40 pointer-events-auto border px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2 transition-all active:scale-95 group select-none ${
           isDark

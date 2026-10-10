@@ -14,6 +14,7 @@ import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { campusRooms } from '../../data/campusRooms';
 import { findDetailedPathToRoom } from '../../services/routing/pathfinding';
+import { SearchableLocationCombobox, CAMPUS_LANDMARKS } from './SearchableLocationCombobox';
 
 export const CampusWayfindingBar: React.FC = () => {
   const isWayfindingOpen = useCampusStore((state) => state.isWayfindingOpen);
@@ -57,19 +58,29 @@ export const CampusWayfindingBar: React.FC = () => {
   const originName = useMemo(() => {
     const preset = originPresets.find((p) => p.id === userOriginId);
     if (preset) return preset.label;
+    const landmark = CAMPUS_LANDMARKS.find((lm) => lm.id === userOriginId);
+    if (landmark) return `📍 ${landmark.name}`;
     const room = campusRooms.find((r) => r.id === userOriginId);
     if (room) return `📍 ${room.code}: ${room.name}`;
     return '📍 Main Entrance Gate';
-  }, [userOriginId]);
+  }, [userOriginId, originPresets]);
 
   const destinationRoom = useMemo(() => {
     return selectedRoomId ? campusRooms.find((r) => r.id === selectedRoomId) : null;
   }, [selectedRoomId]);
 
-  // 1-Tap instant route execution
+  // 1-Tap instant route execution for destination
   const handleSelectDestination = (roomId: string) => {
     selectRoom(roomId);
     navigateToRoom(roomId, userOriginId);
+  };
+
+  // 1-Tap selection for origin
+  const handleSelectOrigin = (originId: string) => {
+    setUserOriginId(originId);
+    if (selectedRoomId) {
+      navigateToRoom(selectedRoomId, originId);
+    }
   };
 
   // 1-Tap start turn-by-turn navigation
@@ -109,8 +120,8 @@ export const CampusWayfindingBar: React.FC = () => {
       data-testid="campus-wayfinding-container"
       className={`absolute z-40 pointer-events-auto select-none transition-all duration-200 ${
         isWayfindingOpen
-          ? 'top-16 left-3 right-3 sm:top-20 sm:left-auto sm:right-28 sm:w-96'
-          : 'top-16 right-3 sm:top-20 sm:left-auto sm:right-28 sm:w-96'
+          ? 'top-16 left-3 right-3 sm:top-20 sm:left-auto sm:right-48 sm:w-[410px]'
+          : 'top-16 right-3 sm:top-20 sm:left-auto sm:right-48 sm:w-auto'
       }`}
     >
       {/* 1. Collapsed Pill Header (when minimized or route active) */}
@@ -118,7 +129,7 @@ export const CampusWayfindingBar: React.FC = () => {
         <button
           onClick={() => setIsWayfindingOpen(true)}
           data-testid="toggle-wayfinding-pill"
-          className={`flex items-center justify-between gap-1.5 sm:gap-2 px-3 py-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] ${cardBgClass}`}
+          className={`flex items-center justify-between gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] ${cardBgClass}`}
           title="Open Campus Wayfinding: Where You Are ➔ Where You Want To Go"
         >
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
@@ -141,13 +152,13 @@ export const CampusWayfindingBar: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-1 text-cyan-500 sm:text-slate-400 shrink-0">
+          <div className="flex items-center gap-1 text-cyan-500 sm:text-slate-400 shrink-0 ml-1">
             <span className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider">Route</span>
             <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
         </button>
       ) : (
-        /* 2. Expanded Interactive Mobile Wayfinding Sheet */
+        /* 2. Expanded Interactive Wayfinding Card */
         <div className={`p-4 rounded-3xl border animate-in fade-in zoom-in-95 duration-200 space-y-3.5 ${cardBgClass}`}>
           {/* Sheet Header */}
           <div className="flex items-center justify-between pb-2 border-b border-slate-700/30">
@@ -157,7 +168,7 @@ export const CampusWayfindingBar: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xs font-extrabold tracking-wide">Campus Wayfinding</h3>
-                <p className="text-[10px] text-slate-400">Specify origin & destination in 1 tap</p>
+                <p className="text-[10px] text-slate-400">Navigate anywhere to anywhere with smart search</p>
               </div>
             </div>
 
@@ -171,15 +182,17 @@ export const CampusWayfindingBar: React.FC = () => {
           </div>
 
           {/* From & To Section */}
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {/* ROW 1: WHERE YOU ARE (From) */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                <span className="flex items-center gap-1.5 text-sky-500">
+                <span className="flex items-center gap-1.5 text-sky-400 font-bold">
                   <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" />
                   <span>Where You Are (From)</span>
                 </span>
-                <span className="font-mono text-[10px] lowercase text-slate-400">{originName}</span>
+                <span className="font-mono text-[10px] lowercase text-slate-400 truncate max-w-[160px] text-right">
+                  {originName}
+                </span>
               </div>
 
               {/* 1-Tap Quick Start Preset Buttons */}
@@ -189,12 +202,7 @@ export const CampusWayfindingBar: React.FC = () => {
                   return (
                     <button
                       key={preset.id}
-                      onClick={() => {
-                        setUserOriginId(preset.id);
-                        if (selectedRoomId) {
-                          navigateToRoom(selectedRoomId, preset.id);
-                        }
-                      }}
+                      onClick={() => handleSelectOrigin(preset.id)}
                       data-testid={`origin-preset-${preset.id}`}
                       className={`py-1.5 px-1 rounded-xl text-[10px] font-bold border truncate transition-all active:scale-95 text-center ${
                         isActive
@@ -210,27 +218,36 @@ export const CampusWayfindingBar: React.FC = () => {
                   );
                 })}
               </div>
+
+              {/* Searchable Combobox for ANY Origin (rooms, labs, gates) */}
+              <SearchableLocationCombobox
+                id="wayfinding-origin-input"
+                value={userOriginId}
+                onChange={handleSelectOrigin}
+                accentColor="sky"
+                isDark={isDark}
+                placeholder="Search origin: any room, lab, or gate..."
+                testIdPrefix="origin-combobox"
+              />
             </div>
 
             {/* Swap Origin / Destination Button */}
-            {selectedRoomId && (
-              <div className="flex justify-center -my-1">
-                <button
-                  onClick={handleSwap}
-                  data-testid="wayfinding-swap-btn"
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/30 transition-all active:scale-95"
-                  title="Swap Origin and Destination"
-                >
-                  <ArrowRightLeft className="w-3 h-3" />
-                  <span>Swap Start & Destination</span>
-                </button>
-              </div>
-            )}
+            <div className="flex justify-center -my-1">
+              <button
+                onClick={handleSwap}
+                data-testid="wayfinding-swap-btn"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/30 transition-all active:scale-95 shadow-sm"
+                title="Swap Origin and Destination"
+              >
+                <ArrowRightLeft className="w-3 h-3" />
+                <span>Swap Start & Destination</span>
+              </button>
+            </div>
 
             {/* ROW 2: WHERE YOU WANT TO GO (To) */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                <span className="flex items-center gap-1.5 text-rose-500">
+                <span className="flex items-center gap-1.5 text-rose-400 font-bold">
                   <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
                   <span>Where You Want To Go (To)</span>
                 </span>
@@ -265,7 +282,19 @@ export const CampusWayfindingBar: React.FC = () => {
                 })}
               </div>
 
-              {/* Room selector dropdown for any other room */}
+              {/* Searchable Combobox for ANY Destination (all 65 rooms + landmarks) */}
+              <SearchableLocationCombobox
+                id="wayfinding-destination-input"
+                value={selectedRoomId}
+                onChange={handleSelectDestination}
+                excludeId={userOriginId}
+                accentColor="rose"
+                isDark={isDark}
+                placeholder="Search destination: any room, lab, or gate..."
+                testIdPrefix="destination-combobox"
+              />
+
+              {/* Fast native select fallback for quick browsing */}
               <select
                 value={selectedRoomId || ''}
                 onChange={(e) => {
@@ -273,12 +302,12 @@ export const CampusWayfindingBar: React.FC = () => {
                     handleSelectDestination(e.target.value);
                   }
                 }}
-                className={`w-full mt-1.5 border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-500 transition-colors ${
-                  isDark ? 'bg-slate-950 border-slate-700 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'
+                className={`w-full mt-1 border rounded-xl px-2.5 py-1 text-[11px] focus:outline-none focus:border-cyan-500 transition-colors opacity-80 hover:opacity-100 ${
+                  isDark ? 'bg-slate-950 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
                 }`}
               >
-                <option value="">🎯 Or choose from all 65 campus rooms...</option>
-                <optgroup label="Ground Floor">
+                <option value="">🎯 Or pick directly from list...</option>
+                <optgroup label="Ground Floor (GF)">
                   {campusRooms
                     .filter((r) => r.floor === 'ground')
                     .map((r) => (
@@ -287,7 +316,7 @@ export const CampusWayfindingBar: React.FC = () => {
                       </option>
                     ))}
                 </optgroup>
-                <optgroup label="First Floor">
+                <optgroup label="First Floor (1F)">
                   {campusRooms
                     .filter((r) => r.floor === 'first')
                     .map((r) => (

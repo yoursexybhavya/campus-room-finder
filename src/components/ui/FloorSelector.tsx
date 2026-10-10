@@ -47,15 +47,18 @@ export const FloorSelector: React.FC = () => {
     },
   ];
 
-  // If a right-side drawer is open on desktop, shift dock left so it never overlaps
-  const isHiddenByDrawer = selectedRoomId !== null || isPanelOpen;
+  const isWayfindingOpen = useCampusStore((state) => state.isWayfindingOpen);
+
+  // If a right-side drawer is open on desktop, shift dock left so it never overlaps. On mobile, hide when drawer or wayfinding is open.
+  const isDrawerOpen = selectedRoomId !== null || isPanelOpen;
+  const isMobileHidden = isDrawerOpen || isWayfindingOpen;
 
   return (
     <div
       data-testid="floor-selector-dock"
-      className={`absolute top-28 sm:top-32 right-3 sm:right-4 z-40 pointer-events-auto flex flex-col gap-2 select-none animate-in fade-in slide-in-from-right duration-300 ${
-        isHiddenByDrawer ? 'hidden md:flex md:right-[410px]' : 'flex'
-      }`}
+      className={`absolute top-28 sm:top-32 ${
+        isDrawerOpen ? 'hidden md:flex md:right-[410px]' : isMobileHidden ? 'hidden md:flex md:right-4' : 'flex right-3 sm:right-4'
+      } z-40 pointer-events-auto flex-col gap-2 select-none animate-in fade-in slide-in-from-right duration-300`}
     >
       {/* 1. 2D / 3D View Mode Toggle Pill (MazeMap Style - hidden on mobile as Header has switcher) */}
       <div
