@@ -35,8 +35,14 @@ export const BlenderCampusModelContent: React.FC = () => {
             child.visible = true;
           }
         } else if (activeFloorFilter === 'first') {
-          // In first floor mode, keep foundation plinth and stairs visible but prioritize 1F
-          if (name.includes('GF_Exterior_Facade_Walls') || name.includes('GF_Interior_Room_Partition_Walls')) {
+          // In first floor mode, keep foundation plinth, pillars, courtyard, and stairs visible but hide GF room partitions & walls
+          if (
+            name.includes('GF_Exterior_Facade_Walls') ||
+            name.includes('GF_Interior_Room_Partition_Walls') ||
+            name.includes('Room_GF_') ||
+            name.includes('GF_Corridor_Dividing_Walls_With_Doors') ||
+            name.includes('GF_Partition_And_Door_Walls')
+          ) {
             child.visible = false;
           } else {
             child.visible = true;

@@ -60,6 +60,7 @@ const PathSegment: React.FC<SegmentProps> = ({ start, end, index }) => {
 
 export const RoutePathMesh: React.FC = () => {
   const navigationPath = useCampusStore((state) => state.navigationPath);
+  const activeFloorFilter = useCampusStore((state) => state.activeFloorFilter);
 
   if (!navigationPath || navigationPath.length < 2) {
     return null;
@@ -68,46 +69,68 @@ export const RoutePathMesh: React.FC = () => {
   const startPt = navigationPath[0];
   const endPt = navigationPath[navigationPath.length - 1];
 
+  const isPointVisible = (y: number) => {
+    if (activeFloorFilter === 'all') return true;
+    if (activeFloorFilter === 'ground') return y <= 2.2;
+    if (activeFloorFilter === 'first') return y >= 2.0;
+    return true;
+  };
+
+  const isSegmentVisible = (y1: number, y2: number) => {
+    if (activeFloorFilter === 'all') return true;
+    if (activeFloorFilter === 'ground') return y1 <= 2.2 || y2 <= 2.2;
+    if (activeFloorFilter === 'first') return y1 >= 2.0 || y2 >= 2.0;
+    return true;
+  };
+
   return (
     <group name="route-path-mesh">
       {/* Start Waypoint Origin Ring */}
-      <mesh position={[startPt[0], startPt[1] + 0.15, startPt[2]]}>
-        <sphereGeometry args={[0.35, 16, 16]} />
-        <meshStandardMaterial
-          color="#10b981"
-          emissive="#10b981"
-          emissiveIntensity={1.5}
-          roughness={0.1}
-        />
-      </mesh>
-
-      {/* Destination Target Marker Pin */}
-      <mesh position={[endPt[0], endPt[1] + 0.18, endPt[2]]}>
-        <sphereGeometry args={[0.42, 16, 16]} />
-        <meshStandardMaterial
-          color="#f43f5e"
-          emissive="#f43f5e"
-          emissiveIntensity={1.8}
-          roughness={0.1}
-        />
-      </mesh>
-
-      {/* Waypoint Vertex Orbs */}
-      {navigationPath.slice(1, -1).map((pt, idx) => (
-        <mesh key={`pt-${idx}`} position={[pt[0], pt[1] + 0.12, pt[2]]}>
-          <sphereGeometry args={[0.2, 12, 12]} />
+      {isPointVisible(startPt[1]) && (
+        <mesh position={[startPt[0], startPt[1] + 0.15, startPt[2]]}>
+          <sphereGeometry args={[0.35, 16, 16]} />
           <meshStandardMaterial
-            color="#38bdf8"
-            emissive="#38bdf8"
-            emissiveIntensity={1.2}
+            color="#10b981"
+            emissive="#10b981"
+            emissiveIntensity={1.5}
             roughness={0.1}
           />
         </mesh>
-      ))}
+      )}
+
+      {/* Destination Target Marker Pin */}
+      {isPointVisible(endPt[1]) && (
+        <mesh position={[endPt[0], endPt[1] + 0.18, endPt[2]]}>
+          <sphereGeometry args={[0.42, 16, 16]} />
+          <meshStandardMaterial
+            color="#f43f5e"
+            emissive="#f43f5e"
+            emissiveIntensity={1.8}
+            roughness={0.1}
+          />
+        </mesh>
+      )}
+
+      {/* Waypoint Vertex Orbs */}
+      {navigationPath.slice(1, -1).map((pt, idx) => {
+        if (!isPointVisible(pt[1])) return null;
+        return (
+          <mesh key={`pt-${idx}`} position={[pt[0], pt[1] + 0.12, pt[2]]}>
+            <sphereGeometry args={[0.2, 12, 12]} />
+            <meshStandardMaterial
+              color="#38bdf8"
+              emissive="#38bdf8"
+              emissiveIntensity={1.2}
+              roughness={0.1}
+            />
+          </mesh>
+        );
+      })}
 
       {/* Flowing Path Cylinders between adjacent waypoints */}
       {navigationPath.slice(0, -1).map((start, idx) => {
         const end = navigationPath[idx + 1];
+        if (!isSegmentVisible(start[1], end[1])) return null;
         return <PathSegment key={`seg-${idx}`} start={start} end={end} index={idx} />;
       })}
     </group>

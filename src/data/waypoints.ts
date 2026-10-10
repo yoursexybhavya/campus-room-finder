@@ -40,11 +40,11 @@ export function buildWaypointGraph(): Map<string, NavNode> {
   };
 
   // =========================================================================
-  // 1. CAMPUS MAIN ENTRANCE & CENTRAL ARTERIAL WALKWAYS
+  // 1. CAMPUS MAIN ENTRANCE & CENTRAL ARTERIAL WALKWAYS (All at ground level y = 0.1)
   // =========================================================================
   addNode('gate', [0, 0.1, 36]);
   addNode('south_walkway', [0, 0.1, 24]);
-  addNode('wp_admin', [0, 1.0, 20]);
+  addNode('wp_admin', [0, 0.1, 20]);
   addNode('courtyard', [0, 0.1, 10]);
   addNode('courtyard_center', [0, 0.1, 0]);
   addNode('center_fountain', [0, 0.1, 0]);
@@ -52,8 +52,10 @@ export function buildWaypointGraph(): Map<string, NavNode> {
 
   link('gate', 'south_walkway');
   link('south_walkway', 'wp_admin');
+  link('wp_admin', 'corr_south_g');
   link('courtyard', 'courtyard_center');
   link('courtyard_center', 'north_walkway');
+  link('center_fountain', 'courtyard_center');
 
   // =========================================================================
   // 2. CORNER HELICAL ROTUNDA STAIRCASES (GROUND & 1ST FLOOR)
@@ -90,7 +92,6 @@ export function buildWaypointGraph(): Map<string, NavNode> {
   addNode('corr_east_1f', [16, 3.6, 0]);
 
   link('south_walkway', 'corr_south_g');
-  link('wp_admin', 'corr_south_g');
   link('courtyard', 'corr_south_g');
   link('north_walkway', 'corr_north_g');
 
@@ -105,10 +106,27 @@ export function buildWaypointGraph(): Map<string, NavNode> {
     const sfx = fl === 'ground' ? '_g' : '_1f';
     const flRooms = campusRooms.filter((r) => r.floor === fl);
 
+    // Group rooms by their physical architectural corridor wing based on coordinates
+    const sRooms: typeof flRooms = [];
+    const nRooms: typeof flRooms = [];
+    const wRooms: typeof flRooms = [];
+    const eRooms: typeof flRooms = [];
+
+    for (const r of flRooms) {
+      if (r.position[0] <= -16) {
+        wRooms.push(r);
+      } else if (r.position[0] >= 16) {
+        eRooms.push(r);
+      } else if (r.position[2] > 0) {
+        sRooms.push(r);
+      } else {
+        nRooms.push(r);
+      }
+    }
+
     // -----------------------------------------------------------------------
     // A. South Wing Corridor Chain (along Z = 16)
     // -----------------------------------------------------------------------
-    const sRooms = flRooms.filter((r) => r.wing === 'South' || (r.wing === 'West' && r.position[2] > 19));
     const sCoords = [-16, ...sRooms.map((r) => r.position[0]), 0, 16]
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort((a, b) => a - b);
@@ -129,7 +147,6 @@ export function buildWaypointGraph(): Map<string, NavNode> {
     // -----------------------------------------------------------------------
     // B. North Wing Corridor Chain (along Z = -16)
     // -----------------------------------------------------------------------
-    const nRooms = flRooms.filter((r) => r.wing === 'North');
     const nCoords = [-16, ...nRooms.map((r) => r.position[0]), 0, 16]
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort((a, b) => a - b);
@@ -150,8 +167,7 @@ export function buildWaypointGraph(): Map<string, NavNode> {
     // -----------------------------------------------------------------------
     // C. West Wing Corridor Chain (along X = -16)
     // -----------------------------------------------------------------------
-    const wRooms = flRooms.filter((r) => r.wing === 'West' && r.position[2] <= 19);
-    const wCoords = [-25.5, ...wRooms.map((r) => r.position[2]), -16, 0, 16, 18]
+    const wCoords = [-25.5, ...wRooms.map((r) => r.position[2]), -16, 0, 16, 25.5]
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort((a, b) => a - b);
 
@@ -171,7 +187,6 @@ export function buildWaypointGraph(): Map<string, NavNode> {
     // -----------------------------------------------------------------------
     // D. East Wing Corridor Chain (along X = 16)
     // -----------------------------------------------------------------------
-    const eRooms = flRooms.filter((r) => r.wing === 'East');
     const eCoords = [-25.5, ...eRooms.map((r) => r.position[2]), -16, 0, 16, 25.5]
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort((a, b) => a - b);
@@ -198,59 +213,72 @@ export function buildWaypointGraph(): Map<string, NavNode> {
       let doorCoords: [number, number, number];
       let corrId: string;
 
-      if (r.wing === 'South' || (r.wing === 'West' && r.position[2] > 19)) {
-        doorCoords = [r.position[0], yDoor, 18.5];
-        corrId =
-          r.position[0] === -16 ? `stairs_sw${sfx}` : r.position[0] === 16 ? `stairs_se${sfx}` : r.position[0] === 0 ? `corr_south${sfx}` : `corr_s${sfx}_${r.position[0]}`;
-      } else if (r.wing === 'North') {
-        doorCoords = [r.position[0], yDoor, -17.5];
-        corrId =
-          r.position[0] === -16 ? `stairs_nw${sfx}` : r.position[0] === 16 ? `stairs_ne${sfx}` : r.position[0] === 0 ? `corr_north${sfx}` : `corr_n${sfx}_${r.position[0]}`;
-      } else if (r.wing === 'West') {
+      if (r.position[0] <= -16) {
+        // West Wing: doorway faces corridor at X = -18
         doorCoords = [-18, yDoor, r.position[2]];
         corrId =
           r.position[2] === 16 ? `stairs_sw${sfx}` : r.position[2] === -16 ? `stairs_nw${sfx}` : r.position[2] === 0 ? `corr_west${sfx}` : `corr_w${sfx}_${r.position[2]}`;
-      } else {
+      } else if (r.position[0] >= 16) {
+        // East Wing: doorway faces corridor at X = 18
         doorCoords = [18, yDoor, r.position[2]];
         corrId =
           r.position[2] === 16 ? `stairs_se${sfx}` : r.position[2] === -16 ? `stairs_ne${sfx}` : r.position[2] === 0 ? `corr_east${sfx}` : `corr_e${sfx}_${r.position[2]}`;
+      } else if (r.position[2] > 0) {
+        // South Wing: doorway faces corridor at Z = 18.5
+        doorCoords = [r.position[0], yDoor, 18.5];
+        corrId =
+          r.position[0] === -16 ? `stairs_sw${sfx}` : r.position[0] === 16 ? `stairs_se${sfx}` : r.position[0] === 0 ? `corr_south${sfx}` : `corr_s${sfx}_${r.position[0]}`;
+      } else {
+        // North Wing: doorway faces corridor at Z = -17.5
+        doorCoords = [r.position[0], yDoor, -17.5];
+        corrId =
+          r.position[0] === -16 ? `stairs_nw${sfx}` : r.position[0] === 16 ? `stairs_ne${sfx}` : r.position[0] === 0 ? `corr_north${sfx}` : `corr_n${sfx}_${r.position[0]}`;
       }
 
       addNode(doorId, doorCoords);
       link(corrId, doorId);
       link(doorId, r.id);
-
-      // Connect legacy doorWaypointId to doorway
-      if (r.doorWaypointId) {
-        addNode(r.doorWaypointId, doorCoords);
-        link(r.doorWaypointId, doorId);
-      }
     }
   }
 
   // =========================================================================
-  // 5. LEGACY WAYPOINTS COMPATIBILITY MAPPINGS
+  // 5. CANONICAL LEGACY WAYPOINTS COMPATIBILITY MAPPINGS
+  // Map each legacy waypoint ONLY to its single authentic canonical room doorway
+  // to prevent cross-room shortcut wormholes across partition walls
   // =========================================================================
-  const legacyWaypoints: Record<string, [number, number, number]> = {
-    wp_lt1: [20, 1.0, 7],
-    wp_lt2: [20, 1.0, -7],
-    wp_lab1: [-20, 1.0, 7],
-    wp_lab2: [-20, 1.0, -7],
-    wp_lab_phy: [-20, 1.0, 18],
-    wp_sem1: [12, 1.0, -20],
-    wp_lib_main: [0, 1.0, -22],
-    wp_south_1f: [0, 3.6, 18],
-    wp_lab3: [-20, 3.6, 7],
-    wp_lab4: [-20, 3.6, -7],
-    wp_sem2: [12, 3.6, -20],
-    wp_fac_cse: [0, 3.6, -22],
-    wp_lt3: [20, 3.6, 7],
-    wp_lt4: [20, 3.6, -7],
+  const legacyToRoom: Record<string, string> = {
+    wp_lt1: 'LT-1',
+    wp_lt2: 'LT-2',
+    wp_lt3: 'LT-3',
+    wp_lt4: 'LT-4',
+    wp_lab1: 'LAB-1',
+    wp_lab2: 'LAB-2',
+    wp_lab3: 'LAB-3',
+    wp_lab4: 'LAB-4',
+    wp_lab_phy: 'LAB-PHY',
+    wp_sem1: 'SEM-1',
+    wp_sem2: 'SEM-2',
+    wp_lib_main: 'LIB-MAIN',
+    wp_fac_cse: 'FAC-CSE',
   };
 
-  for (const [wpId, coords] of Object.entries(legacyWaypoints)) {
-    addNode(wpId, coords);
+  for (const [wpId, roomId] of Object.entries(legacyToRoom)) {
+    const door = map.get(`door_${roomId}`);
+    if (door) {
+      addNode(wpId, door.coords);
+      link(wpId, `door_${roomId}`);
+    }
   }
+
+  // Connect wp_admin to its doorway and south corridor
+  const adminDoor = map.get('door_ADMIN-01');
+  if (adminDoor) {
+    link('wp_admin', 'door_ADMIN-01');
+  }
+
+  // Connect wp_south_1f to South 1F corridor
+  addNode('wp_south_1f', [0, 3.6, 16]);
+  link('wp_south_1f', 'corr_south_1f');
 
   // Legacy room aliases mapped to their canonical IDs
   const legacyAliases: Record<string, string> = {
@@ -279,7 +307,7 @@ export function buildWaypointGraph(): Map<string, NavNode> {
     'CENTRAL-LIB': 'LIB-MAIN',
     'ADM-01': 'ADMIN-01',
     'TECH-CONF': 'ADMIN-01',
-    'center_fountain': 'courtyard_center',
+    center_fountain: 'courtyard_center',
   };
 
   for (const [alias, targetId] of Object.entries(legacyAliases)) {

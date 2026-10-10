@@ -199,7 +199,13 @@ export const RoomDetailsDrawer: React.FC = () => {
               </label>
               <select
                 value={userOriginId}
-                onChange={(e) => setUserOriginId(e.target.value)}
+                onChange={(e) => {
+                  const newOrigin = e.target.value;
+                  setUserOriginId(newOrigin);
+                  if (navigationPath) {
+                    navigateToRoom(room.id, newOrigin);
+                  }
+                }}
                 className={`w-full border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-500 ${
                   isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
                 }`}
@@ -230,8 +236,13 @@ export const RoomDetailsDrawer: React.FC = () => {
                 onClick={() => {
                   const targetRoomObj = campusRooms.find((r) => r.id === userOriginId);
                   if (targetRoomObj) {
-                    setUserOriginId(room.id);
-                    selectRoom(targetRoomObj.id);
+                    const newOrigin = room.id;
+                    const newTarget = targetRoomObj.id;
+                    setUserOriginId(newOrigin);
+                    selectRoom(newTarget);
+                    if (navigationPath) {
+                      navigateToRoom(newTarget, newOrigin);
+                    }
                   }
                 }}
                 className="flex items-center gap-1 text-[10px] text-cyan-500 hover:text-cyan-400 font-semibold px-2 py-0.5 rounded-lg border border-cyan-500/30 hover:bg-cyan-500/10 transition-colors"

@@ -52,7 +52,11 @@ export const NavigationHUD: React.FC = () => {
     if (!isPlaying || !isNavigating || steps.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentStepIndex((currentStepIndex + 1) % steps.length);
+      if (currentStepIndex >= steps.length - 1) {
+        setIsPlaying(false);
+      } else {
+        setCurrentStepIndex(currentStepIndex + 1);
+      }
     }, 2400);
 
     return () => clearInterval(interval);
