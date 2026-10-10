@@ -3,11 +3,13 @@ import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useCampusStore } from '../../stores/useCampusStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { campusRooms } from '../../data/campusRooms';
 
 export const BLENDER_MODEL_PATH = '/models/jiet_campus_prototype.glb';
 
 export const BlenderCampusModelContent: React.FC = () => {
   const activeFloorFilter = useCampusStore((state) => state.activeFloorFilter);
+  const selectRoom = useCampusStore((state) => state.selectRoom);
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
@@ -24,24 +26,37 @@ export const BlenderCampusModelContent: React.FC = () => {
         child.receiveShadow = true;
 
         const name = child.name || '';
-        const isFF = name.includes('FF_') || name.includes('_FF_') || name.includes('First_Floor');
-        const isGF = name.includes('GF_') || name.includes('_GF_') || name.includes('Ground_Floor');
+        const isFF =
+          name.includes('FF_') ||
+          name.includes('_FF_') ||
+          name.includes('First_Floor') ||
+          name.startsWith('Room_FF_') ||
+          name.startsWith('FloorLabel_');
+        const isGF =
+          name.includes('GF_') ||
+          name.includes('_GF_') ||
+          name.includes('Ground_Floor') ||
+          name.startsWith('Room_GF_');
+        const isRoof = name.includes('Roof');
 
         // Floor visibility filter
         if (activeFloorFilter === 'ground') {
-          if (isFF) {
+          if (isFF || isRoof) {
             child.visible = false;
           } else {
             child.visible = true;
           }
         } else if (activeFloorFilter === 'first') {
-          // In first floor mode, keep foundation plinth, pillars, courtyard, and stairs visible but hide GF room partitions & walls
+          // In first floor mode, keep foundation plinth, pillars, courtyard, and stairs visible but hide GF room partitions, walls, and corridors
           if (
             name.includes('GF_Exterior_Facade_Walls') ||
             name.includes('GF_Interior_Room_Partition_Walls') ||
-            name.includes('Room_GF_') ||
+            name.startsWith('Room_GF_') ||
             name.includes('GF_Corridor_Dividing_Walls_With_Doors') ||
-            name.includes('GF_Partition_And_Door_Walls')
+            name.includes('GF_Partition_And_Door_Walls') ||
+            name.includes('GF_Veranda_10ft_Corridors') ||
+            name.includes('GF_Radiating_LTs_Floor') ||
+            name.includes('GF_Curved_Corridor')
           ) {
             child.visible = false;
           } else {
@@ -76,12 +91,35 @@ export const BlenderCampusModelContent: React.FC = () => {
     return cloned;
   }, [scene, activeFloorFilter, isDark]);
 
+  const handleModelClick = (e: any) => {
+    const pt = e.point;
+    if (!pt) return;
+    const clickedFloor = pt.y < 2.5 ? 'ground' : 'first';
+    if (activeFloorFilter !== 'all' && activeFloorFilter !== clickedFloor) return;
+
+    const hitRoom = campusRooms.find((r) => {
+      if (r.floor !== clickedFloor) return false;
+      const [rx, , rz] = r.position;
+      const [w, , d] = r.dimensions;
+      return (
+        Math.abs(pt.x - rx) <= w / 2 + 0.3 &&
+        Math.abs(pt.z - rz) <= d / 2 + 0.3
+      );
+    });
+
+    if (hitRoom) {
+      e.stopPropagation();
+      selectRoom(hitRoom.id);
+    }
+  };
+
   return (
     <group
       name="blender-campus-model"
       position={[0, 0, 0]}
       scale={[1, 1, 1]}
       rotation={[0, 0, 0]}
+      onClick={handleModelClick}
     >
       <primitive object={clonedScene} />
     </group>

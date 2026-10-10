@@ -1,10 +1,8 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { CameraController } from './CameraController';
-import { CampusTerrain } from './CampusTerrain';
-import { GroundFloor } from './GroundFloor';
-import { FirstFloor } from './FirstFloor';
-import { ArchitecturalStairs } from './ArchitecturalStairs';
+import { BlenderCampusModel } from './BlenderCampusModel';
+import { RoomInteractivityLayer } from './RoomInteractivityLayer';
 import { RoutePathMesh } from './RoutePathMesh';
 import { ActiveRoomBeacon } from './ActiveRoomBeacon';
 import { PeerAvatarsLayer } from './PeerAvatarsLayer';
@@ -12,7 +10,6 @@ import { useThemeStore } from '../../stores/useThemeStore';
 
 import { UserLocationDot } from './UserLocationDot';
 import { MazeMapIconsLayer } from './MazeMapIconsLayer';
-import { BlenderCampusModel } from './BlenderCampusModel';
 
 interface CampusSceneProps {
   className?: string;
@@ -58,11 +55,8 @@ export const CampusScene: React.FC<CampusSceneProps> = ({ className = 'w-full h-
 
         <Suspense fallback={null}>
           <CameraController />
-          <CampusTerrain />
           <BlenderCampusModel />
-          <GroundFloor />
-          <FirstFloor />
-          <ArchitecturalStairs />
+          <RoomInteractivityLayer />
           <RoutePathMesh />
           <UserLocationDot />
           <ActiveRoomBeacon />

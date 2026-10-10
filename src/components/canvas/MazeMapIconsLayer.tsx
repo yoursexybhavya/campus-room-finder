@@ -370,9 +370,6 @@ export const MazeMapIconsLayer: React.FC = () => {
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
-  const isAllMode = activeFloorFilter === 'all';
-  const explodedElevation = isAllMode ? 3.0 : 0;
-
   // Filter POIs according to active floor
   const visiblePois = MAZEMAP_POIS.filter((poi) => {
     if (activeFloorFilter === 'ground') return poi.floor === 'ground';
@@ -384,8 +381,8 @@ export const MazeMapIconsLayer: React.FC = () => {
     <group name="mazemap-poi-icons-layer">
       {visiblePois.map((poi) => {
         const [, y] = poi.coords;
-        // In all floors exploded mode, first floor POIs are elevated by explodedElevation (+3.0m)
-        const actualY = poi.floor === 'first' && isAllMode ? y + explodedElevation : y;
+        // In the authentic digital twin, POIs sit cleanly at finished floor heights (GF: ~1.1m, FF: ~4.15m)
+        const actualY = poi.floor === 'first' ? 4.15 : y;
 
         return (
           <SinglePoiMarker

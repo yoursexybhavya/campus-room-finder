@@ -93,4 +93,25 @@ describe('Tier 1 Integration: 3D Campus Scene (R1)', () => {
     expect(screen.getByText(/Campus Room Finder/i)).toBeInTheDocument();
     expect(screen.getByText(/JIET Jodhpur/i)).toBeInTheDocument();
   });
+
+  it('6. should strictly verify old procedural geometry components are completely removed from CampusScene', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const sceneSourcePath = path.resolve(__dirname, '../../src/components/canvas/CampusScene.tsx');
+    const sceneSource = fs.readFileSync(sceneSourcePath, 'utf-8');
+
+    // Verify old duplicate procedural components are NOT imported or rendered
+    expect(sceneSource).not.toContain('<CampusTerrain');
+    expect(sceneSource).not.toContain('<GroundFloor');
+    expect(sceneSource).not.toContain('<FirstFloor');
+    expect(sceneSource).not.toContain('<ArchitecturalStairs');
+    expect(sceneSource).not.toContain("from './CampusTerrain'");
+    expect(sceneSource).not.toContain("from './GroundFloor'");
+    expect(sceneSource).not.toContain("from './FirstFloor'");
+    expect(sceneSource).not.toContain("from './ArchitecturalStairs'");
+
+    // Verify Blender model and RoomInteractivityLayer ARE mounted
+    expect(sceneSource).toContain('<BlenderCampusModel />');
+    expect(sceneSource).toContain('<RoomInteractivityLayer />');
+  });
 });
