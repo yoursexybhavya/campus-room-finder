@@ -9,8 +9,11 @@ export const SearchBar: React.FC = () => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const selectRoom = useCampusStore((state) => state.selectRoom);
+  const isWayfindingOpen = useCampusStore((state) => state.isWayfindingOpen);
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
+
+  if (isWayfindingOpen) return null;
 
   const filteredRooms = useMemo(() => {
     if (!query.trim()) return [];

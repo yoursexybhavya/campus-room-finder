@@ -149,4 +149,24 @@ describe('Anywhere-to-Anywhere Wayfinding & Searchable Combobox Tests', () => {
     expect(useCampusStore.getState().isNavigating).toBe(true);
     expect(useCampusStore.getState().currentStepIndex).toBe(0);
   });
+
+  it('5. CampusWayfindingBar and RoomDetailsDrawer contain zero raw select dropdowns (anti-clutter)', () => {
+    const { container: wayfindingContainer } = render(<CampusWayfindingBar />);
+    expect(wayfindingContainer.querySelectorAll('select').length).toBe(0);
+
+    const room = campusRooms[0];
+    act(() => {
+      useCampusStore.getState().selectRoom(room.id);
+    });
+    const { container: drawerContainer } = render(<RoomDetailsDrawer />);
+    expect(drawerContainer.querySelectorAll('select').length).toBe(0);
+  });
+
+  it('6. CampusWayfindingBar desktop container is positioned on left to avoid FloorSelector/Peers overlap', () => {
+    render(<CampusWayfindingBar />);
+    const container = screen.getByTestId('campus-wayfinding-container');
+    // Must be positioned at sm:left-4 when open and sm:left-[344px] when closed, not overlapping right-4
+    expect(container.className).toContain('sm:left-4');
+    expect(container.className).toContain('sm:right-auto');
+  });
 });

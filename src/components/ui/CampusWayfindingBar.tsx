@@ -120,8 +120,8 @@ export const CampusWayfindingBar: React.FC = () => {
       data-testid="campus-wayfinding-container"
       className={`absolute z-40 pointer-events-auto select-none transition-all duration-200 ${
         isWayfindingOpen
-          ? 'top-16 left-3 right-3 sm:top-20 sm:left-auto sm:right-48 sm:w-[410px]'
-          : 'top-16 right-3 sm:top-20 sm:left-auto sm:right-48 sm:w-auto'
+          ? 'top-16 left-3 right-3 sm:top-20 sm:left-4 sm:right-auto sm:w-[410px]'
+          : 'top-16 right-3 sm:top-20 sm:left-[344px] sm:right-auto sm:w-auto'
       }`}
     >
       {/* 1. Collapsed Pill Header (when minimized or route active) */}
@@ -293,39 +293,6 @@ export const CampusWayfindingBar: React.FC = () => {
                 placeholder="Search destination: any room, lab, or gate..."
                 testIdPrefix="destination-combobox"
               />
-
-              {/* Fast native select fallback for quick browsing */}
-              <select
-                value={selectedRoomId || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    handleSelectDestination(e.target.value);
-                  }
-                }}
-                className={`w-full mt-1 border rounded-xl px-2.5 py-1 text-[11px] focus:outline-none focus:border-cyan-500 transition-colors opacity-80 hover:opacity-100 ${
-                  isDark ? 'bg-slate-950 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
-                }`}
-              >
-                <option value="">🎯 Or pick directly from list...</option>
-                <optgroup label="Ground Floor (GF)">
-                  {campusRooms
-                    .filter((r) => r.floor === 'ground')
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.code}: {r.name} ({r.wing} Wing)
-                      </option>
-                    ))}
-                </optgroup>
-                <optgroup label="First Floor (1F)">
-                  {campusRooms
-                    .filter((r) => r.floor === 'first')
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.code}: {r.name} ({r.wing} Wing)
-                      </option>
-                    ))}
-                </optgroup>
-              </select>
             </div>
           </div>
 

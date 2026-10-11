@@ -272,35 +272,6 @@ export const RoomDetailsDrawer: React.FC = () => {
                 placeholder="Search origin: room, lab, gate..."
                 testIdPrefix="drawer-origin-combobox"
               />
-
-              <select
-                value={userOriginId}
-                onChange={(e) => {
-                  const newOrigin = e.target.value;
-                  setUserOriginId(newOrigin);
-                  navigateToRoom(room.id, newOrigin);
-                }}
-                className={`w-full mt-1.5 border rounded-xl px-2.5 py-1 text-[11px] focus:outline-none focus:border-cyan-500 opacity-80 hover:opacity-100 ${
-                  isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'
-                }`}
-              >
-                <optgroup label="Campus Arterial Hubs">
-                  {originLandmarks.map((lm) => (
-                    <option key={lm.id} value={lm.id}>
-                      {lm.label}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="All Classrooms & Labs">
-                  {campusRooms
-                    .filter((r) => r.id !== room.id)
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.code} ({r.floor === 'ground' ? 'GF' : '1F'}) - {r.wing} Wing
-                      </option>
-                    ))}
-                </optgroup>
-              </select>
             </div>
 
             {/* Reverse Origin/Destination Direction */}
