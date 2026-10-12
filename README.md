@@ -1,226 +1,202 @@
-# 🏫 JIET Jodhpur 3D Campus Room Finder & Indoor Navigation
+<div align="center">
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-campusroomfinder.vercel.app-06b6d4?style=for-the-badge&logo=vercel&logoColor=white)](https://campusroomfinder.vercel.app)
-[![Tests](https://img.shields.io/badge/Tests-359%2F359%20Passing-10b981?style=for-the-badge&logo=vitest&logoColor=white)](#testing)
-[![React](https://img.shields.io/badge/React-18.3.1-61dafb?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Three.js](https://img.shields.io/badge/Three.js-r169-black?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+# 🏛️ UNIPATH — JIET Jodhpur 3D Digital Twin
 
-> **A production-grade, interactive 3D digital twin and intelligent indoor wayfinding system for the JIET Jodhpur engineering campus.**  
-> Effortlessly navigate from **any room, lab, or gate to any destination** across all floors, explore classrooms with MazeMap-style 3D hovering POI labels, sync class schedules in real-time, and locate classmates on campus.
+### *Interactive 3D Campus Map • Turn-by-Turn Indoor Wayfinding • Smart Timetable • Live Peer Radar*
 
-🌐 **Production URL:** [https://campusroomfinder.vercel.app](https://campusroomfinder.vercel.app)  
-📦 **Repository:** [https://github.com/yoursexybhavya/campus-room-finder](https://github.com/yoursexybhavya/campus-room-finder)
+[![Live Demo](https://img.shields.io/badge/🚀_LAUNCH_LIVE_3D_CAMPUS-campusroomfinder.vercel.app-06b6d4?style=for-the-badge&logo=vercel&logoColor=white)](https://campusroomfinder.vercel.app)
+[![Tests](https://img.shields.io/badge/TESTS-359%2F359_PASSING-10b981?style=for-the-badge&logo=vitest&logoColor=white)](#%EF%B8%8F-quick-start--commands)
+[![3D Model](https://img.shields.io/badge/BLENDER_5.2-61_ROOMS_%2B_4_HUBS-f59e0b?style=for-the-badge&logo=blender&logoColor=white)](#-3d-architectural-gallery)
 
----
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=react,ts,threejs,blender,vite,tailwind,nodejs,vercel&perline=8" alt="Tech Stack Icons" />
+</p>
 
-## 📸 Overview
+<img src="./blender/renders/isometric_campus_view.png" alt="JIET Jodhpur 3D Digital Twin Isometric Render" width="100%" style="border-radius: 16px;" />
 
-JIET Jodhpur's engineering campus is a distinctive multi-story quadrangle surrounding an expansive central open lawn, covered verandas, corner helical rotundas, and sandstone colonnades. Finding lecture halls, engineering laboratories, and faculty offices across two levels can be challenging for new students, faculty, and campus visitors.
-
-**Campus Room Finder** digitizes the entire academic quadrangle into a high-fidelity WebGL 3D twin with topological indoor navigation, smart schedule sync, and collaborative peer awareness.
+</div>
 
 ---
 
-## ✨ Key Features
+## 📊 Campus Twin at a Glance
 
-### 1. 🧭 True "Anywhere-to-Anywhere" Indoor Navigation
-- **Universal Routing**: Navigate seamlessly between **all 61 rooms** (Lecture Theaters LT-1 through LT-36, Idea Lab, PC Programming Lab, Chemistry Lab, Electrical Machines, Hardware Design, Seminar Halls, Library, Admin Block) and campus entrance gates.
-- **Topological Collision-Free Pathfinding**: Waypoint graph strictly follows covered veranda centerlines ($|X| = 19.525\text{m}$, $|Z| = 19.525\text{m}$) and open corner walkways. **Zero cutting through walls or mid-air flight**.
-- **Realistic Helical Staircase Traversal**: Inter-floor transitions route through authentic corner spiral staircases and central library bridges, interpolating step-by-step elevations rather than slicing diagonally through floor slabs.
-- **Visual 3D Ribbon**: Floor-grounded glowing pathway with animated directional chevrons, step-by-step walking directions, distance metrics (meters), and walking time estimates (minutes).
-- **1-Tap Route Controls**: Instant start/destination reversal ($\rightleftarrows$ Swap) and quick preset hubs (*Main Gate*, *Courtyard*, *Admin Block*, *Library*).
+<div align="center">
 
-### 2. 🔍 Searchable Location Combobox & Room Finder
-- **Instant Type-to-Search**: Real-time fuzzy query filtering matching room codes (`LT-9`, `LT9`), room titles (`Idea Lab`, `Chemistry`), wings (`East`, `West`), and faculty in charge.
-- **Categorized Dropdown**: Clean, scrollable popover grouped into:
-  - 🏛 **Landmarks & Campus Hubs** (Sky Blue)
-  - 🟢 **Ground Floor (GF)** (Emerald Green — 33 rooms)
-  - 🟣 **First Floor (1F)** (Purple — 28 rooms)
-- **Anti-Clutter UX**: Completely replaces bulky native browser select dropdowns with a responsive, constrained viewport combobox that never overflows the screen.
+| 🏫 **61 + 4** | 🧭 **3,721** | 🪜 **6** | ⚡ **359 / 359** |
+| :---: | :---: | :---: | :---: |
+| **Rooms, Labs & Gates**<br/><sub>33 Ground • 28 First • 4 Hubs</sub> | **Verified Route Pairs**<br/><sub>$61 \times 61$ Collision-Free Paths</sub> | **3D Staircase Transitions**<br/><sub>4 Corner Helical + 2 Library</sub> | **Automated Tests**<br/><sub>Unit • Integration • Stress</sub> |
 
-### 3. 🏢 MazeMap-Inspired Floor Selection & View Modes
-- **Vertical Z-Level Switcher**:
-  - `1F` (First Floor): Isolates first-floor rooms and corridors.
-  - `GF` (Ground Floor): Isolates ground-floor classrooms, labs, and courtyards.
-  - `ALL` (All Floors): Full building stack isometric overview.
-- **2D Blueprint / 3D Isometric Toggle**:
-  - **3D Mode**: Immersive isometric camera navigation with smooth orbital panning, pitch, and zoom.
-  - **2D Plan Mode**: Top-down architectural orthographic blueprint view for fast architectural navigation.
-
-### 4. 🏷️ Dynamic 3D Room Hover Labels & POI Amenities
-- **Floating Spatial Badges**: 3D labels with room codes, names, and category icons (Restrooms/WC, Helical Stairs, Labs, Lecture Theaters, Knowledge Library).
-- **Slab Occlusion & Distance LOD**: Ground-floor labels dynamically occlude when First Floor slabs are active, eliminating visual bleed-through and z-fighting.
-
-### 5. 📅 Smart Timetable Synchronization
-- **Live Class Detection**: Local SQLite/WASM database parses student course schedules and highlights the currently active lecture or lab.
-- **"Take Me To Class" Button**: Automatically routes from the student's current location to their scheduled lecture theater with a single click.
-
-### 6. 👥 Real-Time Peer Locator
-- **Classmate Radar**: WebSocket-powered live peer locator displaying connected friends' active campus locations and check-in statuses on the 3D map.
-
-### 7. 🚀 Anti-Gravity Physics Easter Egg
-- **Konami Code Listener**: Entering `↑ ↑ ↓ ↓ ← → ← → B A` activates zero-gravity mode: campus room nodes float and rotate with particle physics over an animated cosmic background.
+</div>
 
 ---
 
-## 🛠️ Tech Stack
+## 🖼️ 3D Architectural Gallery
 
-| Domain | Technologies |
-| :--- | :--- |
-| **Frontend Framework** | [React 18.3](https://react.dev/), [TypeScript 5.6](https://www.typescriptlang.org/) |
-| **3D & WebGL Graphics** | [Three.js r169](https://threejs.org/), [@react-three/fiber](https://docs.pmnd.rs/react-three-fiber), [@react-three/drei](https://github.com/pmndrs/drei) |
-| **Styling & Icons** | [Tailwind CSS 3.4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) |
-| **State Management** | [Zustand 5.0](https://github.com/pmndrs/zustand) |
-| **Pathfinding & Routing** | Custom A* / Dijkstra Topological Waypoint Graph |
-| **Embedded Database** | [SQL.js](https://sql.js.org/) (SQLite WebAssembly engine) |
-| **Real-time Networking** | [Socket.io](https://socket.io/) client and Express WebSocket server |
-| **Testing Suite** | [Vitest 2.1](https://vitest.dev/), [@testing-library/react](https://testing-library.com/), jsdom (359 automated tests) |
-| **Build & Deployment** | [Vite 5.4](https://vitejs.dev/), [Vercel](https://vercel.com/) |
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="./blender/renders/isometric_campus_view.png" alt="3D Isometric View" width="100%" />
+      <br /><b>🌐 3D Isometric Digital Twin</b><br /><sub>Full two-story quadrangle, central lawn & sandstone colonnades</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="./blender/renders/topdown_overview.png" alt="2D Blueprint Ortho Plan" width="100%" />
+      <br /><b>🗺️ 2D Top-Down Blueprint Mode</b><br /><sub>Color-coded Lecture Theaters, Labs, Library & Admin wings</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="./blender/renders/twin_library_staircases_detail.png" alt="Twin Library Staircases" width="100%" />
+      <br /><b>🪜 Twin Central Library Staircases</b><br /><sub>Porthole landings & elevated bridge into Central Library (F-36)</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="./blender/renders/courtyard_view_admin_to_stage.png" alt="Courtyard & Stage" width="100%" />
+      <br /><b>🎭 Central Quadrangle & JIET Stage</b><br /><sub>Cross-walkways, amphitheater bleachers & covered verandas</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="./blender/renders/first_floor_rooms_detail.png" alt="First Floor Rooms Cutaway" width="100%" />
+      <br /><b>🟣 First Floor (1F) Cutaway</b><br /><sub>28 Upper-level LTs, Computer Labs & HOD cabins</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="./blender/renders/ground_floor_rooms_cutaway.png" alt="Ground Floor Rooms Cutaway" width="100%" />
+      <br /><b>🟢 Ground Floor (GF) Cutaway</b><br /><sub>33 Ground-level Labs, Idea Lab, Drawing Halls & Admin</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## 📂 Project Architecture
+## 🧠 How It Works (Visual Architecture)
 
+### 1. System Pipeline
+
+```mermaid
+flowchart LR
+    subgraph Assets["🎨 3D Pipeline"]
+        CAD["📐 JIET CAD Plans\n+ 540 Walkthrough Frames"] --> BL["🧊 Blender 5.2\nProcedural Builder"]
+        BL --> GLB["📦 jiet_campus_prototype.glb"]
+    end
+
+    subgraph Engine["⚡ WebGL & State Engine"]
+        GLB --> R3F["🎮 React Three Fiber\n+ Three.js r169"]
+        ZUS["🗂️ Zustand Store"] <--> R3F
+        SQL["📅 SQL.js WASM\nTimetable DB"] --> ZUS
+        WS["📡 Socket.io\nPeer Radar"] --> ZUS
+    end
+
+    subgraph UX["🧭 Student Interface"]
+        R3F --> NAV["🛣️ 3D Route Ribbon\n+ Helical Stair Interpolation"]
+        R3F --> POI["🏷️ MazeMap 3D Labels\n+ Slab Occlusion"]
+        ZUS --> COMBO["🔍 Searchable Combobox\nAnywhere ➔ Anywhere"]
+    end
+
+    style Assets fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style Engine fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#fff
+    style UX fill:#0f172a,stroke:#a855f7,stroke-width:2px,color:#fff
 ```
+
+### 2. Topological "Anywhere-to-Anywhere" Routing Engine
+
+```mermaid
+flowchart TD
+    A(["📍 Origin Selected\n(Any Room / Lab / Gate)"]) --> B["🚪 Snap to Room Doorway Node"]
+    B --> C["🏛️ Enter Covered Veranda Centerline\n(|X| = 19.525m, |Z| = 19.525m)"]
+    C --> D{"Same Floor?"}
+    D -- "✅ Yes (GF ➔ GF or 1F ➔ 1F)" --> E["🔄 Traverse Corner Rotunda Walkways"]
+    D -- "🪜 No (GF ⇄ 1F)" --> F["🌀 Route via Nearest Helical Staircase\n(22-Step Spiral Elevation Interpolation)"]
+    F --> E
+    E --> G["🎯 Arrive at Destination Doorway"]
+    G --> H(["🏁 Render Glowing 3D Ribbon + Turn-by-Turn HUD"])
+
+    style A fill:#0284c7,stroke:#38bdf8,color:#fff
+    style D fill:#d97706,stroke:#fbbf24,color:#fff
+    style F fill:#7c3aed,stroke:#a855f7,color:#fff
+    style H fill:#059669,stroke:#34d399,color:#fff
+```
+
+### 3. Spatial Distribution Across Campus
+
+```mermaid
+pie showData
+    title 65 Navigable Campus Locations
+    "Ground Floor Rooms & Labs (GF)" : 33
+    "First Floor Classrooms & Labs (1F)" : 28
+    "Arterial Gates & Hubs" : 4
+```
+
+---
+
+## ⚡ Feature Matrix
+
+| Module | What It Does | Visual Highlight |
+| :--- | :--- | :--- |
+| **🧭 Anywhere ➔ Anywhere** | Route from **any** room/lab/gate to **any** destination in 1 tap | Glowing floor-grounded 3D ribbon + animated chevrons |
+| **🔍 Smart Combobox** | Type-to-search (`LT-9`, `Idea`, `Chem`) + categorized dropdown | Grouped by **Landmarks**, **GF (33)**, and **1F (28)** |
+| **🏢 Z-Level Switcher** | Switch between `1F`, `GF`, and `ALL` + `2D` / `3D` camera views | Instant slab isolation & top-down blueprint snap |
+| **🏷️ 3D Hovering POIs** | Floating room codes & amenity badges (WC, Stairs, Labs, Library) | Automatic floor-slab occlusion (zero bleed-through) |
+| **📅 Timetable Sync** | Detects active class from SQLite schedule & highlights room | 1-tap **"Take Me To Class"** instant routing |
+| **👥 Live Peer Radar** | Real-time Socket.io check-ins showing classmates on campus | Live 3D avatars hovering over active rooms |
+| **🚀 Anti-Gravity Mode** | Type Konami Code (`↑ ↑ ↓ ↓ ← → ← → B A`) | Zero-G floating physics + cosmic starfield |
+
+---
+
+## 🗺️ Repository Blueprint
+
+```text
 campus-room-finder/
-├── public/
-│   └── models/
-│       └── jiet_campus_prototype.glb   # Authentic 3D Blender architectural model
-├── src/
-│   ├── components/
-│   │   ├── canvas/                     # Three.js / React Three Fiber 3D Scene
-│   │   │   ├── CampusScene.tsx         # Root WebGL Canvas & Lighting
-│   │   │   ├── BlenderCampusModel.tsx  # 3D GLTF Campus Mesh loader & materials
-│   │   │   ├── RoutePathMesh.tsx       # Animated 3D floor navigation ribbon
-│   │   │   ├── RoomHoverLabelsLayer.tsx# Dynamic 3D hovering room tags & POIs
-│   │   │   ├── ArchitecturalStairs.tsx # Helical staircases & bridge connections
-│   │   │   └── CameraController.tsx    # Smooth 2D/3D camera transitions
-│   │   └── ui/                         # Clean Tailwind UI Overlays
-│   │       ├── CampusWayfindingBar.tsx # Anywhere-to-Anywhere navigation HUD
-│   │       ├── SearchableLocationCombobox.tsx # Searchable input with floor grouping
-│   │       ├── FloorSelector.tsx       # Vertical 1F / GF / ALL level switcher
-│   │       ├── SearchBar.tsx           # Global campus room & faculty search
-│   │       ├── RoomDetailsDrawer.tsx   # Detailed room sheet & faculty info
-│   │       ├── ActiveClassBanner.tsx   # Current timetable slot alert banner
-│   │       └── PeerLocatorPanel.tsx    # Live classmate radar panel
-│   ├── data/
-│   │   ├── campusRooms.ts              # 61 campus rooms, coordinates & metadata
-│   │   ├── waypoints.ts                # Corridor & staircase waypoint graph
-│   │   └── timetableSeed.ts            # Mock semester class schedules
-│   ├── services/
-│   │   ├── routing/pathfinding.ts      # A* / Dijkstra indoor navigation engine
-│   │   ├── database/timetableDb.ts     # SQL.js SQLite engine
-│   │   └── socket/socketClient.ts      # Real-time peer locator networking
-│   ├── stores/                         # Zustand state stores
-│   │   ├── useCampusStore.ts           # Selected room, floor filter, active route
-│   │   ├── useThemeStore.ts            # Light / Dark mode state
-│   │   └── usePeerStore.ts             # Live connected peers state
-│   ├── types/                          # TypeScript definitions
-│   ├── App.tsx                         # Root Application Layout
-│   └── main.tsx                        # React Entrypoint
-├── tests/                              # Comprehensive test suite (359 tests)
-│   ├── adversarial/                    # Stress & fuzz tests
-│   ├── integration/                    # Scene, wayfinding & theme integration tests
-│   └── unit/                           # Route algorithms, occlusion & UI tests
-├── tailwind.config.js
-├── tsconfig.json
-├── vite.config.ts
-└── package.json
+├── 🧊 blender/
+│   ├── jiet_campus_prototype.blend      # Master Blender 5.2 CAD twin
+│   └── renders/                         # 22 Cycles architectural renders
+├── 📦 public/models/
+│   └── jiet_campus_prototype.glb        # WebGL-optimized 3D campus model
+├── ⚛️ src/
+│   ├── components/canvas/               # 3D WebGL Scene, Ribbon, Stairs & POIs
+│   ├── components/ui/                   # Wayfinding HUD, Combobox, Floor Dock
+│   ├── data/                            # 61 rooms + topological waypoint graph
+│   ├── services/                        # A* pathfinding, SQL.js & Socket.io
+│   └── stores/                          # Zustand state (Campus, Theme, Peers)
+└── 🧪 tests/                            # 36 test suites (359 automated checks)
 ```
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yoursexybhavya/campus-room-finder.git
-   cd campus-room-finder
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start the local development server:**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) (or the displayed port) in your browser.
-
-4. **(Optional) Start the Peer Locator WebSocket server:**
-   ```bash
-   npm run server
-   ```
-
----
-
-## 🧪 Testing
-
-The codebase includes an extensive automated testing suite covering unit algorithms, integration flows, and adversarial stress tests:
+## 🛠️ Quick Start & Commands
 
 ```bash
-# Run all automated tests once
+# 1. Clone & install
+git clone https://github.com/yoursexybhavya/campus-room-finder.git
+cd campus-room-finder && npm install
+
+# 2. Launch 3D dev server (http://localhost:3000)
+npm run dev
+
+# 3. Run all 359 automated tests
 npm test
 
-# Run tests in watch mode
-npm run test:watch
-```
-
-**Test Coverage Highlights:**
-- **36 Test Files, 359 / 359 Tests Passing (100% Green)**
-- Topological pathfinding non-collision audits across all 3,721 room combinations ($61 \times 61$)
-- Helical staircase multi-step floor transitions
-- Searchable combobox fuzzy queries and category filtering
-- Floor occlusion and distance-based label visibility
-- Anti-gravity Konami code keyboard listener
-- Dark / Light mode theme synchronization
-
----
-
-## 📦 Production Build & Deployment
-
-To create an optimized production build:
-
-```bash
-npm run build
-```
-
-This runs TypeScript type checking (`tsc`) followed by Vite's minified production bundling.
-
-To deploy on [Vercel](https://vercel.com):
-```bash
-npx vercel --prod --yes
+# 4. Build & deploy to production
+npm run build && npx vercel --prod --yes
 ```
 
 ---
 
-## 📜 Continuous Documentation Policy
+## 👥 Core Team — The 4 Musketeers
 
-> 📌 **Project Rule**: Whenever features, UI components, 3D assets, route waypoints, or APIs are added, updated, or refactored in this repository, **this `README.md` must be updated immediately** to reflect the latest changes.
+<div align="center">
 
----
+| <a href="https://github.com/yoursexybhavya"><img src="https://github.com/yoursexybhavya.png" width="90" height="90" style="border-radius:50%;" alt="yoursexybhavya"/><br/><b>Bhavya Jangid</b></a> | <a href="https://github.com/babooshki"><img src="https://github.com/babooshki.png" width="90" height="90" style="border-radius:50%;" alt="babooshki"/><br/><b>Babooshki</b></a> | <a href="https://github.com/Aditya69-xr"><img src="https://github.com/Aditya69-xr.png" width="90" height="90" style="border-radius:50%;" alt="Aditya69-xr"/><br/><b>Aditya Jain</b></a> | <a href="https://github.com/Dev-Harry-Code"><img src="https://github.com/Dev-Harry-Code.png" width="90" height="90" style="border-radius:50%;" alt="Dev-Harry-Code"/><br/><b>Harshal Sharma</b></a> |
+| :---: | :---: | :---: | :---: |
+| [![GitHub](https://img.shields.io/badge/@yoursexybhavya-181717?style=flat-square&logo=github)](https://github.com/yoursexybhavya) | [![GitHub](https://img.shields.io/badge/@babooshki-181717?style=flat-square&logo=github)](https://github.com/babooshki) | [![GitHub](https://img.shields.io/badge/@Aditya69--xr-181717?style=flat-square&logo=github)](https://github.com/Aditya69-xr) | [![GitHub](https://img.shields.io/badge/@Dev--Harry--Code-181717?style=flat-square&logo=github)](https://github.com/Dev-Harry-Code) |
+| <sub>Jodhpur, India</sub> | <sub>Jodhpur, India</sub> | <sub>Jodhpur, India</sub> | <sub>Jodhpur, India</sub> |
 
-## 👥 Core Team & Collaborators (4 Musketeers)
-
-| Avatar | Member | GitHub | Location |
-| :---: | :--- | :--- | :--- |
-| <img src="https://github.com/yoursexybhavya.png" width="48" height="48" style="border-radius:50%" alt="yoursexybhavya" /> | **Bhavya Jangid** | [@yoursexybhavya](https://github.com/yoursexybhavya) | Jodhpur, India |
-| <img src="https://github.com/babooshki.png" width="48" height="48" style="border-radius:50%" alt="babooshki" /> | **Babooshki** | [@babooshki](https://github.com/babooshki) | Jodhpur, India |
-| <img src="https://github.com/Aditya69-xr.png" width="48" height="48" style="border-radius:50%" alt="Aditya69-xr" /> | **Aditya Jain** | [@Aditya69-xr](https://github.com/Aditya69-xr) | Jodhpur, India |
-| <img src="https://github.com/Dev-Harry-Code.png" width="48" height="48" style="border-radius:50%" alt="Dev-Harry-Code" /> | **Harshal Sharma** | [@Dev-Harry-Code](https://github.com/Dev-Harry-Code) | Jodhpur, India |
+</div>
 
 ---
 
-## 📄 License
+<div align="center">
 
-This project is licensed under the MIT License. Developed for the JIET Jodhpur academic community.
+> 📌 **Auto-Sync Rule**: *This `README.md` is continuously updated alongside every architectural, UI, or routing update.*
+
+**Built with ❤️ at JIET Jodhpur • [Live App](https://campusroomfinder.vercel.app)**
+
+</div>
