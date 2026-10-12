@@ -210,6 +210,17 @@ npx vercel --prod --yes
 
 ---
 
+## 👥 Core Team & Collaborators (4 Musketeers)
+
+| Avatar | Member | GitHub | Location |
+| :---: | :--- | :--- | :--- |
+| <img src="https://github.com/yoursexybhavya.png" width="48" height="48" style="border-radius:50%" alt="yoursexybhavya" /> | **Bhavya Jangid** | [@yoursexybhavya](https://github.com/yoursexybhavya) | Jodhpur, India |
+| <img src="https://github.com/babooshki.png" width="48" height="48" style="border-radius:50%" alt="babooshki" /> | **Babooshki** | [@babooshki](https://github.com/babooshki) | Jodhpur, India |
+| <img src="https://github.com/Aditya69-xr.png" width="48" height="48" style="border-radius:50%" alt="Aditya69-xr" /> | **Aditya Jain** | [@Aditya69-xr](https://github.com/Aditya69-xr) | Jodhpur, India |
+| <img src="https://github.com/Dev-Harry-Code.png" width="48" height="48" style="border-radius:50%" alt="Dev-Harry-Code" /> | **Harshal Sharma** | [@Dev-Harry-Code](https://github.com/Dev-Harry-Code) | Jodhpur, India |
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License. Developed for the JIET Jodhpur academic community.
